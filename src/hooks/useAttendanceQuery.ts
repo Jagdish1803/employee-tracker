@@ -3,12 +3,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { attendanceApi } from '@/lib/api/attendanceApi';
-import type { AttendanceRecord, UploadHistory } from '@/types';
+import type { AttendanceRecord } from '@/types';
 
 // Query Keys
 export const attendanceKeys = {
   all: ['attendance'] as const,
-  records: (params?: any) => ['attendance', 'records', params] as const,
+  records: (params?: Record<string, unknown>) => ['attendance', 'records', params] as const,
   uploadHistory: () => ['attendance', 'upload-history'] as const,
   record: (id: number) => ['attendance', 'record', id] as const,
 };
@@ -86,7 +86,7 @@ export function useUpdateAttendanceRecord() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+    mutationFn: async ({ id, data }: { id: number; data: Record<string, unknown> }) => {
       return attendanceApi.updateAttendance(id, data);
     },
     onSuccess: (result, variables) => {
@@ -125,7 +125,7 @@ export function useDeleteAttendanceRecord() {
       // Optimistically remove the record
       queryClient.setQueriesData(
         { queryKey: attendanceKeys.records() },
-        (old: any) => old?.filter((record: any) => record.id !== deletedId) || []
+        (old: AttendanceRecord[]) => old?.filter((record: AttendanceRecord) => record.id !== deletedId) || []
       );
       
       return { previousRecords };
@@ -187,7 +187,7 @@ export function useDeleteBatch() {
       // Optimistically remove the upload history entry
       queryClient.setQueryData(
         attendanceKeys.uploadHistory(),
-        (old: any) => old?.filter((upload: any) => upload.batchId !== batchId) || []
+        (old: UploadHistory[]) => old?.filter((upload: UploadHistory) => upload.batchId !== batchId) || []
       );
       
       return { previousUploadHistory, previousRecords };
@@ -278,7 +278,7 @@ export function useUploadAttendanceFile() {
             try {
               const response = JSON.parse(xhr.responseText);
               resolve(response);
-            } catch (error) {
+            } catch {
               reject(new Error('Invalid response format'));
             }
           } else {
@@ -314,7 +314,7 @@ export function useUploadAttendanceFile() {
       setUploadProgress(0);
       console.log('Upload mutation started');
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data) => {
       console.log('Upload completed successfully:', data);
       setUploadProgress(100);
 
@@ -325,7 +325,7 @@ export function useUploadAttendanceFile() {
       // Show success message
       toast.success(`File uploaded successfully! Processed ${data.data?.processedRecords || 0} records`);
     },
-    onError: (error, variables) => {
+    onError: (error) => {
       console.error('Upload failed:', error);
       setUploadProgress(0);
 

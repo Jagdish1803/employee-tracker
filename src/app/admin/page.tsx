@@ -15,7 +15,7 @@ interface DashboardData {
   todaysSubmissions: number;
   pendingIssues: number;
   totalIssues: number;
-  recentActivity: any[];
+  recentActivity: Record<string, unknown>[];
 }
 
 export default function AdminDashboard() {
@@ -125,7 +125,7 @@ export default function AdminDashboard() {
         {/* Today's Submissions */}
         <div className="bg-white rounded-xl p-5 border border-gray-200 hover:border-gray-300 transition-all shadow-sm">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-gray-600 text-sm">Today's Submissions</span>
+            <span className="text-gray-600 text-sm">Today&apos;s Submissions</span>
           </div>
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-gray-100 rounded-lg border border-gray-200">
@@ -160,7 +160,7 @@ export default function AdminDashboard() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900">View Daily Chart</h3>
-                  <p className="text-sm text-gray-600">See today's work submissions</p>
+                  <p className="text-sm text-gray-600">See today&apos;s work submissions</p>
                 </div>
               </div>
             </CardContent>
@@ -254,7 +254,7 @@ export default function AdminDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center">
               <Calendar className="h-5 w-5 mr-2" />
-              Today's Summary
+              Today&apos;s Summary
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">

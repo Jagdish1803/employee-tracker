@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Upload, Calendar, Users, FileText, Eye, Trash2, RefreshCw, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Upload, Calendar, Users, FileText, Eye, Trash2, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils';
 
 export default function AdminAttendancePage() {
   const {
-    filteredRecords, uploadHistory, loading, uploading, saving, deleting, editingRecord, editForm,
+    filteredRecords, uploadHistory, loading, saving, deleting, editingRecord, editForm,
     filterStatus, searchTerm,
     setFilterStatus, setSearchTerm,
     loadAttendanceRecords, loadUploadHistory,
@@ -57,14 +57,14 @@ export default function AdminAttendancePage() {
   // Update available dates when records change, but avoid infinite loops
   useEffect(() => {
     setAvailableDates(availableDatesFromRecords);
-  }, [filteredRecords.length]); // Use specific dependencies
+  }, [availableDatesFromRecords]);
 
   // Auto-select latest date when available dates change (but only if no specific date is selected)
   useEffect(() => {
     if (selectedDate === 'all' && availableDatesFromRecords.length > 0) {
       setSelectedDate(availableDatesFromRecords[availableDatesFromRecords.length - 1]);
     }
-  }, [availableDatesFromRecords.length, selectedDate]); // Specific dependencies
+  }, [availableDatesFromRecords, selectedDate]);
 
   // Filter records by selected date
   const dateFilteredRecords = selectedDate && selectedDate !== 'all'
@@ -129,7 +129,7 @@ export default function AdminAttendancePage() {
   const canNavigateNext = availableDates.indexOf(selectedDate) < availableDates.length - 1;
 
   // Wrapper for AttendanceTable onFieldChange to match expected type
-  const handleTableFieldChange = (field: string, value: any) => {
+  const handleTableFieldChange = (field: string, value: unknown) => {
     handleFieldChange(field as keyof AttendanceRecord, value);
   };
 

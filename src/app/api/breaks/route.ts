@@ -2,7 +2,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { employeeQuerySchema } from '@/lib/validations';
-import { z } from 'zod';
 
 // GET /api/breaks - Get breaks with filters
 export async function GET(request: NextRequest) {
@@ -13,13 +12,13 @@ export async function GET(request: NextRequest) {
     let validatedQuery;
     try {
       validatedQuery = employeeQuerySchema.parse(query);
-    } catch (validationError) {
+    } catch {
       validatedQuery = {};
     }
 
     await prisma.$connect();
 
-    const where: any = {};
+    const where: Record<string, unknown> = {};
 
     if (validatedQuery.employeeId) {
       where.employeeId = validatedQuery.employeeId;

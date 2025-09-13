@@ -11,5 +11,8 @@ export {
   logService,
   employeeService,
   tagService,
-  issueService
+  issueService,
+  breakService,
+  warningService,
+  assignmentService
 } from './services';

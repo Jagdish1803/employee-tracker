@@ -4,13 +4,6 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { AttendanceStatus } from '@prisma/client';
 
-const attendanceQuerySchema = z.object({
-  employeeId: z.string().optional().transform(val => val ? parseInt(val) : undefined),
-  dateFrom: z.string().optional(),
-  dateTo: z.string().optional(),
-  status: z.enum(['PRESENT', 'ABSENT', 'LEAVE_APPROVED', 'WFH_APPROVED', 'LATE', 'HALF_DAY']).optional(),
-});
-
 const createAttendanceSchema = z.object({
   employeeId: z.number(),
   date: z.string(),
@@ -40,7 +33,7 @@ export async function GET(request: NextRequest) {
     console.log('Fetching unified attendance records with params:', { month, year, status, search, employeeId });
 
     // Build where clause for date filtering with proper date handling
-    let dateFilter: any = {};
+    let dateFilter: Record<string, unknown> = {};
     if (month && year) {
       const monthNum = parseInt(month);
       const yearNum = parseInt(year);
@@ -66,7 +59,7 @@ export async function GET(request: NextRequest) {
         where: {
           ...employeeFilter,
           ...(Object.keys(dateFilter).length > 0 && { date: dateFilter }),
-          ...(status && status !== 'ALL' && { status: status as any }),
+          ...(status && status !== 'ALL' && { status: status as AttendanceStatus }),
           // Add search filter at database level for better performance
           ...(search && search.trim() && {
             employee: {
@@ -102,7 +95,7 @@ export async function GET(request: NextRequest) {
         where: {
           ...employeeFilter,
           ...(Object.keys(dateFilter).length > 0 && { attendanceDate: dateFilter }),
-          ...(status && status !== 'ALL' && { status: status as any }),
+          ...(status && status !== 'ALL' && { status: status as AttendanceStatus }),
           // Add search filter at database level for better performance
           ...(search && search.trim() && {
             employee: {
@@ -352,7 +345,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate status logic
-    let finalStatus = validatedData.status;
+    const finalStatus = validatedData.status;
     if (finalStatus === 'PRESENT' && !checkInTime && !totalHours && !hasTagWork && !hasFlowaceWork) {
       console.warn(`Employee ${employee.name} marked present but no evidence of work found`);
     }

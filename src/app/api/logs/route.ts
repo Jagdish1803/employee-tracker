@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const query = Object.fromEntries(searchParams.entries());
     const validatedQuery = employeeQuerySchema.parse(query);
 
-    const where: any = {};
+    const where: Record<string, unknown> = {};
 
     if (validatedQuery.employeeId) {
       where.employeeId = validatedQuery.employeeId;

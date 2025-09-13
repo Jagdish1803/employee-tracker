@@ -52,7 +52,7 @@ export function AttendanceUploadDialog({
         console.warn('Reset function not available:', error);
       }
     }
-  }, [isOpen]);
+  }, [isOpen, uploadMutation]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -99,7 +99,7 @@ export function AttendanceUploadDialog({
   const isValidFile = selectedFile && selectedFile.name.endsWith('.srp');
 
   // Get current upload state with safe property access
-  const isUploading = uploadMutation.isPending || (uploadMutation as any).isLoading;
+  const isUploading = uploadMutation.isPending || (uploadMutation as Record<string, unknown>).isLoading;
   const uploadSuccess = uploadMutation.isSuccess;
   const uploadError = uploadMutation.isError;
   const currentProgress = Math.max(localProgress, 0);
@@ -223,9 +223,9 @@ export function AttendanceUploadDialog({
               )}
               {uploadSuccess && uploadMutation.data && (
                 <div className="text-xs text-green-700 space-y-1">
-                  <p>✅ Processed {(uploadMutation.data as any)?.processedRecords || 0} records</p>
-                  {((uploadMutation.data as any)?.errorRecords || 0) > 0 && (
-                    <p>⚠️ {(uploadMutation.data as any)?.errorRecords || 0} records had errors</p>
+                  <p>✅ Processed {(uploadMutation.data as Record<string, unknown>)?.processedRecords || 0} records</p>
+                  {((uploadMutation.data as Record<string, unknown>)?.errorRecords || 0) > 0 && (
+                    <p>⚠️ {(uploadMutation.data as Record<string, unknown>)?.errorRecords || 0} records had errors</p>
                   )}
                 </div>
               )}

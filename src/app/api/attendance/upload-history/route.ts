@@ -4,7 +4,8 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export async function GET(request: NextRequest) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function GET(_request: NextRequest) {
   try {
     // Query UploadHistory table instead of ImportLog
     const uploadHistory = await prisma.uploadHistory.findMany({

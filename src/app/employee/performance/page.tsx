@@ -1,7 +1,7 @@
 // src/app/employee/performance/page.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { BarChart3, LogOut, Calendar, TrendingUp, Clock, Target } from 'lucide-react';
@@ -36,20 +36,20 @@ export default function PerformancePage() {
         setEmployee(emp);
         setIsLoggedIn(true);
         loadPerformanceData(emp.id);
-      } catch (error) {
+      } catch {
         localStorage.removeItem('employee');
         setLoading(false);
       }
     } else {
       setLoading(false);
     }
-  }, []);
+  }, [loadPerformanceData]);
 
   useEffect(() => {
     if (employee && (dateRange || (useCustomRange && customDateFrom && customDateTo))) {
       loadPerformanceData(employee.id);
     }
-  }, [employee, dateRange, customDateFrom, customDateTo, useCustomRange]);
+  }, [employee, dateRange, customDateFrom, customDateTo, useCustomRange, loadPerformanceData]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,8 +69,8 @@ export default function PerformancePage() {
         toast.success('Login successful!');
         loadPerformanceData(emp.id);
       }
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Login failed';
+    } catch (error: unknown) {
+      const errorMessage = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Login failed';
       toast.error(errorMessage);
     } finally {
       setLoggingIn(false);
@@ -86,10 +86,10 @@ export default function PerformancePage() {
     toast.success('Logged out successfully');
   };
 
-  const loadPerformanceData = async (employeeId: number) => {
+  const loadPerformanceData = useCallback(async (employeeId: number) => {
     try {
       setLoading(true);
-      
+
       let dateFrom, dateTo;
       if (useCustomRange && customDateFrom && customDateTo) {
         dateFrom = customDateFrom;
@@ -115,7 +115,7 @@ export default function PerformancePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [dateRange, useCustomRange, customDateFrom, customDateTo]);
 
   // Calculate performance metrics
   const performanceMetrics = React.useMemo(() => {
@@ -259,7 +259,7 @@ export default function PerformancePage() {
             </div>
 
             {!useCustomRange ? (
-              <Select value={dateRange || undefined} onValueChange={(value: any) => setDateRange(value)}>
+              <Select value={dateRange || undefined} onValueChange={(value: 'week' | 'month' | 'quarter') => setDateRange(value)}>
                 <SelectTrigger className="w-auto">
                   <SelectValue placeholder="Select date range" />
                 </SelectTrigger>

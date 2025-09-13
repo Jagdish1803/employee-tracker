@@ -1,7 +1,7 @@
 // src/app/employee/attendance/page.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import { Calendar, BarChart3, Users, Clock, CheckCircle, XCircle, AlertTriangle, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -30,6 +30,55 @@ export default function EmployeeAttendancePage() {
     selectedYear
   );
 
+  const generateMockAttendanceData = useCallback((): AttendanceCalendarView[] => {
+    const data: AttendanceCalendarView[] = [];
+    const year = parseInt(selectedYear);
+    const month = parseInt(selectedMonth);
+    const daysInMonth = new Date(year, month, 0).getDate();
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = `${year}-${selectedMonth.padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+      const dayOfWeek = new Date(year, month - 1, day).getDay();
+
+      // Skip Sundays for mock data
+      if (dayOfWeek === 0) {
+        continue;
+      }
+
+      // Generate random attendance status
+      const statuses: Attendance['status'][] = ['PRESENT', 'ABSENT', 'LATE', 'HALF_DAY', 'LEAVE_APPROVED'];
+      const status = statuses[Math.floor(Math.random() * statuses.length)];
+
+      data.push({
+        date,
+        status,
+        checkInTime: status !== 'ABSENT' ? '09:00:00' : undefined,
+        checkOutTime: status === 'PRESENT' ? '18:00:00' : status === 'HALF_DAY' ? '13:00:00' : undefined,
+        hoursWorked: status === 'PRESENT' ? 8 : status === 'HALF_DAY' ? 4 : 0,
+        remarks: status === 'LATE' ? 'Late arrival' : status === 'LEAVE_APPROVED' ? 'Approved leave' : undefined
+      });
+    }
+
+    return data;
+  }, [selectedMonth, selectedYear]);
+
+  const generateMockSummary = useCallback((): AttendanceSummary => {
+    return {
+      employeeId: employee?.id || 0,
+      month: selectedMonth,
+      year: selectedYear,
+      totalWorkingDays: 22,
+      presentDays: 18,
+      absentDays: 2,
+      halfDays: 1,
+      lateDays: 1,
+      leaveDays: 2,
+      totalHoursWorked: 156,
+      averageHoursPerDay: 7.8,
+      attendancePercentage: 81.8
+    };
+  }, [employee?.id, selectedMonth, selectedYear]);
+
   // Use mock data for now since API endpoints might not be implemented
   const attendanceData = React.useMemo(() => {
     if (calendarQuery.data) {
@@ -37,7 +86,7 @@ export default function EmployeeAttendancePage() {
     }
     // Return mock data if API fails
     return generateMockAttendanceData();
-  }, [calendarQuery.data, selectedMonth, selectedYear]);
+  }, [calendarQuery.data, generateMockAttendanceData]);
 
   const summary = React.useMemo(() => {
     if (summaryQuery.data) {
@@ -45,7 +94,7 @@ export default function EmployeeAttendancePage() {
     }
     // Return mock summary if API fails
     return generateMockSummary();
-  }, [summaryQuery.data, selectedMonth, selectedYear]);
+  }, [summaryQuery.data, generateMockSummary]);
 
   const loading = calendarQuery.isLoading || summaryQuery.isLoading;
 
@@ -71,9 +120,9 @@ export default function EmployeeAttendancePage() {
     if (employee && selectedMonth && selectedYear) {
       loadAttendanceData();
     }
-  }, [employee, selectedMonth, selectedYear]);
+  }, [employee, selectedMonth, selectedYear, loadAttendanceData]);
 
-  const loadAttendanceData = async () => {
+  const loadAttendanceData = useCallback(async () => {
     if (!employee) return;
 
     try {
@@ -84,56 +133,8 @@ export default function EmployeeAttendancePage() {
       console.error('Error loading attendance data:', error);
       toast.error('Failed to load attendance data');
     }
-  };
+  }, [employee]);
 
-  const generateMockAttendanceData = (): AttendanceCalendarView[] => {
-    const data: AttendanceCalendarView[] = [];
-    const year = parseInt(selectedYear);
-    const month = parseInt(selectedMonth);
-    const daysInMonth = new Date(year, month, 0).getDate();
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = `${year}-${selectedMonth.padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-      const dayOfWeek = new Date(year, month - 1, day).getDay();
-      
-      // Skip Sundays for mock data
-      if (dayOfWeek === 0) {
-        continue;
-      }
-
-      // Generate random attendance status
-      const statuses: Attendance['status'][] = ['PRESENT', 'ABSENT', 'LATE', 'HALF_DAY', 'LEAVE_APPROVED'];
-      const status = statuses[Math.floor(Math.random() * statuses.length)];
-      
-      data.push({
-        date,
-        status,
-        checkInTime: status !== 'ABSENT' ? '09:00:00' : undefined,
-        checkOutTime: status === 'PRESENT' ? '18:00:00' : status === 'HALF_DAY' ? '13:00:00' : undefined,
-        hoursWorked: status === 'PRESENT' ? 8 : status === 'HALF_DAY' ? 4 : 0,
-        remarks: status === 'LATE' ? 'Late arrival' : status === 'LEAVE_APPROVED' ? 'Approved leave' : undefined
-      });
-    }
-
-    return data;
-  };
-
-  const generateMockSummary = (): AttendanceSummary => {
-    return {
-      employeeId: employee?.id || 0,
-      month: selectedMonth,
-      year: selectedYear,
-      totalWorkingDays: 22,
-      presentDays: 18,
-      absentDays: 2,
-      halfDays: 1,
-      lateDays: 1,
-      leaveDays: 2,
-      totalHoursWorked: 156,
-      averageHoursPerDay: 7.8,
-      attendancePercentage: 81.8
-    };
-  };
 
   const generateMonthOptions = () => {
     const months = [];

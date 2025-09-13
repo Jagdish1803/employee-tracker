@@ -7,7 +7,7 @@ import { Issue } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog,
@@ -29,7 +29,6 @@ export default function IssuesPage() {
   // React Query hooks
   const {
     issues,
-    pendingIssues,
     isLoading,
     updateIssue,
     resolveIssue,
@@ -58,7 +57,7 @@ export default function IssuesPage() {
         });
       }
       closeDialog();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating issue:', error);
     }
   };
@@ -131,7 +130,7 @@ export default function IssuesPage() {
           </h1>
           <p className="text-muted-foreground mt-1">Review and respond to employee issues</p>
         </div>
-        <Select value={statusFilter || undefined} onValueChange={(value: any) => setStatusFilter(value)}>
+        <Select value={statusFilter || undefined} onValueChange={(value: 'all' | 'pending' | 'in_progress' | 'resolved') => setStatusFilter(value)}>
           <SelectTrigger className="w-auto">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
@@ -296,7 +295,7 @@ export default function IssuesPage() {
               
               <div className="grid gap-2">
                 <Label htmlFor="status">Status</Label>
-                <Select value={newStatus || undefined} onValueChange={(value: any) => setNewStatus(value)}>
+                <Select value={newStatus || undefined} onValueChange={(value: 'pending' | 'in_progress' | 'resolved') => setNewStatus(value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>

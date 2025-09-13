@@ -2,7 +2,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma, connectDB, ensureConnection } from '@/lib/prisma';
 import { employeeQuerySchema } from '@/lib/validations';
-import { z } from 'zod';
 
 // GET /api/logs/by-date - Get logs by specific date and employee
 export async function GET(request: NextRequest) {

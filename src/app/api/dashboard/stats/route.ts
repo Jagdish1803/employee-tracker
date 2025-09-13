@@ -1,10 +1,11 @@
 // src/app/api/dashboard/stats/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma, ensureConnection } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { getCurrentISTDate } from '@/lib/utils';
 
 // GET /api/dashboard/stats - Get dashboard statistics
-export async function GET(request: NextRequest) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function GET(_request: NextRequest) {
   try {
     await prisma.$connect();
 

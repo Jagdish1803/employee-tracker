@@ -1,11 +1,11 @@
 // src/app/admin/missing-data/page.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import { AlertTriangle, Calendar, Users, Download, FileX } from 'lucide-react';
 import { employeeService, logService } from '@/api';
-import { Employee, Log } from '@/types';
+import { Employee } from '@/types';
 import { getCurrentISTDate, getWorkingDaysBetween, formatDate } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,7 +40,7 @@ export default function MissingDataPage() {
     if (employees.length > 0) {
       analyzeMissingData();
     }
-  }, [employees, dateFrom, dateTo]);
+  }, [employees, dateFrom, dateTo, analyzeMissingData]);
 
   const loadEmployees = async () => {
     try {
@@ -56,9 +56,9 @@ export default function MissingDataPage() {
     }
   };
 
-  const analyzeMissingData = async () => {
+  const analyzeMissingData = useCallback(async () => {
     if (!dateFrom || !dateTo || employees.length === 0) return;
-    
+
     setAnalyzing(true);
     try {
       // Get all logs for the date range
@@ -69,20 +69,20 @@ export default function MissingDataPage() {
 
       const logs = logsResponse.data.success ? logsResponse.data.data || [] : [];
       const workingDays = getWorkingDaysBetween(dateFrom, dateTo);
-      
+
       // Analyze missing data for each employee
       const missingDataAnalysis: MissingDataRecord[] = employees.map(employee => {
         // Get all dates this employee submitted data
         const employeeLogs = logs.filter(log => log.employeeId === employee.id);
-        const submittedDates = [...new Set(employeeLogs.map(log => 
+        const submittedDates = [...new Set(employeeLogs.map(log =>
           new Date(log.logDate).toISOString().split('T')[0]
         ))];
-        
+
         // Find missing working days
         const missingDates = workingDays.filter(date => !submittedDates.includes(date));
-        
+
         const totalMissing = missingDates.length;
-        const completionRate = workingDays.length > 0 
+        const completionRate = workingDays.length > 0
           ? Math.round(((workingDays.length - totalMissing) / workingDays.length) * 100)
           : 100;
 
@@ -104,7 +104,7 @@ export default function MissingDataPage() {
     } finally {
       setAnalyzing(false);
     }
-  };
+  }, [dateFrom, dateTo, employees]);
 
   const exportToCSV = () => {
     const csvHeaders = [

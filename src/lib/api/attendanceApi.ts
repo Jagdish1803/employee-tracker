@@ -26,9 +26,9 @@ export const attendanceApi = {
     try {
       const response = await attendanceService.uploadSrpFile(formData);
       return response;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Upload error:', error);
-      throw new Error(error.response?.data?.message || error.message || 'Failed to upload file');
+      throw new Error((error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message || (error as { message?: string })?.message || 'Failed to upload file');
     }
   },
 
@@ -38,7 +38,7 @@ export const attendanceApi = {
       console.log('Fetching attendance with filters:', filters);
 
       // Use the unified endpoint that queries both tables
-      const response: any = await attendanceService.getAll(filters);
+      const response: Record<string, unknown> = await attendanceService.getAll(filters);
       
       // Handle the response structure
       if (response && response.success) {
@@ -52,7 +52,7 @@ export const attendanceApi = {
         console.log('Unexpected response format, returning empty array');
         return [];
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error in getAllAttendance:', error);
       // Return empty array to prevent crashes
       return [];
@@ -63,7 +63,7 @@ export const attendanceApi = {
   getUploadHistory: async (): Promise<UploadHistory[]> => {
     try {
       console.log('Fetching upload history...');
-      const response: any = await attendanceService.getUploadHistory();
+      const response: Record<string, unknown> = await attendanceService.getUploadHistory();
       
       // Handle the response structure
       if (response && response.success) {
@@ -77,7 +77,7 @@ export const attendanceApi = {
         console.log('Unexpected response format, returning empty array');
         return [];
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching upload history:', error);
       // Return empty array instead of throwing
       return [];
@@ -89,9 +89,9 @@ export const attendanceApi = {
     try {
       const response = await attendanceService.updateRecord(id, data);
       return response;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Update error:', error);
-      throw new Error(error.response?.data?.message || 'Failed to update attendance record');
+      throw new Error((error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to update attendance record');
     }
   },
 
@@ -100,9 +100,9 @@ export const attendanceApi = {
     try {
       const response = await attendanceService.deleteRecord(id);
       return response;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Delete error:', error);
-      throw new Error(error.response?.data?.message || 'Failed to delete attendance record');
+      throw new Error((error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to delete attendance record');
     }
   },
 
@@ -111,9 +111,9 @@ export const attendanceApi = {
     try {
       const response = await attendanceService.deleteUploadHistory(id);
       return response;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Delete upload history error:', error);
-      throw new Error(error.response?.data?.message || 'Failed to delete upload history');
+      throw new Error((error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to delete upload history');
     }
   },
 
@@ -122,24 +122,24 @@ export const attendanceApi = {
     try {
       const response = await attendanceService.deleteBatch(batchId);
       return response;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Delete batch error:', error);
-      throw new Error(error.response?.data?.message || 'Failed to delete batch');
+      throw new Error((error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to delete batch');
     }
   },
 
   // Get employee attendance (for employee view)
   getEmployeeAttendance: async (employeeId: number, month?: string, year?: string) => {
     try {
-      const params: any = {};
+      const params: Record<string, string> = {};
       if (month) params.month = month;
       if (year) params.year = year;
 
       const response = await attendanceService.getByEmployee(employeeId, params);
       return response;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching employee attendance:', error);
-      throw new Error(error.response?.data?.message || 'Failed to fetch employee attendance');
+      throw new Error((error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to fetch employee attendance');
     }
   },
 
@@ -148,9 +148,9 @@ export const attendanceApi = {
     try {
       const response = await attendanceService.getEmployeeCalendar(employeeId, month, year);
       return response;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching employee calendar:', error);
-      throw new Error(error.response?.data?.message || 'Failed to fetch employee calendar');
+      throw new Error((error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to fetch employee calendar');
     }
   },
 
@@ -159,9 +159,9 @@ export const attendanceApi = {
     try {
       const response = await attendanceService.getEmployeeSummary(employeeId, month, year);
       return response;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching employee summary:', error);
-      throw new Error(error.response?.data?.message || 'Failed to fetch employee summary');
+      throw new Error((error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to fetch employee summary');
     }
   },
 };

@@ -42,7 +42,7 @@ export async function PUT(
       );
     }
 
-    const updateData: any = { ...validatedData };
+    const updateData: Record<string, unknown> = { ...validatedData };
 
     // Set resolved date if status is being changed to resolved
     if (validatedData.issueStatus === 'resolved' && existingIssue.issueStatus !== 'resolved') {

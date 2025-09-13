@@ -1,8 +1,8 @@
 // src/app/admin/warnings/page.tsx
 'use client';
 import React, { useState } from 'react';
-import { AlertTriangle, Users, Calendar, Eye, EyeOff } from 'lucide-react';
-import { Warning, Employee } from '@/types';
+import { AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import { Warning } from '@/types';
 import { formatDate } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -39,7 +39,7 @@ export default function WarningsPage() {
 
     try {
       await dismissWarning(warningToDismiss.id);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error dismissing warning:', error);
     } finally {
       setWarningToDismiss(null);
@@ -128,7 +128,7 @@ export default function WarningsPage() {
             </div>
             <div className="grid gap-2">
               <label className="text-sm font-medium">Status</label>
-              <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
+              <Select value={statusFilter} onValueChange={(value: 'all' | 'active' | 'dismissed') => setStatusFilter(value)}>
                 <SelectTrigger className="w-auto">
                   <SelectValue />
                 </SelectTrigger>

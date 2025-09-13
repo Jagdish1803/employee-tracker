@@ -6,7 +6,7 @@ import { issueApi } from '@/lib/api-client';
 export const issueKeys = {
   all: ['issues'] as const,
   lists: () => [...issueKeys.all, 'list'] as const,
-  list: (filters: any) => [...issueKeys.lists(), filters] as const,
+  list: (filters: Record<string, unknown>) => [...issueKeys.lists(), filters] as const,
   details: () => [...issueKeys.all, 'detail'] as const,
   detail: (id: number) => [...issueKeys.details(), id] as const,
   pending: () => [...issueKeys.all, 'pending'] as const,
@@ -17,7 +17,7 @@ export const issueKeys = {
 };
 
 // Get issues with filters
-export function useIssues(filters: any = {}) {
+export function useIssues(filters: Record<string, unknown> = {}) {
   return useQuery({
     queryKey: issueKeys.list(filters),
     queryFn: () => issueApi.getAll(),
@@ -35,7 +35,7 @@ export function usePendingIssues() {
     queryFn: () => issueApi.getAll(),
     select: (response) => {
       const issues = response?.data?.data || [];
-      return issues.filter((issue: any) => issue.status === 'PENDING');
+      return issues.filter((issue: Record<string, unknown>) => issue.status === 'PENDING');
     },
     staleTime: 1 * 60 * 1000, // 1 minute for pending
     gcTime: 5 * 60 * 1000, // 5 minutes
@@ -51,7 +51,7 @@ export function useResolvedIssues() {
     queryFn: () => issueApi.getAll(),
     select: (response) => {
       const issues = response?.data?.data || [];
-      return issues.filter((issue: any) => issue.status === 'RESOLVED');
+      return issues.filter((issue: Record<string, unknown>) => issue.status === 'RESOLVED');
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 15 * 60 * 1000, // 15 minutes
@@ -66,7 +66,7 @@ export function useIssue(id: number) {
     queryFn: () => issueApi.getAll(),
     select: (response) => {
       const issues = response?.data?.data || [];
-      return issues.find((issue: any) => issue.id === id);
+      return issues.find((issue: Record<string, unknown>) => issue.id === id);
     },
     staleTime: 1 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
@@ -81,7 +81,7 @@ export function useEmployeeIssues(employeeId: number) {
     queryFn: () => issueApi.getAll(),
     select: (response) => {
       const issues = response?.data?.data || [];
-      return issues.filter((issue: any) => issue.employeeId === employeeId);
+      return issues.filter((issue: Record<string, unknown>) => issue.employeeId === employeeId);
     },
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
@@ -94,7 +94,7 @@ export function useCreateIssue() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: any) => issueApi.create(data),
+    mutationFn: (data: Record<string, unknown>) => issueApi.create(data),
     onSuccess: (newIssue, variables) => {
       toast.success('Issue created successfully');
       
@@ -121,7 +121,7 @@ export function useUpdateIssue() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) => 
+    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) => 
       issueApi.update(id, data),
     onSuccess: (updatedIssue, variables) => {
       toast.success('Issue updated successfully');
@@ -180,11 +180,13 @@ export function useDeleteIssue() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    mutationFn: (_id: number) => {
       // Since delete is not available, we'll just invalidate queries
       return Promise.resolve({ data: { success: true } });
     },
-    onSuccess: (_, deletedId) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    onSuccess: (_, _deletedId) => {
       toast.success('Issue delete not available - update status instead');
       
       // Invalidate lists
@@ -200,7 +202,7 @@ export function useDeleteIssue() {
 }
 
 // Combined hook for issue management
-export function useIssueManagement(defaultFilters: any = {}) {
+export function useIssueManagement(defaultFilters: Record<string, unknown> = {}) {
   const issuesQuery = useIssues(defaultFilters);
   const pendingIssuesQuery = usePendingIssues();
   const resolvedIssuesQuery = useResolvedIssues();

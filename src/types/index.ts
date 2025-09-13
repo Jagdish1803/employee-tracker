@@ -222,7 +222,7 @@ export interface ApiResponse<T> {
   data?: T;
   error?: string;
   message?: string;
-  details?: any;
+  details?: Record<string, unknown>;
 }
 
 // Dashboard Stats
@@ -425,8 +425,8 @@ export interface UploadHistory {
   uploadedAt: string;
   completedAt: string | null;
   batchId: string;
-  errors: any;
-  summary: any;
+  errors: Record<string, unknown>;
+  summary: Record<string, unknown>;
 }
 
 // Employee attendance types

@@ -1,6 +1,5 @@
 // src/hooks/useAttendanceManagement.ts
-import { useState, useEffect, useMemo } from 'react';
-import { toast } from 'react-hot-toast';
+import { useState, useMemo } from 'react';
 import {
   useAttendanceRecords,
   useUploadHistory,
@@ -10,7 +9,7 @@ import {
   useDeleteBatch,
   useUploadAttendanceFile
 } from './useAttendanceQuery';
-import type { AttendanceRecord, UploadHistory } from '@/types';
+import type { AttendanceRecord } from '@/types';
 
 export const useAttendanceManagement = () => {
   // Filter states
@@ -140,7 +139,7 @@ export const useAttendanceManagement = () => {
     });
   };
 
-  const handleFieldChange = (field: keyof AttendanceRecord, value: any) => {
+  const handleFieldChange = (field: keyof AttendanceRecord, value: unknown) => {
     setEditForm(prev => ({
       ...prev,
       [field]: value

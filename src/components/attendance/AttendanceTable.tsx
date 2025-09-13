@@ -23,7 +23,7 @@ interface AttendanceTableProps {
   editForm?: Partial<AttendanceRecord>;
   onSave?: () => void;
   onCancel?: () => void;
-  onFieldChange?: (field: string, value: any) => void;
+  onFieldChange?: (field: string, value: unknown) => void;
   saving?: boolean;
   deleting?: string | number | null;
 }

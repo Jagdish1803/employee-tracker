@@ -17,8 +17,6 @@ import {
   CalendarDays
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { toast } from 'react-hot-toast';
 
 interface AdminLayoutProps {
   children: React.ReactNode;

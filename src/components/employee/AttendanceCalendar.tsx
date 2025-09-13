@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Calendar, Clock, AlertTriangle, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'react-hot-toast';
@@ -60,7 +60,7 @@ export function AttendanceCalendar({ employeeId }: AttendanceCalendarProps) {
       const response = await attendanceService.getByEmployee(employeeId, { month, year });
 
       if (Array.isArray(response)) {
-        const records = response.map((record: any) => ({
+        const records = response.map((record: Record<string, unknown>) => ({
           ...record,
           hasException: record.hasException || false,
           hasTagWork: record.hasTagWork || false,

@@ -33,7 +33,7 @@ export async function PUT(
       }
 
       // Prepare update data for attendance table
-      const updateData: any = {};
+      const updateData: Record<string, unknown> = {};
       if (body.status) updateData.status = body.status;
       if (body.checkInTime !== undefined) {
         updateData.checkInTime = body.checkInTime ?
@@ -91,7 +91,7 @@ export async function PUT(
       }
 
       // Prepare update data for attendanceRecord table
-      const updateData: any = {};
+      const updateData: Record<string, unknown> = {};
       if (body.status) updateData.status = body.status;
       if (body.checkInTime !== undefined) {
         updateData.checkInTime = body.checkInTime ?
@@ -191,7 +191,7 @@ export async function DELETE(
       message: 'Attendance record deleted successfully'
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error deleting attendance record:', error);
 
     // Handle Prisma NotFoundError

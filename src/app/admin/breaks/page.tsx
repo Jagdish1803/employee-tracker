@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { Coffee, Clock, AlertTriangle, Users } from 'lucide-react';
-import { Break, Employee } from '@/types';
+import { Break } from '@/types';
 import { formatTime, getCurrentISTDate } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,7 +42,7 @@ export default function BreaksPage() {
     try {
       // Here you would call a warning creation API
       setBreakToWarn(null);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating warning:', error);
     }
   };

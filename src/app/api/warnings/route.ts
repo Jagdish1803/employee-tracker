@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
   await ensureConnection();
 
-    const where: any = {};
+    const where: Record<string, unknown> = {};
 
     if (validatedQuery.employeeId) {
       where.employeeId = validatedQuery.employeeId;

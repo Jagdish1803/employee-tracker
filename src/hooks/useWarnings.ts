@@ -6,7 +6,7 @@ import { warningApi } from '@/lib/api-client';
 export const warningKeys = {
   all: ['warnings'] as const,
   lists: () => [...warningKeys.all, 'list'] as const,
-  list: (filters: any) => [...warningKeys.lists(), filters] as const,
+  list: (filters: Record<string, unknown>) => [...warningKeys.lists(), filters] as const,
   details: () => [...warningKeys.all, 'detail'] as const,
   detail: (id: number) => [...warningKeys.details(), id] as const,
   active: () => [...warningKeys.all, 'active'] as const,
@@ -15,7 +15,7 @@ export const warningKeys = {
 };
 
 // Get all warnings with optional filters
-export function useWarnings(filters: any = {}) {
+export function useWarnings(filters: Record<string, unknown> = {}) {
   return useQuery({
     queryKey: warningKeys.list(filters),
     queryFn: () => warningApi.getAll(),
@@ -55,7 +55,7 @@ export function useCreateWarning() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: any) => warningApi.create(data),
+    mutationFn: (data: Record<string, unknown>) => warningApi.create(data),
     onSuccess: (newWarning, variables) => {
       toast.success('Warning created successfully');
       
@@ -89,7 +89,7 @@ export function useDismissWarning() {
       // Update specific warning in cache
       queryClient.setQueryData(
         warningKeys.detail(dismissedId),
-        (old: any) => old ? { ...old, isActive: false } : old
+        (old: Record<string, unknown>) => old ? { ...old, isActive: false } : old
       );
       
       // Invalidate lists
@@ -105,7 +105,7 @@ export function useDismissWarning() {
 }
 
 // Combined hook for warning management
-export function useWarningManagement(defaultFilters: any = {}) {
+export function useWarningManagement(defaultFilters: Record<string, unknown> = {}) {
   const warningsQuery = useWarnings(defaultFilters);
   const activeWarningsQuery = useActiveWarnings();
   const createMutation = useCreateWarning();

@@ -46,7 +46,7 @@ export default function IssuesPage() {
         setEmployee(emp);
         setIsLoggedIn(true);
         loadIssues(emp.id);
-      } catch (error) {
+      } catch {
         localStorage.removeItem('employee');
         setLoading(false);
       }
@@ -73,8 +73,8 @@ export default function IssuesPage() {
         toast.success('Login successful!');
         loadIssues(emp.id);
       }
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Login failed';
+    } catch (error: unknown) {
+      const errorMessage = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Login failed';
       toast.error(errorMessage);
     } finally {
       setLoggingIn(false);
@@ -129,8 +129,8 @@ export default function IssuesPage() {
         toast.success('Issue submitted successfully');
         loadIssues(employee.id); // Reload issues
       }
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Failed to submit issue';
+    } catch (error: unknown) {
+      const errorMessage = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Failed to submit issue';
       toast.error(errorMessage);
     } finally {
       setSubmitting(false);

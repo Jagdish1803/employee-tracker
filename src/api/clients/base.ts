@@ -1,5 +1,5 @@
 // src/api/clients/base.ts
-import axios, { AxiosResponse } from 'axios';
+import axios from 'axios';
 
 // Create axios instance with base configuration
 export const apiClient = axios.create({

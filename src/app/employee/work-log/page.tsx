@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { LogOut } from 'lucide-react';
-import { assignmentService, logService, employeeService } from '@/api';
+import { assignmentService, employeeService } from '@/api';
 import { Assignment, Employee } from '@/types';
 import { getCurrentISTDate } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -33,7 +33,7 @@ export default function WorkLogPage() {
         setEmployee(emp);
         setIsLoggedIn(true);
         loadAssignments(emp.id);
-      } catch (error) {
+      } catch {
         localStorage.removeItem('employee');
       }
     } else {
@@ -59,8 +59,8 @@ export default function WorkLogPage() {
         toast.success('Login successful!');
         loadAssignments(emp.id);
       }
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Login failed';
+    } catch (error: unknown) {
+      const errorMessage = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Login failed';
       toast.error(errorMessage);
     } finally {
       setLoggingIn(false);

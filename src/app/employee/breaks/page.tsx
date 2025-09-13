@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
-import { Coffee, Clock, AlertTriangle, LogOut, Calendar, Play, Pause } from 'lucide-react';
+import { Coffee, AlertTriangle, LogOut, Calendar, Play, Pause } from 'lucide-react';
 import { employeeService } from '@/api';
 import { Break, Employee } from '@/types';
 import { getCurrentISTDate, formatTime } from '@/lib/utils';
@@ -30,8 +30,7 @@ export default function BreaksPage() {
     breaks: breakHistory,
     isLoading: loading,
     breakIn,
-    breakOut,
-    refetch
+    breakOut
   } = useBreakManagement({ date: getCurrentISTDate() });
 
   // Get current active break for this employee
@@ -42,7 +41,7 @@ export default function BreaksPage() {
   // Calculate break summary
   const breakSummary = {
     totalBreaks: todayBreaks.length,
-    totalMinutes: todayBreaks.reduce((total: number, breakRecord: any) => {
+    totalMinutes: todayBreaks.reduce((total: number, breakRecord: Break) => {
       if (breakRecord.breakOutTime) {
         const duration = new Date(breakRecord.breakOutTime).getTime() - new Date(breakRecord.breakInTime).getTime();
         return total + Math.floor(duration / (1000 * 60));
@@ -50,13 +49,13 @@ export default function BreaksPage() {
       return total;
     }, 0),
     avgMinutes: todayBreaks.length > 0 ? Math.floor(
-      todayBreaks.reduce((total: number, breakRecord: any) => {
+      todayBreaks.reduce((total: number, breakRecord: Break) => {
         if (breakRecord.breakOutTime) {
           const duration = new Date(breakRecord.breakOutTime).getTime() - new Date(breakRecord.breakInTime).getTime();
           return total + Math.floor(duration / (1000 * 60));
         }
         return total;
-      }, 0) / todayBreaks.filter((breakRecord: any) => breakRecord.breakOutTime).length
+      }, 0) / todayBreaks.filter((breakRecord: Break) => breakRecord.breakOutTime).length
     ) : 0
   };
 
@@ -69,7 +68,7 @@ export default function BreaksPage() {
         setEmployee(emp);
         setIsLoggedIn(true);
         // React Query will automatically load data when employee is set
-      } catch (error) {
+      } catch {
         localStorage.removeItem('employee');
       }
     }
@@ -107,8 +106,8 @@ export default function BreaksPage() {
         toast.success('Login successful!');
         // React Query will automatically load data when employee is set
       }
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Login failed';
+    } catch (error: unknown) {
+      const errorMessage = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Login failed';
       toast.error(errorMessage);
     } finally {
       setLoggingIn(false);
@@ -133,8 +132,8 @@ export default function BreaksPage() {
       await breakIn({ employeeId: employee.id });
       toast.success('Break started');
       // React Query will automatically refetch and update data
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Failed to start break';
+    } catch (error: unknown) {
+      const errorMessage = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Failed to start break';
       toast.error(errorMessage);
     } finally {
       setActionLoading(false);
@@ -150,8 +149,8 @@ export default function BreaksPage() {
       setBreakDuration(0);
       toast.success('Break ended');
       // React Query will automatically refetch and update data
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Failed to end break';
+    } catch (error: unknown) {
+      const errorMessage = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Failed to end break';
       toast.error(errorMessage);
     } finally {
       setActionLoading(false);
@@ -159,6 +158,7 @@ export default function BreaksPage() {
   };
 
   const isExceeded = breakDuration > 20;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const totalBreakTime = todayBreaks.reduce((total, breakItem) => total + breakItem.breakDuration, 0);
 
   // Login form
@@ -300,7 +300,7 @@ export default function BreaksPage() {
           <CardHeader>
             <CardTitle className="flex items-center">
               <Calendar className="h-5 w-5 mr-2" />
-              Today's Break Summary
+              Today&apos;s Break Summary
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -326,7 +326,7 @@ export default function BreaksPage() {
         {/* Break History */}
         <Card>
           <CardHeader>
-            <CardTitle>Today's Break History</CardTitle>
+            <CardTitle>Today&apos;s Break History</CardTitle>
           </CardHeader>
           <CardContent>
             {breakHistory.length === 0 ? (
@@ -334,7 +334,7 @@ export default function BreaksPage() {
                 <Coffee className="mx-auto h-12 w-12 text-gray-400" />
                 <h3 className="mt-4 text-lg font-medium text-gray-900">No breaks today</h3>
                 <p className="mt-2 text-sm text-gray-600">
-                  Start your first break when you're ready.
+                  Start your first break when you&apos;re ready.
                 </p>
               </div>
             ) : (

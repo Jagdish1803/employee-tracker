@@ -9,7 +9,7 @@ import { Tag as TagType } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -45,7 +45,7 @@ export default function TagsPage() {
       } else {
         toast.error(response.data.error || 'Failed to load tags');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading tags:', error);
       const errorMessage = error.response?.data?.error || 'Failed to load tags';
       toast.error(errorMessage);
@@ -72,10 +72,10 @@ export default function TagsPage() {
           loadTags();
         }
       }
-      
+
       closeDialog();
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Operation failed';
+    } catch (error: unknown) {
+      const errorMessage = (error as { response?: { data?: { error?: string } } }).response?.data?.error || 'Operation failed';
       toast.error(errorMessage);
     } finally {
       setSubmitting(false);
@@ -103,8 +103,8 @@ export default function TagsPage() {
       await tagService.delete(tagToDelete.id);
       toast.success('Tag deleted successfully');
       loadTags();
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Failed to delete tag';
+    } catch (error: unknown) {
+      const errorMessage = (error as { response?: { data?: { error?: string } } }).response?.data?.error || 'Failed to delete tag';
       toast.error(errorMessage);
     } finally {
       setTagToDelete(null);

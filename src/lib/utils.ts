@@ -126,7 +126,7 @@ export function getErrorMessage(error: unknown): string {
 }
 
 // Local storage utilities (for client-side data persistence)
-export function setLocalStorage(key: string, value: any): void {
+export function setLocalStorage(key: string, value: unknown): void {
   if (typeof window !== 'undefined') {
     try {
       localStorage.setItem(key, JSON.stringify(value));
@@ -161,12 +161,12 @@ export function removeLocalStorage(key: string): void {
 }
 
 // Session management utilities
-export function saveEmployeeSession(employee: any): void {
+export function saveEmployeeSession(employee: Record<string, unknown>): void {
   setLocalStorage('employee', employee);
   setLocalStorage('lastLogin', new Date().toISOString());
 }
 
-export function getEmployeeSession(): any | null {
+export function getEmployeeSession(): Record<string, unknown> | null {
   return getLocalStorage('employee', null);
 }
 
@@ -324,7 +324,7 @@ export function createSearchParams(params: Record<string, string | number | bool
 }
 
 // Debounce utility for search inputs
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
@@ -337,7 +337,7 @@ export function debounce<T extends (...args: any[]) => any>(
 }
 
 // Throttle utility
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {

@@ -5,7 +5,8 @@ import { createEmployeeSchema } from '@/lib/validations';
 import { z } from 'zod';
 
 // GET /api/employees - Get all employees
-export async function GET(request: NextRequest) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function GET(_request: NextRequest) {
   try {
     await ensureConnection();
     

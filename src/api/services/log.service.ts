@@ -4,7 +4,7 @@ import { apiClient } from '../clients/base';
 export class LogService {
   private readonly basePath = '/logs';
 
-  async getByDate(employeeId: number, date: string): Promise<any> {
+  async getByDate(employeeId: number, date: string): Promise<unknown[]> {
     try {
       const response = await apiClient.get(`${this.basePath}/by-date`, {
         params: { employeeId, date }
@@ -16,7 +16,7 @@ export class LogService {
     }
   }
 
-  async getByDateRange(params: any): Promise<any> {
+  async getByDateRange(params: Record<string, unknown>): Promise<unknown[]> {
     try {
       const response = await apiClient.get(`${this.basePath}`, { params });
       return response.data || [];
@@ -26,7 +26,7 @@ export class LogService {
     }
   }
 
-  async submit(data: any): Promise<any> {
+  async submit(data: Record<string, unknown>): Promise<Record<string, unknown>> {
     try {
       const response = await apiClient.post(this.basePath, data);
       return response.data;
@@ -36,7 +36,7 @@ export class LogService {
     }
   }
 
-  async update(id: number, data: any): Promise<any> {
+  async update(id: number, data: Record<string, unknown>): Promise<Record<string, unknown>> {
     try {
       const response = await apiClient.put(`${this.basePath}/${id}`, data);
       return response.data;

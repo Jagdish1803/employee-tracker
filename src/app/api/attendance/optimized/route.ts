@@ -27,8 +27,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Build the raw SQL query
-    let whereConditions = [];
-    let queryParams: any[] = [];
+    const whereConditions = [];
+    const queryParams: unknown[] = [];
 
     // Add status filter
     if (status && status !== 'ALL') {
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
       ORDER BY date DESC, employeeName ASC
     `;
 
-    const records = await prisma.$queryRawUnsafe(query, ...queryParams) as any[];
+    const records = await prisma.$queryRawUnsafe(query, ...queryParams) as Record<string, unknown>[];
 
     // Transform the data to match the expected format
     const transformedRecords = records.map(record => ({
@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
       table: tableName
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Log the full error for debugging
     console.error('[Optimized API] Error:', error);
     // Return error response that the fallback can handle

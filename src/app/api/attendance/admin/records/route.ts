@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     console.log('Fetching attendance records with params:', { month, year, status });
 
     // Build where clause
-    let whereClause: any = {};
+    const whereClause: Record<string, unknown> = {};
 
     if (month && year) {
       const startDate = new Date(parseInt(year), parseInt(month) - 1, 1);

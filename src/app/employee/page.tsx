@@ -54,6 +54,7 @@ export default function EmployeeDashboard() {
       const today = getCurrentISTDate();
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const weekAgoString = weekAgo.toISOString().split('T')[0];
 
       // Load all dashboard data
@@ -192,7 +193,7 @@ export default function EmployeeDashboard() {
                   <CheckCircle className="h-6 w-6 text-green-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Today's Status</p>
+                  <p className="text-sm font-medium text-gray-600">Today&apos;s Status</p>
                   <p className="text-xl font-bold text-gray-900">
                     {todayStats.hasSubmitted ? 'Submitted' : 'Pending'}
                   </p>
@@ -208,7 +209,7 @@ export default function EmployeeDashboard() {
                   <Clock className="h-6 w-6 text-blue-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Today's Time</p>
+                  <p className="text-sm font-medium text-gray-600">Today&apos;s Time</p>
                   <p className="text-xl font-bold text-gray-900">{formatMinutesToHours(todayStats.totalMinutes)}</p>
                 </div>
               </div>
@@ -441,7 +442,7 @@ export default function EmployeeDashboard() {
                 onClick={() => router.push('/employee/work-log')}
                 className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-xl font-medium shadow-sm hover:shadow-md transition-all duration-200"
               >
-                Submit Today's Work Log
+                Submit Today&apos;s Work Log
               </Button>
             </CardContent>
           </Card>

@@ -13,12 +13,10 @@ import {
   User,
   Menu,
   X,
-  Bell,
   CalendarDays
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { toast } from 'react-hot-toast';
 
 interface EmployeeLayoutProps {
   children: React.ReactNode;
@@ -36,7 +34,7 @@ const navigation = [
 export default function EmployeeLayout({ children }: EmployeeLayoutProps) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [employee, setEmployee] = useState<any>(null);
+  const [employee, setEmployee] = useState<{ name: string; employeeCode: string; email: string } | null>(null);
 
   useEffect(() => {
     // Set demo employee data

@@ -91,7 +91,7 @@ function parseSrpFile(content: string, selectedDate?: string) {
       const serialNo = parts[0];
       let empCode = '';
       let cardNumber = '';
-      let employeeNameParts = [];
+      const employeeNameParts = [];
       let shift = '';
       let shiftStart = '';
       let timeAndHoursParts = [];
@@ -364,8 +364,8 @@ export async function POST(request: NextRequest) {
 
     const results = {
       processed: 0,
-      errors: [] as any[],
-      warnings: [] as any[],
+      errors: [] as unknown[],
+      warnings: [] as unknown[],
     };
 
     // Get all employees for code lookup
@@ -375,12 +375,11 @@ export async function POST(request: NextRequest) {
     const employeeMap = new Map(employees.map(emp => [emp.employeeCode, emp]));
 
     // Process each row with batch processing for better performance
-    const batchSize = 100;
     const attendanceRecords = [];
     const newEmployees = [];
     
     for (let i = 0; i < parseResult.data.length; i++) {
-      const row = parseResult.data[i] as any;
+      const row = parseResult.data[i] as Record<string, unknown>;
       const rowNumber = i + 1;
 
       try {
@@ -627,7 +626,7 @@ export async function POST(request: NextRequest) {
     // Batch create new employees if any
     if (newEmployees.length > 0) {
       console.log(`Creating ${newEmployees.length} new employees in batch...`);
-      const createdEmployees = await prisma.employee.createMany({
+      await prisma.employee.createMany({
         data: newEmployees,
         skipDuplicates: true
       });
@@ -688,7 +687,7 @@ export async function POST(request: NextRequest) {
                     shift: record.shift || null,
                     shiftStart: record.shiftStart || null,
                     remarks: record.remarks,
-                    source: record.source as any,
+                    source: record.source as 'SRP_FILE',
                     updatedAt: new Date()
                   },
                   create: {
@@ -703,7 +702,7 @@ export async function POST(request: NextRequest) {
                     shift: record.shift || null,
                     shiftStart: record.shiftStart || null,
                     remarks: record.remarks,
-                    source: record.source as any
+                    source: record.source as 'SRP_FILE'
                   }
                 });
 

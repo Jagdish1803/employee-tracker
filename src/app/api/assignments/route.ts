@@ -1,6 +1,6 @@
 // src/app/api/assignments/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma, ensureConnection } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { createAssignmentSchema, employeeQuerySchema } from '@/lib/validations';
 import { z } from 'zod';
 
@@ -16,14 +16,14 @@ export async function GET(request: NextRequest) {
     let validatedQuery;
     try {
       validatedQuery = employeeQuerySchema.parse(query);
-    } catch (validationError) {
+    } catch {
       console.log('Query validation failed, using empty filter');
       validatedQuery = {};
     }
 
     await prisma.$connect();
 
-    const where: any = {};
+    const where: Record<string, unknown> = {};
     if (validatedQuery.employeeId) {
       where.employeeId = validatedQuery.employeeId;
     }

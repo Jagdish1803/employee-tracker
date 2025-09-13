@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Calendar, BarChart3, Users, Clock } from 'lucide-react';
 import { logService, employeeService, tagService } from '@/api';
 import { Employee, Tag, Log } from '@/types';
@@ -8,12 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatMinutesToHours, getCurrentISTDate } from '@/lib/utils';
+import { getCurrentISTDate } from '@/lib/utils';
 
 export default function DailyChartPage() {
   const [selectedDate, setSelectedDate] = useState(getCurrentISTDate());
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [tags, setTags] = useState<Tag[]>([]);
+  const [, setTags] = useState<Tag[]>([]);
   const [logs, setLogs] = useState<Log[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -25,7 +25,7 @@ export default function DailyChartPage() {
     if (selectedDate) {
       loadDailyLogs();
     }
-  }, [selectedDate]);
+  }, [selectedDate, loadDailyLogs]);
 
   const loadInitialData = async () => {
     try {
@@ -52,7 +52,7 @@ export default function DailyChartPage() {
     }
   };
 
-  const loadDailyLogs = async () => {
+  const loadDailyLogs = useCallback(async () => {
     try {
       setLoading(true);
       const response = await logService.getByDateRange({
@@ -68,14 +68,16 @@ export default function DailyChartPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedDate]);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const getEmployeeLogData = (employeeId: number) => {
     const employeeLogs = logs.filter(log => log.employeeId === employeeId);
     const totalMinutes = employeeLogs.reduce((sum, log) => sum + log.totalMinutes, 0);
     return { logs: employeeLogs, totalMinutes };
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const getTagLogForEmployee = (employeeId: number, tagId: number) => {
     return logs.find(log => log.employeeId === employeeId && log.tagId === tagId);
   };

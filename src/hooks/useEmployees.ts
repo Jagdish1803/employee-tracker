@@ -1,7 +1,7 @@
 // src/hooks/useEmployees.ts
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { employeeService } from '@/api';
-import { Employee, CreateEmployeeRequest } from '@/types';
+import { CreateEmployeeRequest } from '@/types';
 import { toast } from 'react-hot-toast';
 
 export function useEmployees() {

@@ -1,12 +1,10 @@
 // src/api/services/attendance.service.ts
-import { AxiosResponse } from 'axios';
 import { apiClient } from '../clients/base';
-import { 
-  AttendanceRecord, 
+import {
+  AttendanceRecord,
   Attendance,
   AttendanceUploadRequest,
-  UploadHistory,
-  ApiResponse 
+  UploadHistory
 } from '@/types';
 
 interface AttendanceFilters {
@@ -128,7 +126,7 @@ export class AttendanceService {
   }
 
   // Get employee calendar
-  async getEmployeeCalendar(employeeId: number, month: string, year: string): Promise<any> {
+  async getEmployeeCalendar(employeeId: number, month: string, year: string): Promise<Record<string, unknown>> {
     try {
       const response = await apiClient.get(`${this.basePath}/employee/${employeeId}/calendar`, {
         params: { month, year }
@@ -146,7 +144,7 @@ export class AttendanceService {
   }
 
   // Get employee summary
-  async getEmployeeSummary(employeeId: number, month: string, year: string): Promise<any> {
+  async getEmployeeSummary(employeeId: number, month: string, year: string): Promise<Record<string, unknown>> {
     try {
       const response = await apiClient.get(`${this.basePath}/employee/${employeeId}/summary`, {
         params: { month, year }
@@ -164,7 +162,7 @@ export class AttendanceService {
   }
 
   // Upload SRP file
-  async uploadSrpFile(formData: FormData): Promise<any> {
+  async uploadSrpFile(formData: FormData): Promise<Record<string, unknown>> {
     try {
       const response = await apiClient.post(`${this.basePath}/upload`, formData, {
         headers: {
@@ -185,7 +183,7 @@ export class AttendanceService {
   }
 
   // Upload CSV file (legacy)
-  async uploadCSV(file: File): Promise<any> {
+  async uploadCSV(file: File): Promise<Record<string, unknown>> {
     try {
       const formData = new FormData();
       formData.append('file', file);
@@ -207,7 +205,7 @@ export class AttendanceService {
   }
 
   // Upload Flowace CSV file
-  async uploadFlowaceCSV(file: File): Promise<any> {
+  async uploadFlowaceCSV(file: File): Promise<Record<string, unknown>> {
     try {
       const formData = new FormData();
       formData.append('file', file);
@@ -251,7 +249,7 @@ export class AttendanceService {
   }
 
   // Delete upload history entry
-  async deleteUploadHistory(id: number): Promise<any> {
+  async deleteUploadHistory(id: number): Promise<void> {
     try {
       const response = await apiClient.delete(`${this.basePath}/upload-history`, { params: { id } });
 
@@ -267,7 +265,7 @@ export class AttendanceService {
   }
 
   // Delete entire batch/file
-  async deleteBatch(batchId: string): Promise<any> {
+  async deleteBatch(batchId: string): Promise<void> {
     try {
       const response = await apiClient.delete(`${this.basePath}/delete-batch`, { params: { batchId } });
 
@@ -283,7 +281,7 @@ export class AttendanceService {
   }
 
   // Update attendance record
-  async updateRecord(id: number, data: UpdateAttendanceData): Promise<any> {
+  async updateRecord(id: number, data: UpdateAttendanceData): Promise<AttendanceRecord> {
     try {
       const response = await apiClient.put(`${this.basePath}/record/${id}`, data);
 
@@ -299,7 +297,7 @@ export class AttendanceService {
   }
 
   // Delete attendance record
-  async deleteRecord(id: string | number): Promise<any> {
+  async deleteRecord(id: string | number): Promise<void> {
     try {
       const response = await apiClient.delete(`${this.basePath}/record/${id}`);
 
@@ -315,7 +313,7 @@ export class AttendanceService {
   }
 
   // Generic upload method
-  async upload(data: AttendanceUploadRequest): Promise<any> {
+  async upload(data: AttendanceUploadRequest): Promise<Record<string, unknown>> {
     try {
       const formData = new FormData();
       formData.append('file', data.file);
@@ -340,7 +338,7 @@ export class AttendanceService {
   }
 
   // Update attendance (legacy method)
-  async update(id: number, data: Partial<Attendance>): Promise<any> {
+  async update(id: number, data: Partial<Attendance>): Promise<AttendanceRecord> {
     try {
       const response = await apiClient.put(`${this.basePath}/${id}`, data);
 
@@ -356,7 +354,7 @@ export class AttendanceService {
   }
 
   // Delete attendance (legacy method)
-  async delete(id: number): Promise<any> {
+  async delete(id: number): Promise<void> {
     try {
       const response = await apiClient.delete(`${this.basePath}/${id}`);
 
@@ -383,4 +381,3 @@ export class AttendanceService {
 }
 
 export const attendanceService = new AttendanceService();
-  

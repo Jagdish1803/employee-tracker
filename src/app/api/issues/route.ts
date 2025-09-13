@@ -1,11 +1,12 @@
 // src/app/api/issues/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma, ensureConnection } from '@/lib/prisma';
-import { createIssueSchema, employeeQuerySchema } from '@/lib/validations';
+import { createIssueSchema } from '@/lib/validations';
 import { z } from 'zod';
 
 // GET /api/issues - Get issues with filters
-export async function GET(request: NextRequest) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function GET(_request: NextRequest) {
   try {
     await ensureConnection();
     const issues = await prisma.issue.findMany({

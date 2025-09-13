@@ -51,7 +51,7 @@ export default function AssignmentsPage() {
       if (tagsResponse.data.success) {
         setTags(tagsResponse.data.data || []);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading data:', error);
       toast.error('Failed to load data');
     } finally {
@@ -71,8 +71,8 @@ export default function AssignmentsPage() {
         loadData();
         closeDialog();
       }
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Failed to create assignments';
+    } catch (error: unknown) {
+      const errorMessage = (error as { response?: { data?: { error?: string } } }).response?.data?.error || 'Failed to create assignments';
       toast.error(errorMessage);
       console.error('Error creating assignments:', error);
     } finally {
@@ -92,8 +92,8 @@ export default function AssignmentsPage() {
       await assignmentService.delete(assignmentToDelete.id);
       toast.success('Assignment removed successfully');
       loadData();
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Failed to remove assignment';
+    } catch (error: unknown) {
+      const errorMessage = (error as { response?: { data?: { error?: string } } }).response?.data?.error || 'Failed to remove assignment';
       toast.error(errorMessage);
     } finally {
       setAssignmentToDelete(null);

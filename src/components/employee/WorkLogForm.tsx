@@ -59,7 +59,7 @@ export default function WorkLogForm({
     });
     setLogs(initialLogs);
     setHasChanges(false);
-  }, [assignments]);
+  }, [assignments, logs]);
 
   // Load existing data and submission status when date or employee changes
   useEffect(() => {
@@ -67,7 +67,7 @@ export default function WorkLogForm({
       loadExistingData();
       loadSubmissionStatus();
     }
-  }, [employeeId, selectedDate]);
+  }, [employeeId, selectedDate, loadExistingData, loadSubmissionStatus]);
 
   const loadExistingData = useCallback(async () => {
     try {
@@ -94,10 +94,10 @@ export default function WorkLogForm({
     try {
       // If your API does not return submissionStatus, set to null or handle as needed
       setSubmissionStatus(null);
-    } catch (error) {
+    } catch {
       setSubmissionStatus(null);
     }
-  }, [employeeId, selectedDate]);
+  }, []);
 
   const handleCountChange = useCallback((tagId: number, count: number) => {
     const newCount = Math.max(0, count);
@@ -149,8 +149,8 @@ export default function WorkLogForm({
       } else {
         toast.error(response.data.error || 'Failed to submit work log');
       }
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Failed to submit work log';
+    } catch (error: unknown) {
+      const errorMessage = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Failed to submit work log';
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -196,7 +196,7 @@ export default function WorkLogForm({
             <AlertTriangle className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-4 text-lg font-medium text-gray-900">No Tags Assigned</h3>
             <p className="mt-2 text-sm text-gray-600">
-              You don't have any work tags assigned. Please contact your administrator.
+              You don&apos;t have any work tags assigned. Please contact your administrator.
             </p>
           </div>
         ) : (
@@ -292,7 +292,7 @@ export default function WorkLogForm({
                         Missing Mandatory Tags
                       </h3>
                       <div className="mt-2 text-sm text-red-700">
-                        <p>You have not filled in some mandatory tags. Please complete all mandatory fields or contact your supervisor if you didn't work on these tasks.</p>
+                        <p>You have not filled in some mandatory tags. Please complete all mandatory fields or contact your supervisor if you didn&apos;t work on these tasks.</p>
                       </div>
                     </div>
                   </div>

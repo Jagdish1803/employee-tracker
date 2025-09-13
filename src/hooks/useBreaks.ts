@@ -6,7 +6,7 @@ import { breakApi } from '@/lib/api-client';
 export const breakKeys = {
   all: ['breaks'] as const,
   lists: () => [...breakKeys.all, 'list'] as const,
-  list: (filters: any) => [...breakKeys.lists(), filters] as const,
+  list: (filters: Record<string, unknown>) => [...breakKeys.lists(), filters] as const,
   details: () => [...breakKeys.all, 'detail'] as const,
   detail: (id: number) => [...breakKeys.details(), id] as const,
   active: () => [...breakKeys.all, 'active'] as const,
@@ -18,7 +18,7 @@ export const breakKeys = {
 };
 
 // Get breaks with filters
-export function useBreaks(filters: any = {}) {
+export function useBreaks(filters: Record<string, unknown> = {}) {
   return useQuery({
     queryKey: breakKeys.list(filters),
     queryFn: () => breakApi.getByDateRange(filters),
@@ -37,7 +37,7 @@ export function useActiveBreaks() {
     select: (response) => {
       const breaks = response?.data?.data || [];
       // Filter for active breaks (those without breakOutTime)
-      return breaks.filter((breakRecord: any) => !breakRecord.breakOutTime);
+      return breaks.filter((breakRecord: Record<string, unknown>) => !breakRecord.breakOutTime);
     },
     staleTime: 30 * 1000, // 30 seconds for active breaks
     gcTime: 2 * 60 * 1000, // 2 minutes
@@ -86,7 +86,7 @@ export function useBreakIn() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: any) => breakApi.breakIn(data),
+    mutationFn: (data: Record<string, unknown>) => breakApi.breakIn(data),
     onSuccess: () => {
       toast.success('Break started successfully');
       
@@ -107,7 +107,7 @@ export function useBreakOut() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: any) => breakApi.breakOut(data),
+    mutationFn: (data: Record<string, unknown>) => breakApi.breakOut(data),
     onSuccess: () => {
       toast.success('Break ended successfully');
       
@@ -130,7 +130,8 @@ export function useDeleteBreak() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => Promise.resolve({ data: { success: true } }),
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    mutationFn: (_id: number) => Promise.resolve({ data: { success: true } }),
     onSuccess: () => {
       toast.success('Break delete not available');
       
@@ -152,7 +153,7 @@ export function useBreakWarnings() {
     select: (response) => {
       const breaks = response?.data?.data || [];
       // Filter for breaks that might need warnings (long breaks)
-      return breaks.filter((breakRecord: any) => {
+      return breaks.filter((breakRecord: Record<string, unknown>) => {
         if (!breakRecord.breakOutTime) return false;
         const duration = new Date(breakRecord.breakOutTime).getTime() - new Date(breakRecord.breakInTime).getTime();
         const minutes = Math.floor(duration / (1000 * 60));
@@ -167,7 +168,7 @@ export function useBreakWarnings() {
 }
 
 // Combined hook for break management
-export function useBreakManagement(filters: any = {}) {
+export function useBreakManagement(filters: Record<string, unknown> = {}) {
   const breaksQuery = useBreaks(filters);
   const activeBreaksQuery = useActiveBreaks();
   const breakWarningsQuery = useBreakWarnings();
@@ -181,7 +182,7 @@ export function useBreakManagement(filters: any = {}) {
   
   // Filter for today's breaks if date is provided
   const todayBreaks = filters.date 
-    ? breaks.filter((breakRecord: any) => {
+    ? breaks.filter((breakRecord: Record<string, unknown>) => {
         const breakDate = new Date(breakRecord.breakInTime).toISOString().split('T')[0];
         return breakDate === filters.date;
       })

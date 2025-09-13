@@ -43,7 +43,7 @@ export async function GET(
     }
 
     // Build date filter with proper validation
-    let dateFilter: any = {};
+    let dateFilter: Record<string, unknown> = {};
     if (month && year) {
       const monthNum = parseInt(month);
       const yearNum = parseInt(year);

@@ -20,7 +20,7 @@ export async function GET(req: NextRequest, { params }: { params: { employeeId: 
       },
     });
     const totalBreaks = breaks.length;
-    const totalMinutes = breaks.reduce((sum: number, b: any) => {
+    const totalMinutes = breaks.reduce((sum: number, b: { breakOutTime?: Date | null; breakInTime?: Date | null }) => {
       if (b.breakOutTime && b.breakInTime) {
         return sum + Math.round((b.breakOutTime.getTime() - b.breakInTime.getTime()) / 60000);
       }

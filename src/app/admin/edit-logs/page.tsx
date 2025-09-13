@@ -1,7 +1,7 @@
 // src/app/admin/edit-logs/page.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import { Edit, Calendar, Users, Search, Save, AlertTriangle } from 'lucide-react';
 import { logService, employeeService, tagService } from '@/api';
@@ -39,7 +39,7 @@ export default function EditLogsPage() {
 
   useEffect(() => {
     loadLogs();
-  }, [selectedDate, employeeFilter]);
+  }, [selectedDate, employeeFilter, loadLogs]);
 
   const loadInitialData = async () => {
     try {
@@ -62,11 +62,11 @@ export default function EditLogsPage() {
     }
   };
 
-  const loadLogs = async () => {
+  const loadLogs = useCallback(async () => {
     try {
       setLoading(true);
-      
-      const filter: any = {
+
+      const filter: Record<string, unknown> = {
         dateFrom: selectedDate,
         dateTo: selectedDate,
       };
@@ -85,7 +85,7 @@ export default function EditLogsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedDate, employeeFilter]);
 
   const handleEditLog = (log: Log) => {
     setEditingLog(log);
@@ -109,8 +109,8 @@ export default function EditLogsPage() {
         loadLogs();
         closeDialog();
       }
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Failed to update log';
+    } catch (error: unknown) {
+      const errorMessage = (error as { response?: { data?: { error?: string } } }).response?.data?.error || 'Failed to update log';
       toast.error(errorMessage);
     } finally {
       setUpdating(false);
