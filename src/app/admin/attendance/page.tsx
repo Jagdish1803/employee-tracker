@@ -39,10 +39,7 @@ export default function AdminAttendancePage() {
   const [showCalendarDialog, setShowCalendarDialog] = useState(false);
   const [currentCalendarMonth, setCurrentCalendarMonth] = useState(new Date());
 
-  // Simplified available dates calculation without circular dependencies
-  const availableDatesFromRecords = useMemo(() => {
-    return [...new Set(filteredRecords.map(record => record.date))].sort();
-  }, [filteredRecords]);
+  // Removed memoized calculation to prevent circular dependencies
 
   // Calculate pagination
   const totalRecords = filteredRecords.length;
@@ -53,22 +50,19 @@ export default function AdminAttendancePage() {
 
   // Update available dates when records change, but avoid infinite loops
   useEffect(() => {
-    setAvailableDates(availableDatesFromRecords);
-  }, [availableDatesFromRecords]);
+    const newDates = [...new Set(filteredRecords.map(record => record.date))].sort();
+    setAvailableDates(newDates);
+  }, [filteredRecords.length]);
 
-  // Auto-select latest date when available dates change (but only if no specific date is selected)
-  useEffect(() => {
-    if (selectedDate === 'all' && availableDatesFromRecords.length > 0) {
-      const latestDate = availableDatesFromRecords[availableDatesFromRecords.length - 1];
-      if (latestDate !== selectedDate) {
-        setSelectedDate(latestDate);
-      }
-    }
-  }, [availableDatesFromRecords.length]);
+  // Removed auto-date selection to prevent infinite loops
 
-  // Filter records by selected date
+  // Filter records by selected date (compare only date part)
   const dateFilteredRecords = selectedDate && selectedDate !== 'all'
-    ? filteredRecords.filter(record => record.date === selectedDate)
+    ? filteredRecords.filter(record => {
+        // Extract only the date part from record.date
+        const recordDateString = record.date.split('T')[0];
+        return recordDateString === selectedDate;
+      })
     : filteredRecords;
 
   // Update pagination for date-filtered records
@@ -279,7 +273,7 @@ export default function AdminAttendancePage() {
                   {/* Status Filter */}
                   <div className="flex items-center space-x-2">
                     <Label htmlFor="filter-status" className="text-sm font-medium whitespace-nowrap">Status:</Label>
-                    <Select value={filterStatus} onValueChange={setFilterStatus}>
+                    <Select value={filterStatus || 'ALL'} onValueChange={setFilterStatus}>
                       <SelectTrigger className="w-32">
                         <SelectValue placeholder="Status" />
                       </SelectTrigger>
@@ -321,7 +315,7 @@ export default function AdminAttendancePage() {
                 </div>
 
                 {/* Date Browse Section */}
-                {availableDatesFromRecords.length > 0 && (
+                {availableDates.length > 0 && (
                   <div className="flex flex-wrap items-center gap-4 mt-4 pt-4 border-t">
                     <Label className="text-sm font-medium whitespace-nowrap">Browse by Date:</Label>
                     
@@ -337,13 +331,13 @@ export default function AdminAttendancePage() {
                         ←
                       </Button>
                       
-                      <Select value={selectedDate} onValueChange={handleDateChange}>
+                      <Select value={selectedDate || 'all'} onValueChange={handleDateChange}>
                         <SelectTrigger className="w-40">
                           <SelectValue placeholder="Select Date" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All Dates</SelectItem>
-                          {availableDatesFromRecords.map((date) => (
+                          {availableDates.map((date) => (
                             <SelectItem key={date} value={date}>
                               {new Date(date).toLocaleDateString('en-US', {
                                 weekday: 'short',
@@ -567,13 +561,9 @@ export default function AdminAttendancePage() {
                                 <Button variant="outline" size="sm" onClick={() => showUploadDetail(upload)}>
                                   <Eye className="h-4 w-4" />
                                 </Button>
-                                <Button variant="outline" size="sm" onClick={() => deleteUploadHistory(upload.id)}
+                                <Button variant="outline" size="sm" onClick={() => handleDeleteBatch(upload.batchId)}
                                         className="text-red-600 hover:text-red-700">
                                   <Trash2 className="h-4 w-4" />
-                                </Button>
-                                <Button variant="destructive" size="sm" onClick={() => handleDeleteBatch(upload.batchId)}
-                                        className="text-orange-600 hover:text-orange-700">
-                                  Delete History
                                 </Button>
                               </div>
                             </td>

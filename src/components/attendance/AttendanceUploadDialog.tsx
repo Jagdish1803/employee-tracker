@@ -52,7 +52,7 @@ export function AttendanceUploadDialog({
         console.warn('Reset function not available:', error);
       }
     }
-  }, [isOpen, uploadMutation]);
+  }, [isOpen]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

@@ -20,16 +20,19 @@ export const useAttendanceManagement = () => {
   const [editingRecord, setEditingRecord] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<Partial<AttendanceRecord>>({});
 
+  // Stabilize React Query parameters to prevent infinite loops
+  const queryParams = useMemo(() => ({
+    status: filterStatus === 'ALL' ? undefined : filterStatus,
+    search: searchTerm
+  }), [filterStatus, searchTerm]);
+
   // React Query hooks
   const {
     data: attendanceRecords = [],
     isLoading: loading,
     error: loadError,
     refetch: refetchAttendance
-  } = useAttendanceRecords({
-    status: filterStatus === 'ALL' ? undefined : filterStatus,
-    search: searchTerm
-  });
+  } = useAttendanceRecords(queryParams);
 
   const {
     data: uploadHistory = [],

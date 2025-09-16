@@ -87,10 +87,14 @@ export function AttendanceCalendar({ employeeId }: AttendanceCalendarProps) {
   }, [employeeId, currentDate]);
 
   const getAttendanceForDate = (date: Date) => {
-    const dateString = date.toISOString().split('T')[0];
-    return attendanceData.find(record => 
-      record.date.split('T')[0] === dateString
-    );
+    // Compare only the date part (YYYY-MM-DD), ignore time and timezone
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const dateString = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    return attendanceData.find(record => {
+      // Extract only the date part from record.date (handles ISO/UTC)
+      const recordDateString = record.date.split('T')[0];
+      return recordDateString === dateString;
+    });
   };
 
   const getDaysInMonth = () => {
