@@ -32,8 +32,10 @@ export default function EmployeeDashboard() {
     },
   });
 
-  // For demo purposes, using a fixed employee ID
-  const employeeId = 9;
+  // Employee code login state
+  const [employeeCode, setEmployeeCode] = useState('');
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [employeeId, setEmployeeId] = useState<number | null>(null);
 
   // Update current date/time every minute
   useEffect(() => {
@@ -44,9 +46,35 @@ export default function EmployeeDashboard() {
   }, []);
 
   useEffect(() => {
-    // Load dashboard data for demo employee
-    loadDashboardData(employeeId);
-  }, []);
+    if (loggedIn && employeeId) {
+      loadDashboardData(employeeId);
+    }
+  }, [loggedIn, employeeId]);
+  // Simulate employee code lookup (replace with real API call if available)
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // Example: lookup employeeId by code
+    // Replace with real API call if needed
+    if (!employeeCode.trim()) {
+      toast.error('Please enter your employee code');
+      return;
+    }
+    // Demo: hardcoded mapping
+    const codeMap: Record<string, number> = {
+      'EMP-001': 9,
+      'EMP-002': 10,
+      'EMP-003': 11,
+      // Add more codes as needed
+    };
+    const foundId = codeMap[employeeCode.trim().toUpperCase()];
+    if (foundId) {
+      setEmployeeId(foundId);
+      setLoggedIn(true);
+      toast.success('Login successful');
+    } else {
+      toast.error('Invalid employee code');
+    }
+  };
 
   const loadDashboardData = async (employeeId: number) => {
     try {
@@ -107,24 +135,30 @@ export default function EmployeeDashboard() {
     pendingIssues: dashboardData.recentIssues.filter(issue => issue.issueStatus === 'pending').length,
   };
 
-  if (loading) {
+  if (!loggedIn) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading dashboard...</p>
-        </div>
+        <form className="bg-white p-8 rounded-xl shadow-md w-full max-w-sm" onSubmit={handleLogin}>
+          <h2 className="text-2xl font-bold mb-4 text-center">Employee Login</h2>
+          <div className="mb-4">
+            <label htmlFor="employeeCode" className="block text-sm font-medium text-gray-700 mb-2">Employee Code</label>
+            <input
+              id="employeeCode"
+              type="text"
+              value={employeeCode}
+              onChange={e => setEmployeeCode(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300"
+              placeholder="Enter your code (e.g. EMP-001)"
+              autoFocus
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition"
+          >
+            Login
+          </button>
+        </form>
       </div>
     );
   }
