@@ -48,43 +48,43 @@ const statusLabels = {
 export function AttendanceCalendar({ employeeId }: AttendanceCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [attendanceData, setAttendanceData] = useState<AttendanceRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const loadAttendanceData = useCallback(async () => {
-    try {
-      setLoading(true);
-      
-      const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
-      const year = currentDate.getFullYear().toString();
-      
-      const response = await attendanceService.getByEmployee(employeeId, { month, year });
-
-      if (Array.isArray(response)) {
-        const records = (response as unknown as (AttendanceRecord & Record<string, unknown>)[]).map((record) => ({
-          ...record,
-          hasException: record.hasException || false,
-          hasTagWork: record.hasTagWork || false,
-          hasFlowaceWork: record.hasFlowaceWork || false,
-          tagWorkMinutes: record.tagWorkMinutes || 0,
-          flowaceMinutes: record.flowaceMinutes || 0,
-        }));
-        setAttendanceData(records);
-      } else {
-        setAttendanceData([]);
-        toast.error('Failed to load attendance data');
-      }
-    } catch (error) {
-      console.error('Error loading attendance:', error);
-      setAttendanceData([]);
-      toast.error('Failed to load attendance data');
-    } finally {
-      setLoading(false);
-    }
-  }, [employeeId, currentDate]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    const loadAttendanceData = async () => {
+      try {
+        setLoading(true);
+
+        const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+        const year = currentDate.getFullYear().toString();
+
+        const response = await attendanceService.getByEmployee(employeeId, { month, year });
+
+        if (Array.isArray(response)) {
+          const records = (response as unknown as (AttendanceRecord & Record<string, unknown>)[]).map((record) => ({
+            ...record,
+            hasException: record.hasException || false,
+            hasTagWork: record.hasTagWork || false,
+            hasFlowaceWork: record.hasFlowaceWork || false,
+            tagWorkMinutes: record.tagWorkMinutes || 0,
+            flowaceMinutes: record.flowaceMinutes || 0,
+          }));
+          setAttendanceData(records);
+        } else {
+          setAttendanceData([]);
+          toast.error('Failed to load attendance data');
+        }
+      } catch (error) {
+        console.error('Error loading attendance:', error);
+        setAttendanceData([]);
+        toast.error('Failed to load attendance data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadAttendanceData();
-  }, [loadAttendanceData]);
+  }, [employeeId, currentDate]);
 
   const getAttendanceForDate = (date: Date) => {
     const dateString = date.toISOString().split('T')[0];
@@ -134,15 +134,6 @@ export function AttendanceCalendar({ employeeId }: AttendanceCalendarProps) {
     year: 'numeric' 
   });
 
-  if (loading) {
-    return (
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
@@ -150,6 +141,9 @@ export function AttendanceCalendar({ employeeId }: AttendanceCalendarProps) {
         <div className="flex items-center">
           <Calendar className="h-5 w-5 text-blue-500 mr-2" />
           <h3 className="text-lg font-semibold">Attendance Calendar</h3>
+          {loading && (
+            <div className="ml-3 animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <Button
