@@ -39,12 +39,12 @@ export function useAttendanceRecords(params?: {
         return [];
       }
     },
-    staleTime: 30 * 1000, // 30 seconds - data stays fresh for 30s
-    gcTime: 5 * 60 * 1000, // 5 minutes - keep in cache for 5 minutes
-    refetchOnWindowFocus: true, // Refetch when user returns to tab
-    refetchOnReconnect: true, // Refetch when network reconnects
-    refetchInterval: 60 * 1000, // Background refetch every minute
-    refetchIntervalInBackground: false, // Only when tab is active
+    staleTime: 5 * 60 * 1000, // 5 minutes - data stays fresh longer
+    gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache longer
+    refetchOnWindowFocus: false, // Disable automatic refetching
+    refetchOnReconnect: false, // Disable automatic refetching
+    refetchInterval: false, // Disable background refetch
+    refetchIntervalInBackground: false,
     retry: (failureCount, error) => {
       // Only retry on network errors, not on data errors
       if (failureCount < 2 && error.message.includes('network')) {
@@ -72,10 +72,10 @@ export function useUploadHistory() {
         return [];
       }
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes - upload history changes less frequently
+    staleTime: 5 * 60 * 1000, // 5 minutes - upload history changes less frequently
     gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     retry: 2,
   });
 }

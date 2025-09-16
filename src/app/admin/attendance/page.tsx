@@ -39,13 +39,10 @@ export default function AdminAttendancePage() {
   const [showCalendarDialog, setShowCalendarDialog] = useState(false);
   const [currentCalendarMonth, setCurrentCalendarMonth] = useState(new Date());
 
-  // Memoize filtered records to prevent unnecessary recalculations
-  const memoizedFilteredRecords = useMemo(() => filteredRecords, [filteredRecords]);
-
-  // Memoize available dates calculation
+  // Simplified available dates calculation without circular dependencies
   const availableDatesFromRecords = useMemo(() => {
-    return [...new Set(memoizedFilteredRecords.map(record => record.date))].sort();
-  }, [memoizedFilteredRecords]);
+    return [...new Set(filteredRecords.map(record => record.date))].sort();
+  }, [filteredRecords]);
 
   // Calculate pagination
   const totalRecords = filteredRecords.length;
@@ -62,9 +59,12 @@ export default function AdminAttendancePage() {
   // Auto-select latest date when available dates change (but only if no specific date is selected)
   useEffect(() => {
     if (selectedDate === 'all' && availableDatesFromRecords.length > 0) {
-      setSelectedDate(availableDatesFromRecords[availableDatesFromRecords.length - 1]);
+      const latestDate = availableDatesFromRecords[availableDatesFromRecords.length - 1];
+      if (latestDate !== selectedDate) {
+        setSelectedDate(latestDate);
+      }
     }
-  }, [availableDatesFromRecords.length, selectedDate]);
+  }, [availableDatesFromRecords.length]);
 
   // Filter records by selected date
   const dateFilteredRecords = selectedDate && selectedDate !== 'all'
@@ -146,10 +146,6 @@ export default function AdminAttendancePage() {
     return date.toISOString().split('T')[0];
   };
 
-  const isDateAvailable = useCallback((date: Date) => {
-    const dateStr = formatDateForComparison(date);
-    return availableDates.includes(dateStr);
-  }, [availableDates]);
 
   const navigateMonth = (direction: 'prev' | 'next') => {
     setCurrentCalendarMonth(prev => {
@@ -166,12 +162,12 @@ export default function AdminAttendancePage() {
   const selectCalendarDate = useCallback((day: number) => {
     const selectedDateObj = new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth(), day);
     const dateStr = formatDateForComparison(selectedDateObj);
-    if (isDateAvailable(selectedDateObj)) {
+    if (availableDates.includes(dateStr)) {
       setSelectedDate(dateStr);
       setCurrentPage(1);
       setShowCalendarDialog(false);
     }
-  }, [currentCalendarMonth, isDateAvailable]);
+  }, [currentCalendarMonth, availableDates]);
 
   // Generate calendar days - memoized for performance
   const calendarDays = useMemo(() => {
@@ -188,7 +184,7 @@ export default function AdminAttendancePage() {
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth(), day);
       const dateStr = formatDateForComparison(date);
-      const isAvailable = isDateAvailable(date);
+      const isAvailable = availableDates.includes(dateStr);
       const isSelected = selectedDate === dateStr;
       const isToday = formatDateForComparison(new Date()) === dateStr;
 
@@ -212,7 +208,7 @@ export default function AdminAttendancePage() {
     }
 
     return days;
-  }, [currentCalendarMonth, selectedDate, isDateAvailable, selectCalendarDate]);
+  }, [currentCalendarMonth, selectedDate, availableDates, selectCalendarDate]);
 
   // Optimized date change handler
   const handleDateChange = useCallback((newDate: string) => {
@@ -386,7 +382,7 @@ export default function AdminAttendancePage() {
                     {selectedDate && selectedDate !== 'all' && (
                       <div className="flex items-center space-x-2 text-sm text-gray-600">
                         <span>•</span>
-                        <span>{memoizedFilteredRecords.filter(r => r.date === selectedDate).length} records on this date</span>
+                        <span>{filteredRecords.filter(r => r.date === selectedDate).length} records on this date</span>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -677,7 +673,7 @@ export default function AdminAttendancePage() {
                 setShowCalendarDialog(false);
               }}
             >
-              All Dates ({memoizedFilteredRecords.length})
+              All Dates ({filteredRecords.length})
             </Button>
             
             <div className="border-t pt-2">
