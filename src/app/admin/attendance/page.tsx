@@ -283,7 +283,7 @@ export default function AdminAttendancePage() {
                   {/* Status Filter */}
                   <div className="flex items-center space-x-2">
                     <Label htmlFor="filter-status" className="text-sm font-medium whitespace-nowrap">Status:</Label>
-                    <Select value={filterStatus || undefined} onValueChange={setFilterStatus}>
+                    <Select value={filterStatus} onValueChange={setFilterStatus}>
                       <SelectTrigger className="w-32">
                         <SelectValue placeholder="Status" />
                       </SelectTrigger>
@@ -341,7 +341,7 @@ export default function AdminAttendancePage() {
                         ←
                       </Button>
                       
-                      <Select value={selectedDate || undefined} onValueChange={handleDateChange}>
+                      <Select value={selectedDate} onValueChange={handleDateChange}>
                         <SelectTrigger className="w-40">
                           <SelectValue placeholder="Select Date" />
                         </SelectTrigger>
