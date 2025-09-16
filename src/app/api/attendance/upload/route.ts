@@ -388,13 +388,13 @@ export async function POST(request: NextRequest) {
         // For SRP files, we have a different structure
         if (file.name.endsWith('.srp')) {
           // Find or create employee
-          let employee = employeeMap.get(row.employeeCode);
+          let employee = employeeMap.get(String(row.employeeCode));
           if (!employee) {
             // Prepare new employee for batch creation
             const newEmployee = {
-              employeeCode: row.employeeCode,
-              name: row.employeeName || row.employeeCode,
-              email: `${row.employeeCode.toLowerCase()}@company.com`,
+              employeeCode: String(row.employeeCode),
+              name: String(row.employeeName || row.employeeCode),
+              email: `${String(row.employeeCode).toLowerCase()}@company.com`,
               department: 'General',
               designation: 'Employee',
               isActive: true
@@ -402,16 +402,16 @@ export async function POST(request: NextRequest) {
             newEmployees.push(newEmployee);
             
             // Temporarily add to map for processing
-            employee = { 
+            employee = {
               id: -newEmployees.length, // Temporary ID
-              employeeCode: row.employeeCode, 
-              name: row.employeeName || row.employeeCode 
+              employeeCode: String(row.employeeCode),
+              name: String(row.employeeName || row.employeeCode)
             };
-            employeeMap.set(row.employeeCode, employee);
+            employeeMap.set(String(row.employeeCode), employee);
           }
 
           // Validate and parse date
-          const date = validateDate(row.date);
+          const date = validateDate(String(row.date));
           if (!date) {
             results.errors.push({
               row: rowNumber,
@@ -422,21 +422,21 @@ export async function POST(request: NextRequest) {
           }
 
           // Parse times if provided
-          const checkInTime = row.checkInTime ? 
-            validateTime(row.checkInTime, row.date) : null;
-          const checkOutTime = row.checkOutTime ? 
-            validateTime(row.checkOutTime, row.date) : null;
+          const checkInTime = row.checkInTime ?
+            validateTime(String(row.checkInTime), String(row.date)) : null;
+          const checkOutTime = row.checkOutTime ?
+            validateTime(String(row.checkOutTime), String(row.date)) : null;
 
           // Calculate hours worked
           let hoursWorked = 0;
-          if (row.hoursWorked && !isNaN(parseFloat(row.hoursWorked))) {
-            hoursWorked = parseFloat(row.hoursWorked);
+          if (row.hoursWorked && !isNaN(parseFloat(String(row.hoursWorked)))) {
+            hoursWorked = parseFloat(String(row.hoursWorked));
           } else if (checkInTime && checkOutTime) {
             hoursWorked = (checkOutTime.getTime() - checkInTime.getTime()) / (1000 * 60 * 60);
           }
 
           // Determine final attendance status with improved smart defaults
-          let attendanceStatus = row.status;
+          let attendanceStatus = String(row.status);
 
           // If status is clear, use it
           if (['PRESENT', 'ABSENT', 'LEAVE_APPROVED', 'WFH_APPROVED', 'LATE', 'HALF_DAY'].includes(attendanceStatus)) {
@@ -463,15 +463,15 @@ export async function POST(request: NextRequest) {
 
           // Prepare attendance record for batch processing
           attendanceRecords.push({
-            employeeCode: row.employeeCode,
+            employeeCode: String(row.employeeCode),
             attendanceDate: date,
             status: attendanceStatus,
             checkInTime,
             checkOutTime,
-            lunchOutTime: row.lunchOutTime ? 
-              validateTime(row.lunchOutTime, row.date) : null,
-            lunchInTime: row.lunchInTime ? 
-              validateTime(row.lunchInTime, row.date) : null,
+            lunchOutTime: row.lunchOutTime ?
+              validateTime(String(row.lunchOutTime), String(row.date)) : null,
+            lunchInTime: row.lunchInTime ?
+              validateTime(String(row.lunchInTime), String(row.date)) : null,
             hoursWorked,
             shift: row.shift || '',
             shiftStart: row.shiftStart || '',
@@ -678,30 +678,30 @@ export async function POST(request: NextRequest) {
                     }
                   },
                   update: {
-                    status: record.status,
+                    status: record.status as 'PRESENT' | 'ABSENT' | 'LEAVE_APPROVED' | 'WFH_APPROVED' | 'LATE' | 'HALF_DAY',
                     checkInTime: record.checkInTime,
                     checkOutTime: record.checkOutTime,
                     lunchOutTime: record.lunchOutTime,
                     lunchInTime: record.lunchInTime,
                     hoursWorked: record.hoursWorked,
-                    shift: record.shift || null,
-                    shiftStart: record.shiftStart || null,
-                    remarks: record.remarks,
+                    shift: record.shift ? String(record.shift) : null,
+                    shiftStart: record.shiftStart ? String(record.shiftStart) : null,
+                    remarks: record.remarks ? String(record.remarks) : null,
                     source: record.source as 'SRP_FILE',
                     updatedAt: new Date()
                   },
                   create: {
                     employeeId: employee.id,
                     attendanceDate: record.attendanceDate,
-                    status: record.status,
+                    status: record.status as 'PRESENT' | 'ABSENT' | 'LEAVE_APPROVED' | 'WFH_APPROVED' | 'LATE' | 'HALF_DAY',
                     checkInTime: record.checkInTime,
                     checkOutTime: record.checkOutTime,
                     lunchOutTime: record.lunchOutTime,
                     lunchInTime: record.lunchInTime,
                     hoursWorked: record.hoursWorked,
-                    shift: record.shift || null,
-                    shiftStart: record.shiftStart || null,
-                    remarks: record.remarks,
+                    shift: record.shift ? String(record.shift) : null,
+                    shiftStart: record.shiftStart ? String(record.shiftStart) : null,
+                    remarks: record.remarks ? String(record.remarks) : null,
                     source: record.source as 'SRP_FILE'
                   }
                 });
@@ -752,7 +752,7 @@ export async function POST(request: NextRequest) {
         status: results.errors.length === 0 ? 'COMPLETED' : 'PARTIALLY_COMPLETED',
         processedRecords: results.processed,
         errorRecords: results.errors.length,
-        errors: results.errors,
+        errors: JSON.parse(JSON.stringify(results.errors)),
         summary: {
           totalRows: parseResult.data.length,
           processed: results.processed,
@@ -775,7 +775,7 @@ export async function POST(request: NextRequest) {
         processedRecords: results.processed,
         errorRecords: results.errors.length,
         completedAt: new Date(),
-        errors: results.errors.length > 0 ? results.errors : undefined,
+        errors: results.errors.length > 0 ? JSON.parse(JSON.stringify(results.errors)) : undefined,
         summary: {
           fileName: file.name,
           uploadDate: new Date().toISOString(),
@@ -796,7 +796,7 @@ export async function POST(request: NextRequest) {
         processedRecords: results.processed,
         errorRecords: results.errors.length,
         warningsCount: results.warnings.length,
-        errors: results.errors,
+        errors: JSON.parse(JSON.stringify(results.errors)),
         warnings: results.warnings,
       },
       message: `Successfully processed ${results.processed} out of ${parseResult.data.length} records`,

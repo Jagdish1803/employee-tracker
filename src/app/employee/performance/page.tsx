@@ -27,6 +27,35 @@ export default function PerformancePage() {
   const [useCustomRange, setUseCustomRange] = useState(false);
   const router = useRouter();
 
+  const loadPerformanceData = useCallback(async (employeeId: number) => {
+    try {
+      setLoading(true);
+
+      let dateFrom, dateTo;
+      if (useCustomRange && customDateFrom && customDateTo) {
+        dateFrom = customDateFrom;
+        dateTo = customDateTo;
+      } else {
+        const range = getDateRange(dateRange);
+        dateFrom = range.start;
+        dateTo = range.end;
+      }
+
+      const response = await logService.getByDateRange({
+        employeeId,
+        dateFrom,
+        dateTo,
+      });
+
+      setLogs(Array.isArray(response) ? response as Log[] : []);
+    } catch (error) {
+      console.error('Error loading performance data:', error);
+      toast.error('Failed to load performance data');
+    } finally {
+      setLoading(false);
+    }
+  }, [dateRange, useCustomRange, customDateFrom, customDateTo]);
+
   useEffect(() => {
     // Check if employee is already logged in
     const savedEmployee = localStorage.getItem('employee');
@@ -85,37 +114,6 @@ export default function PerformancePage() {
     localStorage.removeItem('employee');
     toast.success('Logged out successfully');
   };
-
-  const loadPerformanceData = useCallback(async (employeeId: number) => {
-    try {
-      setLoading(true);
-
-      let dateFrom, dateTo;
-      if (useCustomRange && customDateFrom && customDateTo) {
-        dateFrom = customDateFrom;
-        dateTo = customDateTo;
-      } else {
-        const range = getDateRange(dateRange);
-        dateFrom = range.start;
-        dateTo = range.end;
-      }
-
-      const response = await logService.getByDateRange({
-        employeeId,
-        dateFrom,
-        dateTo,
-      });
-
-      if (response.data.success) {
-        setLogs(response.data.data || []);
-      }
-    } catch (error) {
-      console.error('Error loading performance data:', error);
-      toast.error('Failed to load performance data');
-    } finally {
-      setLoading(false);
-    }
-  }, [dateRange, useCustomRange, customDateFrom, customDateTo]);
 
   // Calculate performance metrics
   const performanceMetrics = React.useMemo(() => {

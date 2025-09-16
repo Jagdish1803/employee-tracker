@@ -70,17 +70,17 @@ export default function EmployeeDashboard() {
           issueService.getByEmployee(employeeId),
           warningService.getByEmployee(employeeId)
         ]);
-        console.log('logsResponse:', logsResponse.data);
-        console.log('breakStatusResponse:', breakStatusResponse.data);
+        console.log('logsResponse:', logsResponse);
+        console.log('breakStatusResponse:', breakStatusResponse);
         console.log('issuesResponse:', issuesResponse.data);
-        console.log('warningsResponse:', warningsResponse.data);
+        console.log('warningsResponse:', warningsResponse);
         setDashboardData({
-          todayLogs: logsResponse.data.success ? logsResponse.data.data || [] : [],
-          currentBreak: breakStatusResponse.data.success ? breakStatusResponse.data.data ?? null : null,
-          recentIssues: issuesResponse.data.success ? 
+          todayLogs: Array.isArray(logsResponse) ? logsResponse as Log[] : [],
+          currentBreak: breakStatusResponse as Break | null ?? null,
+          recentIssues: issuesResponse.data.success ?
             (issuesResponse.data.data || []).slice(0, 3) : [],
-          activeWarnings: warningsResponse.data.success ? 
-            (warningsResponse.data.data || []).filter((w: Warning) => w.isActive) : [],
+          activeWarnings: Array.isArray(warningsResponse) ?
+            (warningsResponse as unknown as Warning[]).filter((w: Warning) => w.isActive) : [],
           weeklyStats: {
             totalMinutes: 0,
             daysWorked: 0,

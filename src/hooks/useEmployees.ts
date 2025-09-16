@@ -11,7 +11,7 @@ export function useEmployees() {
       try {
         const response = await employeeService.getAll();
         if (!response.data.success) {
-          throw new Error(response.data.error || 'Failed to fetch employees');
+          throw new Error((response.data as { error?: string }).error || 'Failed to fetch employees');
         }
         return response.data.data;
       } catch (error) {
@@ -29,7 +29,7 @@ export function useEmployee(id: number) {
     queryFn: async () => {
       const response = await employeeService.getById(id);
       if (!response.data.success) {
-        throw new Error(response.data.error || 'Failed to fetch employee');
+        throw new Error((response.data as { error?: string }).error || 'Failed to fetch employee');
       }
       return response.data.data;
     },
@@ -44,7 +44,7 @@ export function useCreateEmployee() {
     mutationFn: async (data: CreateEmployeeRequest) => {
       const response = await employeeService.create(data);
       if (!response.data.success) {
-        throw new Error(response.data.error || 'Failed to create employee');
+        throw new Error((response.data as { error?: string }).error || 'Failed to create employee');
       }
       return response.data.data;
     },
@@ -65,7 +65,7 @@ export function useUpdateEmployee() {
     mutationFn: async ({ id, data }: { id: number; data: Partial<CreateEmployeeRequest> }) => {
       const response = await employeeService.update(id, data);
       if (!response.data.success) {
-        throw new Error(response.data.error || 'Failed to update employee');
+        throw new Error((response.data as { error?: string }).error || 'Failed to update employee');
       }
       return response.data.data;
     },
@@ -87,7 +87,7 @@ export function useDeleteEmployee() {
     mutationFn: async (id: number) => {
       const response = await employeeService.delete(id);
       if (!response.data.success) {
-        throw new Error(response.data.error || 'Failed to delete employee');
+        throw new Error((response.data as { error?: string }).error || 'Failed to delete employee');
       }
       return response.data;
     },

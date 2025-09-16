@@ -38,11 +38,11 @@ export const attendanceApi = {
       console.log('Fetching attendance with filters:', filters);
 
       // Use the unified endpoint that queries both tables
-      const response: Record<string, unknown> = await attendanceService.getAll(filters);
-      
+      const response = await attendanceService.getAll(filters);
+
       // Handle the response structure
-      if (response && response.success) {
-        const records = response.data || [];
+      if ((response as { success?: boolean; data?: AttendanceRecord[] })?.success) {
+        const records = (response as { success?: boolean; data?: AttendanceRecord[] }).data || [];
         console.log('Unified endpoint returned:', records.length, 'records');
         return records;
       } else if (Array.isArray(response)) {
@@ -63,11 +63,11 @@ export const attendanceApi = {
   getUploadHistory: async (): Promise<UploadHistory[]> => {
     try {
       console.log('Fetching upload history...');
-      const response: Record<string, unknown> = await attendanceService.getUploadHistory();
+      const response = await attendanceService.getUploadHistory();
       
       // Handle the response structure
-      if (response && response.success) {
-        const history = response.data || [];
+      if ((response as { success?: boolean; data?: UploadHistory[] })?.success) {
+        const history = (response as { success?: boolean; data?: UploadHistory[] }).data || [];
         console.log('Upload history returned:', history.length, 'items');
         return history;
       } else if (Array.isArray(response)) {

@@ -195,7 +195,7 @@ export async function DELETE(
     console.error('Error deleting attendance record:', error);
 
     // Handle Prisma NotFoundError
-    if (error.code === 'P2025') {
+    if (error instanceof Error && 'code' in error && error.code === 'P2025') {
       return NextResponse.json(
         {
           success: false,

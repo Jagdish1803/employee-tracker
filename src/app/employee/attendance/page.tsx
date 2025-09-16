@@ -116,12 +116,6 @@ export default function EmployeeAttendancePage() {
     setSelectedYear(String(now.getFullYear()));
   }, []);
 
-  useEffect(() => {
-    if (employee && selectedMonth && selectedYear) {
-      loadAttendanceData();
-    }
-  }, [employee, selectedMonth, selectedYear, loadAttendanceData]);
-
   const loadAttendanceData = useCallback(async () => {
     if (!employee) return;
 
@@ -134,6 +128,12 @@ export default function EmployeeAttendancePage() {
       toast.error('Failed to load attendance data');
     }
   }, [employee]);
+
+  useEffect(() => {
+    if (employee && selectedMonth && selectedYear) {
+      loadAttendanceData();
+    }
+  }, [employee, selectedMonth, selectedYear, loadAttendanceData]);
 
 
   const generateMonthOptions = () => {
@@ -200,7 +200,9 @@ export default function EmployeeAttendancePage() {
     // Days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       const date = `${year}-${selectedMonth.padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-      const attendance = attendanceData.find((a: AttendanceCalendarView) => a.date === date);
+      const attendance = Array.isArray(attendanceData)
+        ? attendanceData.find((a: AttendanceCalendarView) => a.date === date)
+        : undefined;
       const isWeekend = new Date(year, month, day).getDay() === 0; // Only Sunday
       
       days.push(
@@ -298,7 +300,7 @@ export default function EmployeeAttendancePage() {
                   <card.icon className={`h-8 w-8 ${card.color}`} />
                   <div className="ml-4">
                     <p className="text-sm font-medium text-muted-foreground">{card.title}</p>
-                    <p className="text-2xl font-bold">{card.value}</p>
+                    <p className="text-2xl font-bold">{String(card.value)}</p>
                   </div>
                 </div>
               </CardContent>
@@ -316,12 +318,12 @@ export default function EmployeeAttendancePage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Attendance Percentage</span>
-                  <span className="text-lg font-bold text-green-600">{summary.attendancePercentage}%</span>
+                  <span className="text-lg font-bold text-green-600">{String(summary.attendancePercentage)}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 
                     className="bg-green-600 h-2 rounded-full" 
-                    style={{ width: `${summary.attendancePercentage}%` }}
+                    style={{ width: `${String(summary.attendancePercentage)}%` }}
                   ></div>
                 </div>
               </div>
@@ -329,11 +331,11 @@ export default function EmployeeAttendancePage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Total Hours Worked</span>
-                  <span className="text-lg font-bold">{summary.totalHoursWorked}h</span>
+                  <span className="text-lg font-bold">{String(summary.totalHoursWorked)}h</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Average Hours/Day</span>
-                  <span className="text-lg font-bold">{summary.averageHoursPerDay}h</span>
+                  <span className="text-lg font-bold">{String(summary.averageHoursPerDay)}h</span>
                 </div>
               </div>
             </div>
@@ -354,7 +356,7 @@ export default function EmployeeAttendancePage() {
                 { label: 'Late', value: summary.lateDays, total: summary.totalWorkingDays, color: 'bg-yellow-500' },
                 { label: 'Half Day', value: summary.halfDays, total: summary.totalWorkingDays, color: 'bg-blue-500' }
               ].map((item) => {
-                const percentage = (item.value / item.total) * 100;
+                const percentage = (Number(item.value) / Number(item.total)) * 100;
                 return (
                   <div key={item.label} className="flex items-center space-x-4">
                     <div className="w-20 text-sm font-medium">{item.label}</div>
@@ -365,7 +367,7 @@ export default function EmployeeAttendancePage() {
                       ></div>
                     </div>
                     <div className="w-16 text-sm text-right">
-                      {item.value} ({percentage.toFixed(1)}%)
+                      {String(item.value)} ({percentage.toFixed(1)}%)
                     </div>
                   </div>
                 );

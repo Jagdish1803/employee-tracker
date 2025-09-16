@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { issueApi } from '@/lib/api-client';
+import type { Issue, CreateIssueRequest } from '@/types';
 
 // Query Keys
 export const issueKeys = {
@@ -35,7 +36,7 @@ export function usePendingIssues() {
     queryFn: () => issueApi.getAll(),
     select: (response) => {
       const issues = response?.data?.data || [];
-      return issues.filter((issue: Record<string, unknown>) => issue.status === 'PENDING');
+      return issues.filter((issue: Issue) => issue.issueStatus === 'pending');
     },
     staleTime: 1 * 60 * 1000, // 1 minute for pending
     gcTime: 5 * 60 * 1000, // 5 minutes
@@ -51,7 +52,7 @@ export function useResolvedIssues() {
     queryFn: () => issueApi.getAll(),
     select: (response) => {
       const issues = response?.data?.data || [];
-      return issues.filter((issue: Record<string, unknown>) => issue.status === 'RESOLVED');
+      return issues.filter((issue: Issue) => issue.issueStatus === 'resolved');
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 15 * 60 * 1000, // 15 minutes
@@ -66,7 +67,7 @@ export function useIssue(id: number) {
     queryFn: () => issueApi.getAll(),
     select: (response) => {
       const issues = response?.data?.data || [];
-      return issues.find((issue: Record<string, unknown>) => issue.id === id);
+      return issues.find((issue: Issue) => issue.id === id);
     },
     staleTime: 1 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
@@ -81,7 +82,7 @@ export function useEmployeeIssues(employeeId: number) {
     queryFn: () => issueApi.getAll(),
     select: (response) => {
       const issues = response?.data?.data || [];
-      return issues.filter((issue: Record<string, unknown>) => issue.employeeId === employeeId);
+      return issues.filter((issue: Issue) => issue.employeeId === employeeId);
     },
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
@@ -94,7 +95,7 @@ export function useCreateIssue() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: Record<string, unknown>) => issueApi.create(data),
+    mutationFn: (data: CreateIssueRequest) => issueApi.create(data),
     onSuccess: (newIssue, variables) => {
       toast.success('Issue created successfully');
       

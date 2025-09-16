@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { attendanceApi } from '@/lib/api/attendanceApi';
-import type { AttendanceRecord } from '@/types';
+import type { AttendanceRecord, UploadHistory } from '@/types';
 
 // Query Keys
 export const attendanceKeys = {
@@ -323,7 +323,7 @@ export function useUploadAttendanceFile() {
       queryClient.invalidateQueries({ queryKey: attendanceKeys.uploadHistory() });
 
       // Show success message
-      toast.success(`File uploaded successfully! Processed ${data.data?.processedRecords || 0} records`);
+      toast.success(`File uploaded successfully! Processed ${(data as { data?: { processedRecords?: number } })?.data?.processedRecords || 0} records`);
     },
     onError: (error) => {
       console.error('Upload failed:', error);

@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(req: NextRequest, { params }: { params: { employeeId: string } }) {
-  const employeeId = params.employeeId;
+export async function GET(req: NextRequest, { params }: { params: Promise<{ employeeId: string }> }) {
+  const { employeeId } = await params;
   const date = req.nextUrl.searchParams.get('date');
   console.log('Break summary API called with:', { employeeId, date });
   if (!employeeId || !date) {

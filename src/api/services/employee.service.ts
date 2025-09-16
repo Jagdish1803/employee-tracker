@@ -59,6 +59,17 @@ export class EmployeeService {
       throw error;
     }
   }
+
+  // Employee login
+  async login(employeeCode: string): Promise<{ data: { success: boolean; data?: Employee } }> {
+    try {
+      const response = await apiClient.post(`${this.basePath}/login`, { employeeCode });
+      return { data: response.data };
+    } catch (error) {
+      console.error('Error during employee login:', error);
+      throw error;
+    }
+  }
 }
 
 export const employeeService = new EmployeeService();

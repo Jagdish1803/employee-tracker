@@ -633,7 +633,7 @@ export default function AdminAttendancePage() {
                 </div>
               </div>
 
-              {selectedUpload.errors && selectedUpload.errors.length > 0 && (
+              {selectedUpload.errors && Array.isArray(selectedUpload.errors) && selectedUpload.errors.length > 0 && (
                 <div>
                   <Label className="text-sm font-medium">Errors</Label>
                   <div className="mt-2 bg-red-50 border border-red-200 rounded-lg p-4 max-h-60 overflow-y-auto">

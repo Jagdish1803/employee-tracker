@@ -43,12 +43,11 @@ export default function TagsPage() {
       if (response.data.success) {
         setTags(response.data.data || []);
       } else {
-        toast.error(response.data.error || 'Failed to load tags');
+        toast.error('Failed to load tags');
       }
     } catch (error: unknown) {
       console.error('Error loading tags:', error);
-      const errorMessage = error.response?.data?.error || 'Failed to load tags';
-      toast.error(errorMessage);
+      toast.error('Failed to load tags');
     } finally {
       setLoading(false);
     }

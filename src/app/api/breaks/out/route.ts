@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
       await prisma.warning.create({
         data: {
           employeeId: validatedData.employeeId,
+          warningType: 'ATTENDANCE',
           warningDate: new Date(),
           warningMessage: `Break exceeded 20 minutes (${breakDuration} minutes)`,
           isActive: true,

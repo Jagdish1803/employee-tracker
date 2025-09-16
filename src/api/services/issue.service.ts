@@ -70,6 +70,17 @@ export class IssueService {
       throw error;
     }
   }
+
+  // Get issues by employee
+  async getByEmployee(employeeId: number): Promise<{ data: { success: boolean; data: Issue[] } }> {
+    try {
+      const response = await apiClient.get(`${this.basePath}?employeeId=${employeeId}`);
+      return { data: response.data };
+    } catch (error) {
+      console.error('Error fetching issues by employee:', error);
+      throw error;
+    }
+  }
 }
 
 export const issueService = new IssueService();

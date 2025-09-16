@@ -42,7 +42,7 @@ export default function BreaksPage() {
   const breakSummary = {
     totalBreaks: todayBreaks.length,
     totalMinutes: todayBreaks.reduce((total: number, breakRecord: Break) => {
-      if (breakRecord.breakOutTime) {
+      if (breakRecord.breakOutTime && breakRecord.breakInTime) {
         const duration = new Date(breakRecord.breakOutTime).getTime() - new Date(breakRecord.breakInTime).getTime();
         return total + Math.floor(duration / (1000 * 60));
       }
@@ -50,7 +50,7 @@ export default function BreaksPage() {
     }, 0),
     avgMinutes: todayBreaks.length > 0 ? Math.floor(
       todayBreaks.reduce((total: number, breakRecord: Break) => {
-        if (breakRecord.breakOutTime) {
+        if (breakRecord.breakOutTime && breakRecord.breakInTime) {
           const duration = new Date(breakRecord.breakOutTime).getTime() - new Date(breakRecord.breakInTime).getTime();
           return total + Math.floor(duration / (1000 * 60));
         }

@@ -1,7 +1,7 @@
 // src/app/admin/assignments/page.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import { Plus, Trash2, ClipboardList, Users, Tag, AlertTriangle, CheckCircle } from 'lucide-react';
 import { assignmentService, employeeService, tagService } from '@/api';
@@ -28,27 +28,43 @@ export default function AssignmentsPage() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [assignmentToDelete, setAssignmentToDelete] = useState<Assignment | null>(null);
 
-  useEffect(() => {
-    loadData();
+  // Helper type for API assignment object
+  interface ApiAssignment {
+    id: number;
+    employeeId: number;
+    tagId?: number;
+    isMandatory?: boolean;
+    created_at?: string;
+    employee?: Employee;
+    tag?: TagType;
+  }
+
+  // Helper to map API assignment to local Assignment type
+  const mapApiAssignmentToLocal = useCallback((apiAssignment: ApiAssignment): Assignment => {
+    return {
+      id: apiAssignment.id,
+      employeeId: apiAssignment.employeeId,
+      tagId: apiAssignment.tagId ?? 0,
+      isMandatory: apiAssignment.isMandatory ?? false,
+      createdAt: apiAssignment.created_at ? new Date(apiAssignment.created_at) : new Date(),
+      employee: apiAssignment.employee,
+      tag: apiAssignment.tag,
+    };
   }, []);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      
-      const [assignmentsResponse, employeesResponse, tagsResponse] = await Promise.all([
+      const [apiAssignments, employeesResponse, tagsResponse] = await Promise.all([
         assignmentService.getAll(),
         employeeService.getAll(),
         tagService.getAll()
       ]);
-
-      if (assignmentsResponse.data.success) {
-        setAssignments(assignmentsResponse.data.data || []);
-      }
-      if (employeesResponse.data.success) {
+      setAssignments((apiAssignments || []).map(mapApiAssignmentToLocal));
+      if (employeesResponse.data && employeesResponse.data.success) {
         setEmployees(employeesResponse.data.data || []);
       }
-      if (tagsResponse.data.success) {
+      if (tagsResponse.data && tagsResponse.data.success) {
         setTags(tagsResponse.data.data || []);
       }
     } catch (error: unknown) {
@@ -57,20 +73,27 @@ export default function AssignmentsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [mapApiAssignmentToLocal]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleCreateAssignments = async (data: { employeeId: number; tagIds: number[]; isMandatory: boolean }) => {
     setSubmitting(true);
-
     try {
-      const response = await assignmentService.createBulk(data);
-
-      if (response.data.success) {
-        const assignmentCount = data.tagIds.length;
-        toast.success(`${assignmentCount} assignment${assignmentCount > 1 ? 's' : ''} created successfully`);
-        loadData();
-        closeDialog();
-      }
+      const bulkData = {
+        title: 'Bulk Assignment',
+        employeeIds: [data.employeeId],
+        assignedBy: 1, // TODO: Replace with actual user id
+        priority: 'medium' as const,
+        tagIds: data.tagIds,
+        isMandatory: data.isMandatory
+      };
+      await assignmentService.createBulk(bulkData);
+      toast.success(`${data.tagIds.length} assignment${data.tagIds.length > 1 ? 's' : ''} created successfully`);
+      loadData();
+      closeDialog();
     } catch (error: unknown) {
       const errorMessage = (error as { response?: { data?: { error?: string } } }).response?.data?.error || 'Failed to create assignments';
       toast.error(errorMessage);

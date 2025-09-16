@@ -86,9 +86,10 @@ export class BreakService {
   }
 
   // Get break status
-  async getStatus(): Promise<unknown> {
+  async getStatus(employeeId?: number): Promise<unknown> {
     try {
-      const response = await apiClient.get(`${this.basePath}/status`);
+      const url = employeeId ? `${this.basePath}/status?employeeId=${employeeId}` : `${this.basePath}/status`;
+      const response = await apiClient.get(url);
 
       if (response.data && response.data.success !== undefined) {
         return response.data.data;

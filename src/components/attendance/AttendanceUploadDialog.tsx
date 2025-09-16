@@ -96,13 +96,19 @@ export function AttendanceUploadDialog({
     }
   };
 
-  const isValidFile = selectedFile && selectedFile.name.endsWith('.srp');
+  const isValidFile: boolean = Boolean(selectedFile && selectedFile.name.endsWith('.srp'));
 
   // Get current upload state with safe property access
-  const isUploading = uploadMutation.isPending || (uploadMutation as Record<string, unknown>).isLoading;
-  const uploadSuccess = uploadMutation.isSuccess;
-  const uploadError = uploadMutation.isError;
+  const isUploading: boolean = Boolean(uploadMutation.isPending || (uploadMutation as Record<string, unknown>).isLoading);
+  const uploadSuccess: boolean = Boolean(uploadMutation.isSuccess);
+  const uploadError: boolean = Boolean(uploadMutation.isError);
   const currentProgress = Math.max(localProgress, 0);
+
+  // Helper to cast uploadMutation.data for rendering
+  const uploadResult: { processedRecords?: number; errorRecords?: number } | null =
+    uploadSuccess && uploadMutation.data
+      ? (uploadMutation.data as { processedRecords?: number; errorRecords?: number })
+      : null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -221,11 +227,11 @@ export function AttendanceUploadDialog({
                   Please wait while we process your file. This may take a few moments for large files.
                 </p>
               )}
-              {uploadSuccess && uploadMutation.data && (
+              {uploadResult !== null && (
                 <div className="text-xs text-green-700 space-y-1">
-                  <p>✅ Processed {(uploadMutation.data as Record<string, unknown>)?.processedRecords || 0} records</p>
-                  {((uploadMutation.data as Record<string, unknown>)?.errorRecords || 0) > 0 && (
-                    <p>⚠️ {(uploadMutation.data as Record<string, unknown>)?.errorRecords || 0} records had errors</p>
+                  <p>✅ Processed {typeof uploadResult.processedRecords === 'number' ? uploadResult.processedRecords : 0} records</p>
+                  {typeof uploadResult.errorRecords === 'number' && uploadResult.errorRecords > 0 && (
+                    <p>⚠️ {uploadResult.errorRecords} records had errors</p>
                   )}
                 </div>
               )}

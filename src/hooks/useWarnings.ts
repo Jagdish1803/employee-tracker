@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { warningApi } from '@/lib/api-client';
+import type { CreateWarningRequest } from '@/types';
 
 // Query Keys
 export const warningKeys = {
@@ -55,7 +56,7 @@ export function useCreateWarning() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: Record<string, unknown>) => warningApi.create(data),
+    mutationFn: (data: CreateWarningRequest) => warningApi.create(data),
     onSuccess: (newWarning, variables) => {
       toast.success('Warning created successfully');
       

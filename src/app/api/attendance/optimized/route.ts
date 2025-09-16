@@ -99,8 +99,8 @@ export async function GET(request: NextRequest) {
     // Return error response that the fallback can handle
     return NextResponse.json({
       success: false,
-      error: error.message,
-      stack: error.stack,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
       message: 'Failed to fetch attendance records from optimized endpoint'
     }, { status: 500 });
   }

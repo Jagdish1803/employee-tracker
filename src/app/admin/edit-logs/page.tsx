@@ -33,13 +33,30 @@ export default function EditLogsPage() {
   const [editCount, setEditCount] = useState(0);
   const [updating, setUpdating] = useState(false);
 
-  useEffect(() => {
-    loadInitialData();
-  }, []);
+  const loadLogs = useCallback(async () => {
+    try {
+      setLoading(true);
 
-  useEffect(() => {
-    loadLogs();
-  }, [selectedDate, employeeFilter, loadLogs]);
+      const filter: Record<string, unknown> = {
+        dateFrom: selectedDate,
+        dateTo: selectedDate,
+      };
+
+      if (employeeFilter !== 'all') {
+        filter.employeeId = parseInt(employeeFilter);
+      }
+
+      const response = await logService.getByDateRange(filter);
+      if (Array.isArray(response)) {
+        setLogs(response as Log[]);
+      }
+    } catch (error) {
+      console.error('Error loading logs:', error);
+      toast.error('Failed to load logs');
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedDate, employeeFilter]);
 
   const loadInitialData = async () => {
     try {
@@ -62,30 +79,13 @@ export default function EditLogsPage() {
     }
   };
 
-  const loadLogs = useCallback(async () => {
-    try {
-      setLoading(true);
+  useEffect(() => {
+    loadInitialData();
+  }, []);
 
-      const filter: Record<string, unknown> = {
-        dateFrom: selectedDate,
-        dateTo: selectedDate,
-      };
-
-      if (employeeFilter !== 'all') {
-        filter.employeeId = parseInt(employeeFilter);
-      }
-
-      const response = await logService.getByDateRange(filter);
-      if (response.data.success) {
-        setLogs(response.data.data || []);
-      }
-    } catch (error) {
-      console.error('Error loading logs:', error);
-      toast.error('Failed to load logs');
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedDate, employeeFilter]);
+  useEffect(() => {
+    loadLogs();
+  }, [selectedDate, employeeFilter, loadLogs]);
 
   const handleEditLog = (log: Log) => {
     setEditingLog(log);
@@ -104,7 +104,7 @@ export default function EditLogsPage() {
     setUpdating(true);
     try {
       const response = await logService.update(editingLog.id, editCount === 0 ? { count: 0, totalMinutes: 0 } : { count: editCount });
-      if (response.data.success) {
+      if (response && typeof response === 'object' && 'success' in response && response.success) {
         toast.success('Log updated successfully');
         loadLogs();
         closeDialog();

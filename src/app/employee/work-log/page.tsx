@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { LogOut } from 'lucide-react';
-import { assignmentService, employeeService } from '@/api';
+import { employeeService } from '@/api';
 import { Assignment, Employee } from '@/types';
 import { getCurrentISTDate } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -79,9 +79,12 @@ export default function WorkLogPage() {
   const loadAssignments = async (employeeId: number) => {
     try {
       setLoading(true);
-      const response = await assignmentService.getByEmployee(employeeId);
-      if (response.data.success) {
-        setAssignments(response.data.data || []);
+      const response = await fetch(`/api/assignments?employeeId=${employeeId}`);
+      const data = await response.json();
+      if (data.success) {
+        setAssignments(data.data || []);
+      } else {
+        toast.error('Failed to load assignments');
       }
     } catch (error) {
       console.error('Error loading assignments:', error);

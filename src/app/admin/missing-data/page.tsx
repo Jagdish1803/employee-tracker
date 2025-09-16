@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import { AlertTriangle, Calendar, Users, Download, FileX } from 'lucide-react';
 import { employeeService, logService } from '@/api';
-import { Employee } from '@/types';
+import { Employee, Log } from '@/types';
 import { getCurrentISTDate, getWorkingDaysBetween, formatDate } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,30 +32,6 @@ export default function MissingDataPage() {
   const [dateTo, setDateTo] = useState(getCurrentISTDate());
   const [analyzing, setAnalyzing] = useState(false);
 
-  useEffect(() => {
-    loadEmployees();
-  }, []);
-
-  useEffect(() => {
-    if (employees.length > 0) {
-      analyzeMissingData();
-    }
-  }, [employees, dateFrom, dateTo, analyzeMissingData]);
-
-  const loadEmployees = async () => {
-    try {
-      const response = await employeeService.getAll();
-      if (response.data.success) {
-        setEmployees(response.data.data || []);
-      }
-    } catch (error) {
-      console.error('Error loading employees:', error);
-      toast.error('Failed to load employees');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const analyzeMissingData = useCallback(async () => {
     if (!dateFrom || !dateTo || employees.length === 0) return;
 
@@ -67,7 +43,7 @@ export default function MissingDataPage() {
         dateTo,
       });
 
-      const logs = logsResponse.data.success ? logsResponse.data.data || [] : [];
+      const logs = Array.isArray(logsResponse) ? logsResponse as Log[] : [];
       const workingDays = getWorkingDaysBetween(dateFrom, dateTo);
 
       // Analyze missing data for each employee
@@ -105,6 +81,30 @@ export default function MissingDataPage() {
       setAnalyzing(false);
     }
   }, [dateFrom, dateTo, employees]);
+
+  const loadEmployees = async () => {
+    try {
+      const response = await employeeService.getAll();
+      if (response.data.success) {
+        setEmployees(response.data.data || []);
+      }
+    } catch (error) {
+      console.error('Error loading employees:', error);
+      toast.error('Failed to load employees');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadEmployees();
+  }, []);
+
+  useEffect(() => {
+    if (employees.length > 0) {
+      analyzeMissingData();
+    }
+  }, [employees, dateFrom, dateTo, analyzeMissingData]);
 
   const exportToCSV = () => {
     const csvHeaders = [

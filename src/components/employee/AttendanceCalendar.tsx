@@ -60,7 +60,7 @@ export function AttendanceCalendar({ employeeId }: AttendanceCalendarProps) {
       const response = await attendanceService.getByEmployee(employeeId, { month, year });
 
       if (Array.isArray(response)) {
-        const records = response.map((record: Record<string, unknown>) => ({
+        const records = (response as unknown as (AttendanceRecord & Record<string, unknown>)[]).map((record) => ({
           ...record,
           hasException: record.hasException || false,
           hasTagWork: record.hasTagWork || false,

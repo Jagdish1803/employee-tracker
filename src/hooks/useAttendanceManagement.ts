@@ -98,7 +98,7 @@ export const useAttendanceManagement = () => {
 
   // Edit record functions
   const handleEditRecord = (record: AttendanceRecord) => {
-    setEditingRecord(record.id);
+    setEditingRecord(typeof record.id === 'string' ? parseInt(record.id, 10) : record.id);
     setEditForm({
       status: record.status,
       checkInTime: record.checkInTime,

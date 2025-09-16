@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { breakApi } from '@/lib/api-client';
+import type { Break, BreakRequest } from '@/types';
 
 // Query Keys
 export const breakKeys = {
@@ -37,7 +38,7 @@ export function useActiveBreaks() {
     select: (response) => {
       const breaks = response?.data?.data || [];
       // Filter for active breaks (those without breakOutTime)
-      return breaks.filter((breakRecord: Record<string, unknown>) => !breakRecord.breakOutTime);
+      return breaks.filter((breakRecord: Break) => !breakRecord.breakOutTime);
     },
     staleTime: 30 * 1000, // 30 seconds for active breaks
     gcTime: 2 * 60 * 1000, // 2 minutes
@@ -86,7 +87,7 @@ export function useBreakIn() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: Record<string, unknown>) => breakApi.breakIn(data),
+    mutationFn: (data: BreakRequest) => breakApi.breakIn(data),
     onSuccess: () => {
       toast.success('Break started successfully');
       
@@ -107,7 +108,7 @@ export function useBreakOut() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: Record<string, unknown>) => breakApi.breakOut(data),
+    mutationFn: (data: BreakRequest) => breakApi.breakOut(data),
     onSuccess: () => {
       toast.success('Break ended successfully');
       
@@ -153,9 +154,9 @@ export function useBreakWarnings() {
     select: (response) => {
       const breaks = response?.data?.data || [];
       // Filter for breaks that might need warnings (long breaks)
-      return breaks.filter((breakRecord: Record<string, unknown>) => {
+      return breaks.filter((breakRecord: Break) => {
         if (!breakRecord.breakOutTime) return false;
-        const duration = new Date(breakRecord.breakOutTime).getTime() - new Date(breakRecord.breakInTime).getTime();
+        const duration = new Date(breakRecord.breakOutTime).getTime() - new Date(breakRecord.breakInTime || 0).getTime();
         const minutes = Math.floor(duration / (1000 * 60));
         return minutes > 60; // Breaks longer than 60 minutes
       });
@@ -182,8 +183,8 @@ export function useBreakManagement(filters: Record<string, unknown> = {}) {
   
   // Filter for today's breaks if date is provided
   const todayBreaks = filters.date 
-    ? breaks.filter((breakRecord: Record<string, unknown>) => {
-        const breakDate = new Date(breakRecord.breakInTime).toISOString().split('T')[0];
+    ? breaks.filter((breakRecord: Break) => {
+        const breakDate = new Date(breakRecord.breakInTime || 0).toISOString().split('T')[0];
         return breakDate === filters.date;
       })
     : breaks;

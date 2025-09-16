@@ -54,7 +54,7 @@ export default function AdminDashboard() {
       const employees = employeesRes.data.success ? employeesRes.data.data || [] : [];
       const tags = tagsRes.data.success ? tagsRes.data.data || [] : [];
       const issues = issuesRes.data.success ? issuesRes.data.data || [] : [];
-      const logs = logsRes.data.success ? logsRes.data.data || [] : [];
+      const logs = Array.isArray(logsRes) ? logsRes as { employeeId: number }[] : [];
 
       // Calculate today's submissions (unique employees who submitted)
       const todaysSubmissions = new Set(logs.map(log => log.employeeId)).size;

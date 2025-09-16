@@ -61,24 +61,16 @@ export default function WorkLogForm({
     setHasChanges(false);
   }, [assignments, logs]);
 
-  // Load existing data and submission status when date or employee changes
-  useEffect(() => {
-    if (employeeId && selectedDate) {
-      loadExistingData();
-      loadSubmissionStatus();
-    }
-  }, [employeeId, selectedDate, loadExistingData, loadSubmissionStatus]);
-
   const loadExistingData = useCallback(async () => {
     try {
       const response = await logService.getByDate(employeeId, selectedDate);
-      if (response.data.success && response.data.data) {
+      if (Array.isArray(response) && response.length > 0) {
         const existingLogs: Record<number, number> = {};
         interface ApiLogEntry {
           tagId: number;
           count: number;
         }
-        (response.data.data as ApiLogEntry[]).forEach((log: ApiLogEntry) => {
+        (response as ApiLogEntry[]).forEach((log: ApiLogEntry) => {
           existingLogs[log.tagId] = log.count;
         });
         setLogs(prev => ({ ...prev, ...existingLogs }));
@@ -98,6 +90,14 @@ export default function WorkLogForm({
       setSubmissionStatus(null);
     }
   }, []);
+
+  // Load existing data and submission status when date or employee changes
+  useEffect(() => {
+    if (employeeId && selectedDate) {
+      loadExistingData();
+      loadSubmissionStatus();
+    }
+  }, [employeeId, selectedDate, loadExistingData, loadSubmissionStatus]);
 
   const handleCountChange = useCallback((tagId: number, count: number) => {
     const newCount = Math.max(0, count);
@@ -143,11 +143,11 @@ export default function WorkLogForm({
         logDate: selectedDate,
       });
 
-      if (response.data.success) {
+      if ((response as { success?: boolean }).success) {
         setHasChanges(false);
         onSubmitSuccess();
       } else {
-        toast.error(response.data.error || 'Failed to submit work log');
+        toast.error((response as { error?: string }).error || 'Failed to submit work log');
       }
     } catch (error: unknown) {
       const errorMessage = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Failed to submit work log';

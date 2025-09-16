@@ -17,15 +17,23 @@ export default function DailyChartPage() {
   const [logs, setLogs] = useState<Log[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadInitialData();
-  }, []);
+  const loadDailyLogs = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await logService.getByDateRange({
+        dateFrom: selectedDate,
+        dateTo: selectedDate,
+      });
 
-  useEffect(() => {
-    if (selectedDate) {
-      loadDailyLogs();
+      if (Array.isArray(response)) {
+        setLogs(response as Log[]);
+      }
+    } catch (error) {
+      console.error('Error loading daily logs:', error);
+    } finally {
+      setLoading(false);
     }
-  }, [selectedDate, loadDailyLogs]);
+  }, [selectedDate]);
 
   const loadInitialData = async () => {
     try {
@@ -52,23 +60,15 @@ export default function DailyChartPage() {
     }
   };
 
-  const loadDailyLogs = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await logService.getByDateRange({
-        dateFrom: selectedDate,
-        dateTo: selectedDate,
-      });
+  useEffect(() => {
+    loadInitialData();
+  }, []);
 
-      if (response.data.success) {
-        setLogs(response.data.data || []);
-      }
-    } catch (error) {
-      console.error('Error loading daily logs:', error);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (selectedDate) {
+      loadDailyLogs();
     }
-  }, [selectedDate]);
+  }, [selectedDate, loadDailyLogs]);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const getEmployeeLogData = (employeeId: number) => {
