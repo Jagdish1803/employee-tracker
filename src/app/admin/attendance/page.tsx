@@ -64,7 +64,7 @@ export default function AdminAttendancePage() {
     if (selectedDate === 'all' && availableDatesFromRecords.length > 0) {
       setSelectedDate(availableDatesFromRecords[availableDatesFromRecords.length - 1]);
     }
-  }, [availableDatesFromRecords, selectedDate]);
+  }, [availableDatesFromRecords.length, selectedDate]);
 
   // Filter records by selected date
   const dateFilteredRecords = selectedDate && selectedDate !== 'all'
@@ -86,7 +86,7 @@ export default function AdminAttendancePage() {
     } else {
       loadUploadHistory();
     }
-  }, [activeTab, loadAttendanceRecords, loadUploadHistory]);
+  }, [activeTab]);
 
   // Reset page when date filter changes
   useEffect(() => {
@@ -148,8 +148,8 @@ export default function AdminAttendancePage() {
 
   const isDateAvailable = useCallback((date: Date) => {
     const dateStr = formatDateForComparison(date);
-    return availableDatesFromRecords.includes(dateStr);
-  }, [availableDatesFromRecords]);
+    return availableDates.includes(dateStr);
+  }, [availableDates]);
 
   const navigateMonth = (direction: 'prev' | 'next') => {
     setCurrentCalendarMonth(prev => {
