@@ -1,8 +1,9 @@
-// src/app/admin/dashboard/page.tsx
+// src/app/admin/page.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Users, Tag, FileText, AlertTriangle, BarChart3, Clock, Coffee, Settings, Calendar } from 'lucide-react';
 import { employeeService, tagService, issueService, logService } from '@/api';
 import { getCurrentISTDate } from '@/lib/utils';
@@ -19,6 +20,8 @@ interface DashboardData {
 }
 
 export default function AdminDashboard() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [data, setData] = useState<DashboardData>({
     totalEmployees: 0,
     totalTags: 0,
@@ -29,6 +32,7 @@ export default function AdminDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -36,9 +40,15 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (mounted) {
+      const code = searchParams.get('code');
+      if (!code || !code.startsWith('ADMIN-')) {
+        router.push('/');
+        return;
+      }
+      setIsAuthenticated(true);
       loadDashboardData();
     }
-  }, [mounted]);
+  }, [mounted, searchParams, router]);
 
   const loadDashboardData = async () => {
     try {
@@ -77,7 +87,7 @@ export default function AdminDashboard() {
     }
   };
 
-  if (!mounted || loading) {
+  if (!mounted || loading || !isAuthenticated) {
     return (
       <div className="p-8">
         <div className="flex items-center justify-center min-h-[400px]">
