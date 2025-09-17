@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { 
@@ -38,6 +38,30 @@ export default function EmployeeDashboard() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [employeeId, setEmployeeId] = useState<number | null>(null);
 
+  const attemptLogin = useCallback(async (code: string) => {
+    try {
+      setLoginLoading(true);
+      const response = await employeeService.login(code);
+
+      if (response.data.success && response.data.data) {
+        setEmployeeId(response.data.data.id);
+        setLoggedIn(true);
+        toast.success('Login successful');
+      } else {
+        toast.error('Invalid employee code');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast.error('Invalid employee code');
+    } finally {
+      setLoginLoading(false);
+    }
+  }, []);
+
+  const handleAutoLogin = useCallback(async (code: string) => {
+    await attemptLogin(code);
+  }, [attemptLogin]);
+
   // Update current date/time every minute
   useEffect(() => {
     const timer = setInterval(() => {
@@ -70,10 +94,6 @@ export default function EmployeeDashboard() {
     await attemptLogin(employeeCode.trim());
   };
 
-  const handleAutoLogin = async (code: string) => {
-    await attemptLogin(code);
-  };
-
   const handleLogout = () => {
     setLoggedIn(false);
     setEmployeeId(null);
@@ -90,26 +110,6 @@ export default function EmployeeDashboard() {
       },
     });
     router.push('/');
-  };
-
-  const attemptLogin = async (code: string) => {
-    try {
-      setLoginLoading(true);
-      const response = await employeeService.login(code);
-
-      if (response.data.success && response.data.data) {
-        setEmployeeId(response.data.data.id);
-        setLoggedIn(true);
-        toast.success('Login successful');
-      } else {
-        toast.error('Invalid employee code');
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      toast.error('Invalid employee code');
-    } finally {
-      setLoginLoading(false);
-    }
   };
 
   const loadDashboardData = async (employeeId: number) => {

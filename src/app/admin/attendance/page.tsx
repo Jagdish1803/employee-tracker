@@ -35,7 +35,6 @@ export default function AdminAttendancePage() {
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 50;
   const [selectedDate, setSelectedDate] = useState<string>('all');
-  const [availableDates, setAvailableDates] = useState<string[]>([]);
   const [showCalendarDialog, setShowCalendarDialog] = useState(false);
   const [currentCalendarMonth, setCurrentCalendarMonth] = useState(new Date());
 
@@ -46,10 +45,9 @@ export default function AdminAttendancePage() {
   const endIndex = startIndex + recordsPerPage;
   const currentRecords = filteredRecords.slice(startIndex, endIndex);
 
-  // Update available dates when records change
-  useEffect(() => {
-    const newDates = [...new Set(filteredRecords.map(record => record.date.split('T')[0]))].sort();
-    setAvailableDates(newDates);
+  // Update available dates when records change using useMemo
+  const availableDates = useMemo(() => {
+    return [...new Set(filteredRecords.map(record => record.date.split('T')[0]))].sort();
   }, [filteredRecords]);
 
   // Filter records by selected date

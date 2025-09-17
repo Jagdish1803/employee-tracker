@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Plus, Edit, Trash2, Users } from 'lucide-react';
 import { useEmployees, useCreateEmployee, useUpdateEmployee, useDeleteEmployee } from '@/hooks/useEmployees';
 import { Employee } from '@/types';
@@ -32,7 +32,6 @@ export default function EmployeesPage() {
   // Pagination and search state
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const pageSize = 10;
 
   const { data: employees = [], isLoading, error } = useEmployees();
@@ -40,23 +39,25 @@ export default function EmployeesPage() {
   const updateEmployee = useUpdateEmployee();
   const deleteEmployee = useDeleteEmployee();
 
+  // Filter employees based on search term using useMemo
+  const filteredEmployees = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return employees;
+    }
+    return employees.filter(employee =>
+      employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      employee.employeeCode.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [searchTerm, employees]);
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   // Pagination calculations
   const totalPages = Math.ceil(filteredEmployees.length / pageSize);
   const paginatedEmployees = filteredEmployees.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-
-  // Filter employees based on search term
-  useEffect(() => {
-    if (!searchTerm.trim()) {
-      setFilteredEmployees(employees);
-    } else {
-      const filtered = employees.filter(employee =>
-        employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        employee.employeeCode.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredEmployees(filtered);
-    }
-    setCurrentPage(1); // Reset to first page when filtering
-  }, [searchTerm, employees]);
 
   if (isLoading) {
     return (
