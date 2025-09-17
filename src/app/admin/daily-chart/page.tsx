@@ -5,15 +5,6 @@ import { Calendar, BarChart3, Users, Clock } from 'lucide-react';
 import { logService, employeeService, tagService } from '@/api';
 import { Employee, Tag, Log } from '@/types';
 import { Button } from '@/components/ui/button';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -102,16 +93,10 @@ export default function DailyChartPage() {
     setCurrentPage(1); // Reset to first page when filtering
   }, [searchTerm, employees]);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const getEmployeeLogData = (employeeId: number) => {
     const employeeLogs = logs.filter(log => log.employeeId === employeeId);
     const totalMinutes = employeeLogs.reduce((sum, log) => sum + log.totalMinutes, 0);
     return { logs: employeeLogs, totalMinutes };
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const getTagLogForEmployee = (employeeId: number, tagId: number) => {
-    return logs.find(log => log.employeeId === employeeId && log.tagId === tagId);
   };
 
   const hasSubmittedData = (employeeId: number) => {

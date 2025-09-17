@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { employeeService, tagService, issueService, logService } from '@/api';
 import { getCurrentISTDate } from '@/lib/utils';
+import { getAdminSession, saveAdminSession, isValidAdminCode } from '@/lib/admin-auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -46,11 +47,23 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (mounted) {
+      // Check if admin is already logged in
+      const existingSession = getAdminSession();
       const code = searchParams.get('code');
-      if (!code || !code.startsWith('ADMIN-')) {
+      
+      if (existingSession) {
+        setIsAuthenticated(true);
+        loadDashboardData();
+        return;
+      }
+      
+      if (!code || !isValidAdminCode(code)) {
         router.push('/');
         return;
       }
+      
+      // Save new admin session
+      saveAdminSession(code);
       setIsAuthenticated(true);
       loadDashboardData();
     }
@@ -105,7 +118,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="p-4 lg:p-6 space-y-8">
       {/* Header Section */}
       <div className="border-b border-border/40 pb-6">
         <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">

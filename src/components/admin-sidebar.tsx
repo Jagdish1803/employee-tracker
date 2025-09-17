@@ -1,16 +1,3 @@
-import {
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarFooter,
-  SidebarRail,
-} from "@/components/ui/sidebar";
 import { 
   Home, 
   BarChart3, 
@@ -24,12 +11,13 @@ import {
   Coffee, 
   FileText,
   Building2,
-  ChevronRight
+  LogOut
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { clearAdminSession } from "@/lib/admin-auth";
 
 const navigation = [
   { 
@@ -112,6 +100,12 @@ interface AdminSidebarProps {
 
 export default function AdminSidebar({ isCollapsed = false }: AdminSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    clearAdminSession();
+    router.push('/');
+  };
   
   return (
     <div className="flex flex-col h-full bg-sidebar text-sidebar-foreground max-h-screen">
@@ -195,7 +189,13 @@ export default function AdminSidebar({ isCollapsed = false }: AdminSidebarProps)
                 <span className="truncate font-semibold text-sidebar-foreground">Admin</span>
                 <span className="truncate text-xs text-sidebar-foreground/70">admin@company.com</span>
               </div>
-              <ChevronRight className="size-4 ml-auto" />
+              <button
+                onClick={handleLogout}
+                className="p-1 rounded hover:bg-sidebar-accent/50 transition-colors"
+                title="Logout"
+              >
+                <LogOut className="size-4" />
+              </button>
             </>
           )}
         </div>

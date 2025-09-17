@@ -1,7 +1,7 @@
 // src/app/admin/warnings/page.tsx
 'use client';
 import React, { useState } from 'react';
-import { AlertTriangle, Eye, EyeOff, Search, Plus, Trash2 } from 'lucide-react';
+import { AlertTriangle, Eye, EyeOff, Trash2 } from 'lucide-react';
 import { Warning, CreateWarningRequest, WarningType } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

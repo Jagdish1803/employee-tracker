@@ -12,7 +12,7 @@ import {
 } from '@/api';
 import { Log, Break, Issue, Warning } from '@/types';
 import { getCurrentISTDate, formatDateTime, formatMinutesToHours } from '@/lib/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 export default function EmployeeDashboard() {
@@ -53,7 +53,7 @@ export default function EmployeeDashboard() {
       setEmployeeCode(codeFromUrl);
       handleAutoLogin(codeFromUrl);
     }
-  }, [searchParams]);
+  }, [searchParams, handleAutoLogin, loggedIn]);
 
   useEffect(() => {
     if (loggedIn && employeeId) {
