@@ -7,21 +7,15 @@ import { z } from 'zod';
 // GET /api/assignments - Get assignments with optional filters
 export async function GET(request: NextRequest) {
   try {
-    console.log('GET /api/assignments called');
-    
     const { searchParams } = new URL(request.url);
     const query = Object.fromEntries(searchParams.entries());
-    console.log('Query params:', query);
 
     let validatedQuery;
     try {
       validatedQuery = employeeQuerySchema.parse(query);
     } catch {
-      console.log('Query validation failed, using empty filter');
       validatedQuery = {};
     }
-
-    await prisma.$connect();
 
     const where: Record<string, unknown> = {};
     if (validatedQuery.employeeId) {
@@ -30,9 +24,27 @@ export async function GET(request: NextRequest) {
 
     const assignments = await prisma.assignment.findMany({
       where,
-      include: {
-        employee: true,
-        tag: true,
+      select: {
+        id: true,
+        employeeId: true,
+        tagId: true,
+        isMandatory: true,
+        createdAt: true,
+        employee: {
+          select: {
+            id: true,
+            name: true,
+            employeeCode: true,
+            email: true,
+          }
+        },
+        tag: {
+          select: {
+            id: true,
+            tagName: true,
+            timeMinutes: true,
+          }
+        },
       },
       orderBy: [
         { employee: { name: 'asc' } },
@@ -40,15 +52,13 @@ export async function GET(request: NextRequest) {
       ],
     });
 
-    console.log(`Found ${assignments.length} assignments`);
-
     return NextResponse.json({
       success: true,
       data: assignments,
     });
   } catch (error) {
     console.error('Error in GET /api/assignments:', error);
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         {
@@ -68,23 +78,14 @@ export async function GET(request: NextRequest) {
       },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
 // POST /api/assignments - Create new assignment
 export async function POST(request: NextRequest) {
   try {
-    console.log('POST /api/assignments called');
-    
     const body = await request.json();
-    console.log('Request body:', body);
-    
     const validatedData = createAssignmentSchema.parse(body);
-    console.log('Validated data:', validatedData);
-
-    await prisma.$connect();
 
     // Check if assignment already exists
     const existingAssignment = await prisma.assignment.findUnique({
@@ -97,7 +98,6 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingAssignment) {
-      console.log('Assignment already exists');
       return NextResponse.json(
         {
           success: false,
@@ -107,14 +107,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify employee and tag exist
+    // Verify employee and tag exist in a single query
     const [employee, tag] = await Promise.all([
-      prisma.employee.findUnique({ where: { id: validatedData.employeeId } }),
-      prisma.tag.findUnique({ where: { id: validatedData.tagId } }),
+      prisma.employee.findUnique({
+        where: { id: validatedData.employeeId },
+        select: { id: true, name: true }
+      }),
+      prisma.tag.findUnique({
+        where: { id: validatedData.tagId },
+        select: { id: true, tagName: true }
+      }),
     ]);
 
     if (!employee) {
-      console.log('Employee not found:', validatedData.employeeId);
       return NextResponse.json(
         {
           success: false,
@@ -125,7 +130,6 @@ export async function POST(request: NextRequest) {
     }
 
     if (!tag) {
-      console.log('Tag not found:', validatedData.tagId);
       return NextResponse.json(
         {
           success: false,
@@ -135,17 +139,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('Creating assignment for:', employee.name, 'with tag:', tag.tagName);
-
     const assignment = await prisma.assignment.create({
       data: validatedData,
-      include: {
-        employee: true,
-        tag: true,
+      select: {
+        id: true,
+        employeeId: true,
+        tagId: true,
+        isMandatory: true,
+        createdAt: true,
+        employee: {
+          select: {
+            id: true,
+            name: true,
+            employeeCode: true,
+            email: true,
+          }
+        },
+        tag: {
+          select: {
+            id: true,
+            tagName: true,
+            timeMinutes: true,
+          }
+        },
       },
     });
-
-    console.log('Assignment created successfully:', assignment.id);
 
     return NextResponse.json({
       success: true,
@@ -154,7 +172,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error in POST /api/assignments:', error);
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         {
@@ -174,7 +192,5 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

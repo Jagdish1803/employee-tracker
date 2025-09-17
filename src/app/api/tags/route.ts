@@ -9,8 +9,14 @@ import { z } from 'zod';
 export async function GET(_request: NextRequest) {
   try {
     await ensureConnection();
-    
+
     const tags = await prisma.tag.findMany({
+      select: {
+        id: true,
+        tagName: true,
+        timeMinutes: true,
+        createdAt: true,
+      },
       orderBy: { tagName: 'asc' },
     });
     return NextResponse.json({ success: true, data: tags });

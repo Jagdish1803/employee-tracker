@@ -96,7 +96,7 @@ export interface UpdateLogRequest {
 }
 
 // Warning Types
-export type WarningType = 'ATTENDANCE' | 'PERFORMANCE' | 'CONDUCT' | 'OTHER';
+export type WarningType = 'ATTENDANCE' | 'LEAVE_MISUSE' | 'BREAK_EXCEEDED' | 'WORK_QUALITY' | 'BEHAVIORAL' | 'SYSTEM_MISUSE';
 
 export interface Warning {
   id: number;

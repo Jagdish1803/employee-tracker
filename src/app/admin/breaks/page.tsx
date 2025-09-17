@@ -231,8 +231,8 @@ export default function BreaksPage() {
                     <div className="flex items-center space-x-4">
                       <div className="text-right">
                         <div className="text-sm font-medium">
-                          {formatTime(breakRecord.breakInTime!)} 
-                          {breakRecord.breakOutTime && ` - ${formatTime(breakRecord.breakOutTime)}`}
+                          {formatTime(breakRecord.breakInTime!.toTimeString().slice(0,5))}
+                          {breakRecord.breakOutTime && ` - ${formatTime(breakRecord.breakOutTime.toTimeString().slice(0,5))}`}
                         </div>
                         <div className="text-sm text-muted-foreground">
                           Duration: {duration}

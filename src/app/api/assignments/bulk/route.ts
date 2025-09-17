@@ -7,42 +7,38 @@ import { z } from 'zod';
 // POST /api/assignments/bulk - Create multiple assignments for one employee
 export async function POST(request: NextRequest) {
   try {
-    console.log('POST /api/assignments/bulk called');
-    
     const body = await request.json();
-    console.log('Request body:', body);
-    
     const validatedData = createBulkAssignmentSchema.parse(body);
-    console.log('Validated data:', validatedData);
 
-    // Verify employee exists
-    const employee = await prisma.employee.findUnique({ 
-      where: { id: validatedData.employeeId } 
-    });
+    // Verify all employees and tags exist in parallel
+    const [employees, tags] = await Promise.all([
+      prisma.employee.findMany({
+        where: { id: { in: validatedData.employeeIds } },
+        select: { id: true, name: true }
+      }),
+      prisma.tag.findMany({
+        where: { id: { in: validatedData.tagIds } },
+        select: { id: true, tagName: true }
+      })
+    ]);
 
-    if (!employee) {
-      console.log('Employee not found:', validatedData.employeeId);
+    if (employees.length !== validatedData.employeeIds.length) {
+      const missingEmployeeIds = validatedData.employeeIds.filter(
+        id => !employees.find(emp => emp.id === id)
+      );
       return NextResponse.json(
         {
           success: false,
-          error: 'Employee not found',
+          error: `Employees not found: ${missingEmployeeIds.join(', ')}`,
         },
         { status: 404 }
       );
     }
 
-    // Verify all tags exist
-    const tags = await prisma.tag.findMany({
-      where: { 
-        id: { in: validatedData.tagIds } 
-      }
-    });
-
     if (tags.length !== validatedData.tagIds.length) {
       const missingTagIds = validatedData.tagIds.filter(
         tagId => !tags.find(tag => tag.id === tagId)
       );
-      console.log('Tags not found:', missingTagIds);
       return NextResponse.json(
         {
           success: false,
@@ -55,44 +51,64 @@ export async function POST(request: NextRequest) {
     // Check for existing assignments
     const existingAssignments = await prisma.assignment.findMany({
       where: {
-        employeeId: validatedData.employeeId,
+        employeeId: { in: validatedData.employeeIds },
         tagId: { in: validatedData.tagIds }
       },
-      include: { tag: true }
+      select: {
+        employeeId: true,
+        tagId: true,
+        employee: { select: { name: true } },
+        tag: { select: { tagName: true } }
+      }
     });
 
     if (existingAssignments.length > 0) {
-      const existingTagNames = existingAssignments.map(a => a.tag?.tagName).join(', ');
-      console.log('Some assignments already exist:', existingTagNames);
+      const existingInfo = existingAssignments.map(a => `${a.employee?.name} - ${a.tag?.tagName}`).join(', ');
       return NextResponse.json(
         {
           success: false,
-          error: `Assignments already exist for these tags: ${existingTagNames}`,
+          error: `Assignments already exist for: ${existingInfo}`,
         },
         { status: 400 }
       );
     }
 
-    console.log('Creating bulk assignments for:', employee.name, 'with tags:', tags.map(t => t.tagName).join(', '));
-
-    // Create all assignments in a transaction
+    // Create all assignments in a transaction with optimized select
     const assignments = await prisma.$transaction(
-      validatedData.tagIds.map(tagId =>
-        prisma.assignment.create({
-          data: {
-            employeeId: validatedData.employeeId,
-            tagId: tagId,
-            isMandatory: validatedData.isMandatory,
-          },
-          include: {
-            employee: true,
-            tag: true,
-          },
-        })
+      validatedData.employeeIds.flatMap(employeeId =>
+        validatedData.tagIds.map(tagId =>
+          prisma.assignment.create({
+            data: {
+              employeeId,
+              tagId,
+              isMandatory: validatedData.isMandatory,
+            },
+            select: {
+              id: true,
+              employeeId: true,
+              tagId: true,
+              isMandatory: true,
+              createdAt: true,
+              employee: {
+                select: {
+                  id: true,
+                  name: true,
+                  employeeCode: true,
+                  email: true,
+                }
+              },
+              tag: {
+                select: {
+                  id: true,
+                  tagName: true,
+                  timeMinutes: true,
+                }
+              },
+            },
+          })
+        )
       )
     );
-
-    console.log(`Created ${assignments.length} assignments successfully`);
 
     return NextResponse.json({
       success: true,
@@ -101,7 +117,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error in POST /api/assignments/bulk:', error);
-    
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         {
@@ -112,7 +127,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
     return NextResponse.json(
       {
         success: false,

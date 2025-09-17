@@ -7,3 +7,4 @@ export { issueService, IssueService } from './issue.service';
 export { breakService, BreakService } from './break.service';
 export { warningService, WarningService } from './warning.service';
 export { assignmentService, AssignmentService } from './assignment.service';
+export { flowaceService, FlowaceService } from './flowace.service';

@@ -1,21 +1,34 @@
 // src/app/admin/warnings/page.tsx
 'use client';
 import React, { useState } from 'react';
-import { AlertTriangle, Eye, EyeOff } from 'lucide-react';
-import { Warning } from '@/types';
-import { formatDate } from '@/lib/utils';
+import { AlertTriangle, Eye, EyeOff, Search, Plus, Trash2 } from 'lucide-react';
+import { Warning, CreateWarningRequest, WarningType } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { useWarningManagement } from '@/hooks/useWarnings';
 import { useEmployees } from '@/hooks/useEmployees';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
 
 export default function WarningsPage() {
   const [employeeFilter, setEmployeeFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'dismissed'>('all');
   const [dismissConfirmOpen, setDismissConfirmOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [warningToDismiss, setWarningToDismiss] = useState<Warning | null>(null);
+  const [warningToDelete, setWarningToDelete] = useState<Warning | null>(null);
+  const [createWarningOpen, setCreateWarningOpen] = useState(false);
+  const [newWarning, setNewWarning] = useState<CreateWarningRequest>({
+    employeeId: 0,
+    warningType: 'ATTENDANCE',
+    warningMessage: '',
+    warningDate: new Date().toISOString().split('T')[0]
+  });
 
   // React Query hooks
   const { data: employees = [], isLoading: loadingEmployees } = useEmployees();
@@ -23,11 +36,41 @@ export default function WarningsPage() {
     warnings,
     isLoading: loadingWarnings,
     dismissWarning,
-    isDismissing
+    isDismissing,
+    deleteWarning,
+    isDeleting,
+    createWarning,
+    isCreating
   } = useWarningManagement({
     employeeId: employeeFilter !== 'all' ? parseInt(employeeFilter) : undefined,
     status: statusFilter !== 'all' ? statusFilter : undefined
   });
+
+  const handleCreateWarning = async () => {
+    if (!newWarning.employeeId || newWarning.employeeId === 0 || !newWarning.warningMessage.trim()) {
+      toast.error('Please select an employee and enter a warning message');
+      return;
+    }
+
+    try {
+      // Ensure warningDate is in correct format
+      const formattedWarning = {
+        ...newWarning,
+        warningDate: newWarning.warningDate || new Date().toISOString().split('T')[0]
+      };
+      
+      await createWarning(formattedWarning);
+      setCreateWarningOpen(false);
+      setNewWarning({
+        employeeId: 0,
+        warningType: 'ATTENDANCE',
+        warningMessage: '',
+        warningDate: new Date().toISOString().split('T')[0]
+      });
+    } catch (error) {
+      console.error('Error creating warning:', error);
+    }
+  };
 
   const handleDismissWarning = async (warning: Warning) => {
     setWarningToDismiss(warning);
@@ -43,6 +86,25 @@ export default function WarningsPage() {
       console.error('Error dismissing warning:', error);
     } finally {
       setWarningToDismiss(null);
+      setDismissConfirmOpen(false);
+    }
+  };
+
+  const handleDeleteWarning = async (warning: Warning) => {
+    setWarningToDelete(warning);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!warningToDelete) return;
+
+    try {
+      await deleteWarning(warningToDelete.id);
+    } catch (error: unknown) {
+      console.error('Error deleting warning:', error);
+    } finally {
+      setWarningToDelete(null);
+      setDeleteConfirmOpen(false);
     }
   };
 
@@ -92,7 +154,7 @@ export default function WarningsPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 lg:p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold flex items-center">
@@ -101,6 +163,12 @@ export default function WarningsPage() {
           </h1>
           <p className="text-muted-foreground mt-1">Review and manage employee warnings</p>
         </div>
+        <Button 
+          onClick={() => setCreateWarningOpen(true)}
+          className="bg-red-600 hover:bg-red-700 text-white"
+        >
+          Create Warning
+        </Button>
       </div>
 
       {/* Filters */}
@@ -261,7 +329,7 @@ export default function WarningsPage() {
                               <div className="flex items-center space-x-2 mb-2">
                                 <AlertTriangle className={`h-4 w-4 ${priority.color}`} />
                                 <span className="font-medium text-gray-900">
-                                  {formatDate(warning.warningDate)}
+                                  {new Date(warning.warningDate).toLocaleDateString()}
                                 </span>
                                 <span className="text-sm text-gray-500">
                                   ({daysOld} days ago)
@@ -277,16 +345,29 @@ export default function WarningsPage() {
                               </p>
                             </div>
                             
-                            {warning.isActive && (
-                              <Button
-                                onClick={() => handleDismissWarning(warning)}
-                                variant="outline"
-                                size="sm"
-                                disabled={isDismissing}
-                              >
-                                {isDismissing ? 'Dismissing...' : 'Dismiss'}
-                              </Button>
-                            )}
+                            <div className="flex space-x-2">
+                              {warning.isActive ? (
+                                <Button
+                                  onClick={() => handleDismissWarning(warning)}
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={isDismissing}
+                                >
+                                  {isDismissing ? 'Dismissing...' : 'Dismiss'}
+                                </Button>
+                              ) : (
+                                <Button
+                                  onClick={() => handleDeleteWarning(warning)}
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={isDeleting}
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-1" />
+                                  {isDeleting ? 'Deleting...' : 'Delete'}
+                                </Button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       );
@@ -314,6 +395,112 @@ export default function WarningsPage() {
         onConfirm={confirmDismiss}
         variant="destructive"
       />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmationDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Delete Warning"
+        description={`Permanently delete warning for ${
+          warningToDelete
+            ? employees.find(emp => emp.id === warningToDelete.employeeId)?.name || 'this employee'
+            : ''
+        }? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmDelete}
+        variant="destructive"
+      />
+
+      {/* Create Warning Dialog */}
+      <Dialog open={createWarningOpen} onOpenChange={setCreateWarningOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-600" />
+              Create Manual Warning
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="employee">Employee</Label>
+              <Select 
+                value={newWarning.employeeId.toString()} 
+                onValueChange={(value) => setNewWarning(prev => ({ ...prev, employeeId: parseInt(value) }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select employee..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {employees.map((employee) => (
+                    <SelectItem key={employee.id} value={employee.id.toString()}>
+                      {employee.name} ({employee.employeeCode})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="warningType">Warning Type</Label>
+              <Select 
+                value={newWarning.warningType} 
+                onValueChange={(value: WarningType) => setNewWarning(prev => ({ ...prev, warningType: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ATTENDANCE">Attendance Issue</SelectItem>
+                  <SelectItem value="LEAVE_MISUSE">Leave Misuse</SelectItem>
+                  <SelectItem value="BREAK_EXCEEDED">Break Time Exceeded</SelectItem>
+                  <SelectItem value="WORK_QUALITY">Work Quality Issue</SelectItem>
+                  <SelectItem value="BEHAVIORAL">Behavioral Issue</SelectItem>
+                  <SelectItem value="SYSTEM_MISUSE">System Misuse</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="warningDate">Warning Date</Label>
+              <Input
+                id="warningDate"
+                type="date"
+                value={newWarning.warningDate}
+                onChange={(e) => setNewWarning(prev => ({ ...prev, warningDate: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="warningMessage">Warning Message</Label>
+              <Textarea
+                id="warningMessage"
+                value={newWarning.warningMessage}
+                onChange={(e) => setNewWarning(prev => ({ ...prev, warningMessage: e.target.value }))}
+                placeholder="Enter the warning message..."
+                rows={4}
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setCreateWarningOpen(false)}
+                disabled={isCreating}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleCreateWarning}
+                disabled={isCreating || !newWarning.employeeId || !newWarning.warningMessage.trim()}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                {isCreating ? 'Creating...' : 'Create Warning'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

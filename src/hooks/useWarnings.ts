@@ -105,12 +105,32 @@ export function useDismissWarning() {
   });
 }
 
+// Delete warning mutation
+export function useDeleteWarning() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => warningApi.delete(id),
+    onSuccess: () => {
+      toast.success('Warning deleted successfully');
+      
+      // Invalidate all warning-related queries
+      queryClient.invalidateQueries({ queryKey: warningKeys.all });
+    },
+    onError: (error) => {
+      console.error('Delete warning error:', error);
+      toast.error('Failed to delete warning');
+    },
+  });
+}
+
 // Combined hook for warning management
 export function useWarningManagement(defaultFilters: Record<string, unknown> = {}) {
   const warningsQuery = useWarnings(defaultFilters);
   const activeWarningsQuery = useActiveWarnings();
   const createMutation = useCreateWarning();
   const dismissMutation = useDismissWarning();
+  const deleteMutation = useDeleteWarning();
 
   return {
     // Data - extract from API response  
@@ -122,6 +142,7 @@ export function useWarningManagement(defaultFilters: Record<string, unknown> = {
     isLoadingActive: activeWarningsQuery.isLoading,
     isCreating: createMutation.isPending,
     isDismissing: dismissMutation.isPending,
+    isDeleting: deleteMutation.isPending,
     
     // Error states
     error: warningsQuery.error || activeWarningsQuery.error,
@@ -129,6 +150,7 @@ export function useWarningManagement(defaultFilters: Record<string, unknown> = {
     // Actions
     createWarning: createMutation.mutateAsync,
     dismissWarning: dismissMutation.mutateAsync,
+    deleteWarning: deleteMutation.mutateAsync,
     
     // Refetch functions
     refetch: () => {

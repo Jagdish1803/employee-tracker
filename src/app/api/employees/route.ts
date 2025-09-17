@@ -9,8 +9,15 @@ import { z } from 'zod';
 export async function GET(_request: NextRequest) {
   try {
     await ensureConnection();
-    
+
     const employees = await prisma.employee.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        employeeCode: true,
+        createdAt: true,
+      },
       orderBy: { name: 'asc' },
     });
     return NextResponse.json({ success: true, data: employees });

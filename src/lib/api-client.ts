@@ -125,6 +125,9 @@ export const warningApi = {
     
   dismiss: (id: number): Promise<AxiosResponse<ApiResponse<null>>> =>
     api.put(`/warnings/${id}`, { isActive: false }),
+    
+  delete: (id: number): Promise<AxiosResponse<ApiResponse<null>>> =>
+    api.delete(`/warnings/${id}`),
 };
 
 // Break API - Enhanced with all endpoints

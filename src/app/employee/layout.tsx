@@ -13,7 +13,8 @@ import {
   User,
   Menu,
   X,
-  CalendarDays
+  CalendarDays,
+  AlertTriangle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,7 @@ const navigation = [
   { name: 'Attendance', href: '/employee/attendance', icon: CalendarDays },
   { name: 'Break Tracker', href: '/employee/breaks', icon: Coffee },
   { name: 'My Issues', href: '/employee/issues', icon: FileText },
+  { name: 'Warnings', href: '/employee/warnings', icon: AlertTriangle },
   { name: 'Performance', href: '/employee/performance', icon: BarChart3 },
 ];
 
@@ -131,8 +133,8 @@ export default function EmployeeLayout({ children }: EmployeeLayoutProps) {
       </div>
 
       {/* Desktop sidebar */}
-      <div className="hidden lg:flex lg:w-64 lg:flex-col">
-        <div className="flex flex-col h-full bg-gray-50 border-r border-gray-200">
+      <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0">
+        <div className="flex flex-col h-full bg-gray-50 border-r border-gray-200 overflow-y-auto custom-scrollbar">
           <div className="flex-1 px-4 py-6">
             <div className="mb-8">
               <div className="flex items-center mb-6">
@@ -195,7 +197,7 @@ export default function EmployeeLayout({ children }: EmployeeLayoutProps) {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col lg:ml-0">
+      <div className="flex-1 flex flex-col lg:ml-64">
         {/* Mobile header */}
         <div className="lg:hidden bg-white border-b border-gray-200">
           <div className="flex items-center justify-between p-4">
@@ -224,7 +226,7 @@ export default function EmployeeLayout({ children }: EmployeeLayoutProps) {
         </div>
 
         {/* Page content */}
-        <main className="flex-1 p-6 bg-white">
+        <main className="flex-1 p-6 bg-white overflow-y-auto custom-scrollbar">
           {children}
         </main>
       </div>

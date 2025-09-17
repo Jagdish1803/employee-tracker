@@ -85,7 +85,7 @@ export const attendanceApi = {
   },
 
   // Update attendance record
-  updateAttendance: async (id: number, data: UpdateAttendanceData) => {
+  updateAttendance: async (id: string | number, data: UpdateAttendanceData) => {
     try {
       const response = await attendanceService.updateRecord(id, data);
       return response;

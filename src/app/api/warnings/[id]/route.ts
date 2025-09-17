@@ -81,3 +81,62 @@ export async function PUT(
     await prisma.$disconnect();
   }
 }
+
+// DELETE /api/warnings/[id] - Delete warning permanently
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: idParam } = await params;
+    const id = parseInt(idParam);
+    
+    if (isNaN(id)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid warning ID',
+        },
+        { status: 400 }
+      );
+    }
+
+    await prisma.$connect();
+
+    // Check if warning exists
+    const existingWarning = await prisma.warning.findUnique({
+      where: { id },
+    });
+
+    if (!existingWarning) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Warning not found',
+        },
+        { status: 404 }
+      );
+    }
+
+    await prisma.warning.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Warning deleted successfully',
+    });
+  } catch (error) {
+    console.error('Error deleting warning:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to delete warning',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
+  } finally {
+    await prisma.$disconnect();
+  }
+}

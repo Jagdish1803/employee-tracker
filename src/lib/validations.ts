@@ -30,7 +30,7 @@ export const createAssignmentSchema = z.object({
 
 // Bulk assignment validation schema for multi-tag assignments
 export const createBulkAssignmentSchema = z.object({
-  employeeId: z.number().positive('Employee ID must be positive'),
+  employeeIds: z.array(z.number().positive('Employee ID must be positive')).min(1, 'At least one employee must be selected'),
   tagIds: z.array(z.number().positive('Tag ID must be positive')).min(1, 'At least one tag must be selected'),
   isMandatory: z.boolean().default(false),
 });
@@ -59,7 +59,7 @@ export const updateLogSchema = z.object({
 // Warning validation schemas
 export const createWarningSchema = z.object({
   employeeId: z.number().positive('Employee ID must be positive'),
-  warningType: z.enum(['ATTENDANCE', 'PERFORMANCE', 'CONDUCT', 'OTHER']),
+  warningType: z.enum(['ATTENDANCE', 'LEAVE_MISUSE', 'BREAK_EXCEEDED', 'WORK_QUALITY', 'BEHAVIORAL', 'SYSTEM_MISUSE']),
   warningMessage: z.string().min(1, 'Warning message is required').max(500, 'Warning message too long'),
   warningDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format').optional(),
 });

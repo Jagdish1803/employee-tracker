@@ -281,7 +281,7 @@ export class AttendanceService {
   }
 
   // Update attendance record
-  async updateRecord(id: number, data: UpdateAttendanceData): Promise<AttendanceRecord> {
+  async updateRecord(id: string | number, data: UpdateAttendanceData): Promise<AttendanceRecord> {
     try {
       const response = await apiClient.put(`${this.basePath}/record/${id}`, data);
 

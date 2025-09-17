@@ -4,11 +4,17 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Users, Tag, FileText, AlertTriangle, BarChart3, Clock, Coffee, Settings, Calendar } from 'lucide-react';
+import {
+  Users, Tag, FileText, AlertTriangle, BarChart3, Clock, Coffee,
+  Settings, Calendar, TrendingUp, Activity, CheckCircle2, Eye,
+  ArrowUpRight, Timer
+} from 'lucide-react';
 import { employeeService, tagService, issueService, logService } from '@/api';
 import { getCurrentISTDate } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 
 interface DashboardData {
   totalEmployees: number;
@@ -89,303 +95,347 @@ export default function AdminDashboard() {
 
   if (!mounted || loading || !isAuthenticated) {
     return (
-      <div className="p-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="flex items-center justify-center min-h-[500px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground text-sm">Loading dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-2">Overview of your employee tracking system</p>
-      </div>
-
-      {/* Key Metrics - Reference Style */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {/* Total Employees */}
-        <div className="bg-white rounded-xl p-5 border border-gray-200 hover:border-gray-300 transition-all shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-gray-600 text-sm">Total Employees</span>
+    <div className="space-y-8">
+      {/* Header Section */}
+      <div className="border-b border-border/40 pb-6">
+        <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+              Admin Dashboard
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              Monitor and manage your organization&apos;s productivity and operations
+            </p>
           </div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-gray-100 rounded-lg border border-gray-200">
-              <Users className="h-5 w-5 text-gray-700" />
-            </div>
-            <span className="text-2xl font-bold text-gray-800">{data.totalEmployees}</span>
-          </div>
-        </div>
-
-        {/* Total Tags */}
-        <div className="bg-white rounded-xl p-5 border border-gray-200 hover:border-gray-300 transition-all shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-gray-600 text-sm">Total Tags</span>
-          </div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-gray-100 rounded-lg border border-gray-200">
-              <Tag className="h-5 w-5 text-gray-700" />
-            </div>
-            <span className="text-2xl font-bold text-gray-800">{data.totalTags}</span>
-          </div>
-        </div>
-
-        {/* Today's Submissions */}
-        <div className="bg-white rounded-xl p-5 border border-gray-200 hover:border-gray-300 transition-all shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-gray-600 text-sm">Today&apos;s Submissions</span>
-          </div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-gray-100 rounded-lg border border-gray-200">
-              <FileText className="h-5 w-5 text-gray-700" />
-            </div>
-            <span className="text-2xl font-bold text-gray-800">{data.todaysSubmissions}</span>
-          </div>
-        </div>
-
-        {/* Pending Issues */}
-        <div className="bg-white rounded-xl p-5 border border-gray-200 hover:border-gray-300 transition-all shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-gray-600 text-sm">Pending Issues</span>
-          </div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-gray-100 rounded-lg border border-gray-200">
-              <AlertTriangle className="h-5 w-5 text-gray-700" />
-            </div>
-            <span className="text-2xl font-bold text-gray-800">{data.pendingIssues}</span>
+          <div className="flex items-center space-x-3">
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+              <Activity className="h-3 w-3 mr-1" />
+              System Online
+            </Badge>
+            <Button variant="outline" size="sm">
+              <Settings className="h-4 w-4 mr-2" />
+              Settings
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <Link href="/admin/daily-chart">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4">
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <BarChart3 className="h-6 w-6 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">View Daily Chart</h3>
-                  <p className="text-sm text-gray-600">See today&apos;s work submissions</p>
-                </div>
+      {/* Key Metrics */}
+      <div>
+        <h2 className="text-xl font-semibold mb-4 text-gray-900">Key Metrics</h2>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500 bg-gradient-to-br from-blue-50 to-white">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-700">Total Employees</CardTitle>
+              <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                <Users className="h-4 w-4 text-blue-600" />
               </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-gray-900">{data.totalEmployees}</div>
+              <p className="text-xs text-muted-foreground flex items-center mt-1">
+                <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
+                Active in system
+              </p>
             </CardContent>
           </Card>
-        </Link>
 
-        <Link href="/admin/employees">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4">
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <Users className="h-6 w-6 text-green-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">Manage Employees</h3>
-                  <p className="text-sm text-gray-600">Add and edit employee records</p>
-                </div>
+          <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 border-l-green-500 bg-gradient-to-br from-green-50 to-white">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-700">Work Tags</CardTitle>
+              <div className="h-8 w-8 rounded-lg bg-green-500/10 flex items-center justify-center">
+                <Tag className="h-4 w-4 text-green-600" />
               </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-gray-900">{data.totalTags}</div>
+              <p className="text-xs text-muted-foreground flex items-center mt-1">
+                <CheckCircle2 className="h-3 w-3 mr-1 text-green-500" />
+                Work categories
+              </p>
             </CardContent>
           </Card>
-        </Link>
 
-        <Link href="/admin/assignments">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4">
-                <div className="p-3 bg-purple-100 rounded-lg">
-                  <Settings className="h-6 w-6 text-purple-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">Tag Assignments</h3>
-                  <p className="text-sm text-gray-600">Assign tags to employees</p>
-                </div>
+          <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 border-l-yellow-500 bg-gradient-to-br from-yellow-50 to-white">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-700">Today&apos;s Submissions</CardTitle>
+              <div className="h-8 w-8 rounded-lg bg-yellow-500/10 flex items-center justify-center">
+                <FileText className="h-4 w-4 text-yellow-600" />
               </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-gray-900">{data.todaysSubmissions}</div>
+              <p className="text-xs text-muted-foreground flex items-center mt-1">
+                <Timer className="h-3 w-3 mr-1 text-yellow-500" />
+                Work logs submitted
+              </p>
             </CardContent>
           </Card>
-        </Link>
 
-        <Link href="/admin/issues">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4">
-                <div className="p-3 bg-red-100 rounded-lg">
-                  <AlertTriangle className="h-6 w-6 text-red-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">Issue Management</h3>
-                  <p className="text-sm text-gray-600">Review and respond to issues</p>
-                </div>
+          <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 border-l-red-500 bg-gradient-to-br from-red-50 to-white">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-700">Pending Issues</CardTitle>
+              <div className="h-8 w-8 rounded-lg bg-red-500/10 flex items-center justify-center">
+                <AlertTriangle className="h-4 w-4 text-red-600" />
               </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-gray-900">{data.pendingIssues}</div>
+              <p className="text-xs text-muted-foreground flex items-center mt-1">
+                <Eye className="h-3 w-3 mr-1 text-red-500" />
+                Require attention
+              </p>
             </CardContent>
           </Card>
-        </Link>
-
-        <Link href="/admin/breaks">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4">
-                <div className="p-3 bg-yellow-100 rounded-lg">
-                  <Coffee className="h-6 w-6 text-yellow-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">Break Management</h3>
-                  <p className="text-sm text-gray-600">Monitor employee breaks</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
-
-        <Link href="/admin/edit-logs">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4">
-                <div className="p-3 bg-indigo-100 rounded-lg">
-                  <Clock className="h-6 w-6 text-indigo-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">Edit Work Logs</h3>
-                  <p className="text-sm text-gray-600">Modify submitted work entries</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
+        </div>
       </div>
 
-      {/* Today's Summary */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Calendar className="h-5 w-5 mr-2" />
-              Today&apos;s Summary
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Total Employees</span>
-              <span className="font-medium">{data.totalEmployees}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Submitted Today</span>
-              <span className="font-medium text-green-600">{data.todaysSubmissions}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Pending Submissions</span>
-              <span className="font-medium text-orange-600">
-                {data.totalEmployees - data.todaysSubmissions}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Submission Rate</span>
-              <span className="font-medium">
-                {data.totalEmployees > 0 
-                  ? Math.round((data.todaysSubmissions / data.totalEmployees) * 100)
-                  : 0
-                }%
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Quick Actions Grid */}
+      <div>
+        <h2 className="text-xl font-semibold mb-4 text-gray-900">Quick Actions</h2>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <Link href="/admin/daily-chart">
+            <Card className="relative overflow-hidden group hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer border-2 border-transparent hover:border-blue-200 bg-gradient-to-br from-blue-50 via-white to-blue-50">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <div className="relative">
+                    <div className="p-4 bg-blue-500 rounded-xl shadow-lg group-hover:shadow-xl transition-shadow">
+                      <BarChart3 className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 h-3 w-3 bg-green-400 rounded-full border-2 border-white"></div>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">Daily Chart</h3>
+                    <p className="text-sm text-muted-foreground">View today&apos;s work submissions</p>
+                  </div>
+                  <ArrowUpRight className="h-4 w-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <AlertTriangle className="h-5 w-5 mr-2" />
-              Issues Overview
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Total Issues</span>
-              <span className="font-medium">{data.totalIssues}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Pending Issues</span>
-              <span className="font-medium text-red-600">{data.pendingIssues}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Resolution Rate</span>
-              <span className="font-medium">
-                {data.totalIssues > 0 
-                  ? Math.round(((data.totalIssues - data.pendingIssues) / data.totalIssues) * 100)
-                  : 0
-                }%
-              </span>
-            </div>
-            {data.pendingIssues > 0 && (
-              <Link href="/admin/issues">
-                <Button variant="outline" size="sm" className="w-full">
-                  Review Pending Issues
-                </Button>
-              </Link>
-            )}
-          </CardContent>
-        </Card>
+          <Link href="/admin/employees">
+            <Card className="relative overflow-hidden group hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer border-2 border-transparent hover:border-green-200 bg-gradient-to-br from-green-50 via-white to-green-50">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <div className="relative">
+                    <div className="p-4 bg-green-500 rounded-xl shadow-lg group-hover:shadow-xl transition-shadow">
+                      <Users className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 h-3 w-3 bg-blue-400 rounded-full border-2 border-white"></div>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900 group-hover:text-green-600 transition-colors">Manage Employees</h3>
+                    <p className="text-sm text-muted-foreground">Add and edit employee records</p>
+                  </div>
+                  <ArrowUpRight className="h-4 w-4 text-gray-400 group-hover:text-green-500 transition-colors" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/admin/assignments">
+            <Card className="relative overflow-hidden group hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer border-2 border-transparent hover:border-purple-200 bg-gradient-to-br from-purple-50 via-white to-purple-50">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <div className="relative">
+                    <div className="p-4 bg-purple-500 rounded-xl shadow-lg group-hover:shadow-xl transition-shadow">
+                      <Settings className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 h-3 w-3 bg-orange-400 rounded-full border-2 border-white"></div>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">Tag Assignments</h3>
+                    <p className="text-sm text-muted-foreground">Assign tags to employees</p>
+                  </div>
+                  <ArrowUpRight className="h-4 w-4 text-gray-400 group-hover:text-purple-500 transition-colors" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/admin/issues">
+            <Card className="relative overflow-hidden group hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer border-2 border-transparent hover:border-red-200 bg-gradient-to-br from-red-50 via-white to-red-50">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <div className="relative">
+                    <div className="p-4 bg-red-500 rounded-xl shadow-lg group-hover:shadow-xl transition-shadow">
+                      <AlertTriangle className="h-6 w-6 text-white" />
+                    </div>
+                    {data.pendingIssues > 0 && (
+                      <div className="absolute -top-1 -right-1 h-5 w-5 bg-red-600 rounded-full border-2 border-white flex items-center justify-center">
+                        <span className="text-xs text-white font-bold">{data.pendingIssues}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-gray-900 group-hover:text-red-600 transition-colors">Issue Management</h3>
+                      {data.pendingIssues > 0 && (
+                        <Badge variant="destructive" className="text-xs animate-pulse">
+                          {data.pendingIssues} pending
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">Review and respond to issues</p>
+                  </div>
+                  <ArrowUpRight className="h-4 w-4 text-gray-400 group-hover:text-red-500 transition-colors" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/admin/breaks">
+            <Card className="relative overflow-hidden group hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer border-2 border-transparent hover:border-yellow-200 bg-gradient-to-br from-yellow-50 via-white to-yellow-50">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <div className="relative">
+                    <div className="p-4 bg-yellow-500 rounded-xl shadow-lg group-hover:shadow-xl transition-shadow">
+                      <Coffee className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 h-3 w-3 bg-green-400 rounded-full border-2 border-white"></div>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900 group-hover:text-yellow-600 transition-colors">Break Management</h3>
+                    <p className="text-sm text-muted-foreground">Monitor employee breaks</p>
+                  </div>
+                  <ArrowUpRight className="h-4 w-4 text-gray-400 group-hover:text-yellow-500 transition-colors" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/admin/edit-logs">
+            <Card className="relative overflow-hidden group hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer border-2 border-transparent hover:border-indigo-200 bg-gradient-to-br from-indigo-50 via-white to-indigo-50">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <div className="relative">
+                    <div className="p-4 bg-indigo-500 rounded-xl shadow-lg group-hover:shadow-xl transition-shadow">
+                      <Clock className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 h-3 w-3 bg-blue-400 rounded-full border-2 border-white"></div>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">Edit Work Logs</h3>
+                    <p className="text-sm text-muted-foreground">Modify submitted work entries</p>
+                  </div>
+                  <ArrowUpRight className="h-4 w-4 text-gray-400 group-hover:text-indigo-500 transition-colors" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
       </div>
 
-      {/* Getting Started Guide */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Getting Started</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-start space-x-3">
-              <div className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                <span className="text-xs font-medium text-blue-600">1</span>
+      {/* Analytics & Summary */}
+      <div>
+        <h2 className="text-xl font-semibold mb-4 text-gray-900">Analytics Overview</h2>
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card className="relative overflow-hidden bg-gradient-to-br from-blue-50 to-white border-l-4 border-l-blue-500">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-gray-900">
+                <div className="p-2 bg-blue-500 rounded-lg">
+                  <Calendar className="h-4 w-4 text-white" />
+                </div>
+                Today&apos;s Performance
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-100">
+                <span className="text-sm font-medium text-gray-700">Total Employees</span>
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 font-semibold">
+                  {data.totalEmployees}
+                </Badge>
               </div>
-              <div>
-                <p className="text-sm text-gray-900">
-                  <Link href="/admin/employees" className="font-medium text-blue-600 hover:text-blue-500">
-                    Add employees
-                  </Link> to the system with their details and employee codes
-                </p>
+              <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-100">
+                <span className="text-sm font-medium text-gray-700">Submitted Today</span>
+                <Badge className="bg-green-500 hover:bg-green-600 font-semibold">
+                  {data.todaysSubmissions}
+                </Badge>
               </div>
-            </div>
-            <div className="flex items-start space-x-3">
-              <div className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                <span className="text-xs font-medium text-blue-600">2</span>
+              <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-100">
+                <span className="text-sm font-medium text-gray-700">Pending Submissions</span>
+                <Badge variant="secondary" className="bg-orange-100 text-orange-700 font-semibold">
+                  {data.totalEmployees - data.todaysSubmissions}
+                </Badge>
               </div>
-              <div>
-                <p className="text-sm text-gray-900">
-                  <Link href="/admin/tags" className="font-medium text-blue-600 hover:text-blue-500">
-                    Create work tags
-                  </Link> with time values for different tasks
-                </p>
+              <div className="p-3 bg-white rounded-lg border border-gray-100 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-700">Submission Rate</span>
+                  <span className="text-sm font-bold text-gray-900">
+                    {data.totalEmployees > 0 
+                      ? Math.round((data.todaysSubmissions / data.totalEmployees) * 100)
+                      : 0
+                    }%
+                  </span>
+                </div>
+                <Progress 
+                  value={data.totalEmployees > 0 ? (data.todaysSubmissions / data.totalEmployees) * 100 : 0} 
+                  className="h-2" 
+                />
               </div>
-            </div>
-            <div className="flex items-start space-x-3">
-              <div className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                <span className="text-xs font-medium text-blue-600">3</span>
+            </CardContent>
+          </Card>
+
+          <Card className="relative overflow-hidden bg-gradient-to-br from-red-50 to-white border-l-4 border-l-red-500">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-gray-900">
+                <div className="p-2 bg-red-500 rounded-lg">
+                  <AlertTriangle className="h-4 w-4 text-white" />
+                </div>
+                Issues & Alerts
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-100">
+                <span className="text-sm font-medium text-gray-700">Total Issues</span>
+                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 font-semibold">
+                  {data.totalIssues}
+                </Badge>
               </div>
-              <div>
-                <p className="text-sm text-gray-900">
-                  <Link href="/admin/assignments" className="font-medium text-blue-600 hover:text-blue-500">
-                    Assign tags to employees
-                  </Link> and set which ones are mandatory
-                </p>
+              <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-100">
+                <span className="text-sm font-medium text-gray-700">Pending Issues</span>
+                <Badge variant={data.pendingIssues > 0 ? "destructive" : "outline"} className="font-semibold">
+                  {data.pendingIssues}
+                </Badge>
               </div>
-            </div>
-            <div className="flex items-start space-x-3">
-              <div className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                <span className="text-xs font-medium text-blue-600">4</span>
+              <div className="p-3 bg-white rounded-lg border border-gray-100 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-700">Resolution Rate</span>
+                  <span className="text-sm font-bold text-gray-900">
+                    {data.totalIssues > 0 
+                      ? Math.round(((data.totalIssues - data.pendingIssues) / data.totalIssues) * 100)
+                      : 100
+                    }%
+                  </span>
+                </div>
+                <Progress 
+                  value={data.totalIssues > 0 ? ((data.totalIssues - data.pendingIssues) / data.totalIssues) * 100 : 100} 
+                  className="h-2" 
+                />
               </div>
-              <div>
-                <p className="text-sm text-gray-900">
-                  Employees can now log in using their codes and start tracking work time
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+              {data.pendingIssues > 0 && (
+                <Link href="/admin/issues" className="block">
+                  <Button variant="outline" size="sm" className="w-full hover:bg-red-50 hover:text-red-700 hover:border-red-200 transition-colors">
+                    <AlertTriangle className="h-4 w-4 mr-2" />
+                    Review {data.pendingIssues} Pending Issues
+                  </Button>
+                </Link>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

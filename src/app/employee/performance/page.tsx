@@ -36,7 +36,8 @@ export default function PerformancePage() {
         dateFrom = customDateFrom;
         dateTo = customDateTo;
       } else {
-        const range = getDateRange(dateRange);
+        const days = dateRange === 'week' ? 7 : dateRange === 'month' ? 30 : 90;
+        const range = getDateRange(days);
         dateFrom = range.start;
         dateTo = range.end;
       }

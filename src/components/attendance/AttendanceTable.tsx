@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Edit2, Trash2, Save, X } from 'lucide-react';
+import { Edit2, Trash2, Save, X, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -19,7 +19,7 @@ interface AttendanceTableProps {
   onPageChange: (page: number) => void;
   onEdit: (record: AttendanceRecord) => void;
   onDelete: (id: string | number) => void;
-  editingRecord?: number | null;
+  editingRecord?: string | number | null;
   editForm?: Partial<AttendanceRecord>;
   onSave?: () => void;
   onCancel?: () => void;
@@ -58,225 +58,272 @@ export function AttendanceTable({
   deleting = null
 }: AttendanceTableProps) {
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Employee Name</TableHead>
-            <TableHead>Code</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Shift</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Check In</TableHead>
-            <TableHead>Break In</TableHead>
-            <TableHead>Break Out</TableHead>
-            <TableHead>Check Out</TableHead>
-            <TableHead>Hours</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {records.map((record) => (
-            <TableRow key={record.id} className={editingRecord === record.id ? 'bg-blue-50' : ''}>
-              <TableCell className="font-medium">
-                {record.employee?.name || record.employeeName || 'Unknown'}
-              </TableCell>
-              <TableCell>
-                {record.employee?.employeeCode || record.employeeCode || 'N/A'}
-              </TableCell>
-              <TableCell>
-                {new Date(record.date).toLocaleDateString()}
-              </TableCell>
-              <TableCell>
-                {editingRecord === record.id ? (
-                  <div className="space-y-1">
-                    <Input 
-                      value={editForm.shift || ''} 
-                      onChange={(e) => onFieldChange?.('shift', e.target.value)} 
-                      placeholder="Shift" 
-                      className="w-20 h-8 text-xs" 
-                    />
-                    <Input 
-                      value={editForm.shiftStart || ''} 
-                      onChange={(e) => onFieldChange?.('shiftStart', e.target.value)}
-                      placeholder="Start" 
-                      className="w-20 h-8 text-xs" 
-                    />
-                  </div>
-                ) : (
-                  <div>
-                    {record.shift ? (
-                      <>
-                        <div className="text-sm font-medium">{record.shift}</div>
-                        {record.shiftStart && <div className="text-xs text-gray-500">Start: {record.shiftStart}</div>}
-                      </>
-                    ) : '-'}
-                  </div>
-                )}
-              </TableCell>
-              <TableCell>
-                {editingRecord === record.id ? (
-                  <Select
-                    value={editForm.status || record.status}
-                    onValueChange={(value) => onFieldChange?.('status', value)}
-                  >
-                    <SelectTrigger className="w-28 h-8">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="PRESENT">Present</SelectItem>
-                      <SelectItem value="ABSENT">Absent</SelectItem>
-                      <SelectItem value="LATE">Late</SelectItem>
-                      <SelectItem value="HALF_DAY">Half Day</SelectItem>
-                      <SelectItem value="LEAVE_APPROVED">Leave</SelectItem>
-                      <SelectItem value="WFH_APPROVED">WFH</SelectItem>
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  getStatusBadge(record.status)
-                )}
-              </TableCell>
-              <TableCell>
-                {editingRecord === record.id ? (
-                  <Input 
-                    type="time" 
-                    value={editForm.checkInTime || ''} 
-                    onChange={(e) => onFieldChange?.('checkInTime', e.target.value)} 
-                    className="w-24 h-8" 
-                  />
-                ) : (record.checkInTime && record.checkInTime !== 'null' ? record.checkInTime : '-')}
-              </TableCell>
-              <TableCell>
-                {editingRecord === record.id ? (
-                  <Input 
-                    type="time" 
-                    value={editForm.lunchOutTime || ''}
-                    onChange={(e) => onFieldChange?.('lunchOutTime', e.target.value)} 
-                    className="w-24 h-8" 
-                  />
-                ) : (record.lunchOutTime && record.lunchOutTime !== 'null' ? record.lunchOutTime : '-')}
-              </TableCell>
-              <TableCell>
-                {editingRecord === record.id ? (
-                  <Input 
-                    type="time" 
-                    value={editForm.lunchInTime || ''}
-                    onChange={(e) => onFieldChange?.('lunchInTime', e.target.value)} 
-                    className="w-24 h-8" 
-                  />
-                ) : (record.lunchInTime && record.lunchInTime !== 'null' ? record.lunchInTime : '-')}
-              </TableCell>
-              <TableCell>
-                {editingRecord === record.id ? (
-                  <Input 
-                    type="time" 
-                    value={editForm.checkOutTime || ''}
-                    onChange={(e) => onFieldChange?.('checkOutTime', e.target.value)} 
-                    className="w-24 h-8" 
-                  />
-                ) : (record.checkOutTime && record.checkOutTime !== 'null' ? record.checkOutTime : '-')}
-              </TableCell>
-              <TableCell>
-                {editingRecord === record.id ? (
-                  <Input 
-                    type="number" 
-                    step="0.1" 
-                    value={editForm.hoursWorked || ''}
-                    onChange={(e) => onFieldChange?.('hoursWorked', parseFloat(e.target.value) || 0)} 
-                    className="w-16 h-8" 
-                  />
-                ) : (record.hoursWorked && record.hoursWorked > 0 ? `${record.hoursWorked.toFixed(2)}h` : '0.00h')}
-              </TableCell>
-              <TableCell>
-                <div className="flex space-x-1">
+    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      {/* Header */}
+      <div className="px-3 py-3 border-b border-gray-200 bg-gray-50">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Users className="h-5 w-5 text-gray-500" />
+            <h3 className="text-lg font-semibold text-gray-900">Attendance Records</h3>
+          </div>
+          <div className="text-sm text-gray-500">
+            Total: {totalCount} records
+          </div>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="overflow-x-auto overflow-y-auto max-h-[70vh]">
+        <table className="min-w-full divide-y divide-gray-200 text-sm">
+          <thead className="bg-gray-50 sticky top-0 z-10">
+            <tr>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                Employee Name
+              </th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[80px]">
+                Code
+              </th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[90px]">
+                Date
+              </th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[80px]">
+                Shift
+              </th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[80px]">
+                Status
+              </th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[80px]">
+                Check In
+              </th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[80px]">
+                Break In
+              </th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[80px]">
+                Break Out
+              </th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[80px]">
+                Check Out
+              </th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[60px]">
+                Hours
+              </th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {records.map((record, index) => (
+              <tr key={record.id} className={`hover:bg-gray-50 ${editingRecord === record.id ? 'bg-blue-50' : index % 2 === 0 ? 'bg-white' : 'bg-gray-25'}`}>
+                <td className="px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                  {record.employee?.name || record.employeeName || 'Unknown'}
+                </td>
+                <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-500">
+                  {record.employee?.employeeCode || record.employeeCode || 'N/A'}
+                </td>
+                <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-500">
+                  {new Date(record.date).toLocaleDateString('en-US', { 
+                    month: 'numeric', 
+                    day: 'numeric', 
+                    year: 'numeric' 
+                  })}
+                </td>
+                <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-500">
                   {editingRecord === record.id ? (
-                    <>
-                      <Button
-                        size="sm"
-                        onClick={onSave}
-                        disabled={saving}
-                        className="h-8 w-8 p-0"
-                      >
-                        <Save className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={onCancel}
-                        disabled={saving}
-                        className="h-8 w-8 p-0"
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </>
+                    <div className="space-y-1">
+                      <Input 
+                        value={editForm.shift || ''} 
+                        onChange={(e) => onFieldChange?.('shift', e.target.value)} 
+                        placeholder="Shift" 
+                        className="w-16 h-7 text-xs" 
+                      />
+                      <Input 
+                        value={editForm.shiftStart || ''} 
+                        onChange={(e) => onFieldChange?.('shiftStart', e.target.value)}
+                        placeholder="Start" 
+                        className="w-16 h-7 text-xs" 
+                      />
+                    </div>
                   ) : (
-                    <>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => onEdit(record)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <Edit2 className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => onDelete(record.id)}
-                        disabled={deleting === record.id}
-                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700 disabled:opacity-50"
-                      >
-                        {deleting === record.id ? (
-                          <div className="animate-spin h-3 w-3 border border-current border-t-transparent rounded-full"></div>
-                        ) : (
-                          <Trash2 className="h-3 w-3" />
-                        )}
-                      </Button>
-                    </>
+                    <div>
+                      {record.shift ? (
+                        <>
+                          <div className="text-sm font-medium text-gray-900">{record.shift}</div>
+                          {record.shiftStart && <div className="text-xs text-gray-500">Start: {record.shiftStart}</div>}
+                        </>
+                      ) : '-'}
+                    </div>
                   )}
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+                </td>
+                <td className="px-3 py-3 whitespace-nowrap">
+                  {editingRecord === record.id ? (
+                    <Select
+                      value={editForm.status || record.status}
+                      onValueChange={(value) => onFieldChange?.('status', value)}
+                    >
+                      <SelectTrigger className="w-24 h-7">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="PRESENT">Present</SelectItem>
+                        <SelectItem value="ABSENT">Absent</SelectItem>
+                        <SelectItem value="LATE">Late</SelectItem>
+                        <SelectItem value="HALF_DAY">Half Day</SelectItem>
+                        <SelectItem value="LEAVE_APPROVED">Leave</SelectItem>
+                        <SelectItem value="WFH_APPROVED">WFH</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    getStatusBadge(record.status)
+                  )}
+                </td>
+                <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-900">
+                  {editingRecord === record.id ? (
+                    <Input 
+                      type="time" 
+                      value={editForm.checkInTime || ''} 
+                      onChange={(e) => onFieldChange?.('checkInTime', e.target.value)} 
+                      className="w-20 h-7" 
+                    />
+                  ) : (record.checkInTime && record.checkInTime !== 'null' ? record.checkInTime : '-')}
+                </td>
+                <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-900">
+                  {editingRecord === record.id ? (
+                    <Input 
+                      type="time" 
+                      value={editForm.lunchOutTime || ''}
+                      onChange={(e) => onFieldChange?.('lunchOutTime', e.target.value)} 
+                      className="w-20 h-7" 
+                    />
+                  ) : (record.lunchOutTime && record.lunchOutTime !== 'null' ? record.lunchOutTime : '-')}
+                </td>
+                <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-900">
+                  {editingRecord === record.id ? (
+                    <Input 
+                      type="time" 
+                      value={editForm.lunchInTime || ''}
+                      onChange={(e) => onFieldChange?.('lunchInTime', e.target.value)} 
+                      className="w-20 h-7" 
+                    />
+                  ) : (record.lunchInTime && record.lunchInTime !== 'null' ? record.lunchInTime : '-')}
+                </td>
+                <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-900">
+                  {editingRecord === record.id ? (
+                    <Input 
+                      type="time" 
+                      value={editForm.checkOutTime || ''}
+                      onChange={(e) => onFieldChange?.('checkOutTime', e.target.value)} 
+                      className="w-20 h-7" 
+                    />
+                  ) : (record.checkOutTime && record.checkOutTime !== 'null' ? record.checkOutTime : '-')}
+                </td>
+                <td className="px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                  {editingRecord === record.id ? (
+                    <Input 
+                      type="number" 
+                      step="0.1" 
+                      value={editForm.hoursWorked || ''}
+                      onChange={(e) => onFieldChange?.('hoursWorked', parseFloat(e.target.value) || 0)} 
+                      className="w-14 h-7" 
+                    />
+                  ) : (record.hoursWorked && record.hoursWorked > 0 ? `${record.hoursWorked.toFixed(1)}h` : '0.0h')}
+                </td>
+                <td className="px-3 py-3 whitespace-nowrap text-sm font-medium">
+                  <div className="flex space-x-2">
+                    {editingRecord === record.id ? (
+                      <>
+                        <Button
+                          size="sm"
+                          onClick={onSave}
+                          disabled={saving}
+                          className="h-8 w-8 p-0 bg-green-600 hover:bg-green-700"
+                        >
+                          <Save className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={onCancel}
+                          disabled={saving}
+                          className="h-8 w-8 p-0"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => onEdit(record)}
+                          className="h-8 w-8 p-0 text-blue-600 hover:text-blue-900 hover:bg-blue-50"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => onDelete(record.id)}
+                          disabled={deleting === record.id}
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-900 hover:bg-red-50 disabled:opacity-50"
+                        >
+                          {deleting === record.id ? (
+                            <div className="animate-spin h-4 w-4 border-2 border-red-600 border-t-transparent rounded-full"></div>
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between px-2 py-4">
-          <div className="text-sm text-gray-500">
-            Showing {Math.min((currentPage - 1) * 10 + 1, totalCount)} to {Math.min(currentPage * 10, totalCount)} of {totalCount} results
-          </div>
-          <div className="flex space-x-1">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onPageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              Previous
-            </Button>
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              const page = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
-              return (
-                <Button
-                  key={page}
-                  size="sm"
-                  variant={currentPage === page ? 'default' : 'outline'}
-                  onClick={() => onPageChange(page)}
-                >
-                  {page}
-                </Button>
-              );
-            })}
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onPageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              Next
-            </Button>
+        <div className="px-3 py-3 border-t border-gray-200 bg-gray-50">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-700">
+              Showing {Math.min((currentPage - 1) * 50 + 1, totalCount)} to {Math.min(currentPage * 50, totalCount)} of {totalCount} results
+            </div>
+            <div className="flex space-x-1">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onPageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="text-gray-500 border-gray-300 hover:bg-gray-50"
+              >
+                Previous
+              </Button>
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const page = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                return (
+                  <Button
+                    key={page}
+                    size="sm"
+                    variant={currentPage === page ? 'default' : 'outline'}
+                    onClick={() => onPageChange(page)}
+                    className={currentPage === page ? 'bg-blue-600 text-white' : 'text-gray-500 border-gray-300 hover:bg-gray-50'}
+                  >
+                    {page}
+                  </Button>
+                );
+              })}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onPageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="text-gray-500 border-gray-300 hover:bg-gray-50"
+              >
+                Next
+              </Button>
+            </div>
           </div>
         </div>
       )}

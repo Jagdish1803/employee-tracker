@@ -86,17 +86,19 @@ export function useUpdateAttendanceRecord() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: Record<string, unknown> }) => {
+    mutationFn: async ({ id, data }: { id: string | number; data: Record<string, unknown> }) => {
       return attendanceApi.updateAttendance(id, data);
     },
     onSuccess: (result, variables) => {
       toast.success('Attendance record updated successfully');
       
-      // Update the specific record in cache
-      queryClient.setQueryData(
-        attendanceKeys.record(variables.id),
-        result
-      );
+      // Update the specific record in cache if it's a number
+      if (typeof variables.id === 'number') {
+        queryClient.setQueryData(
+          attendanceKeys.record(variables.id),
+          result
+        );
+      }
       
       // Invalidate list queries
       queryClient.invalidateQueries({ queryKey: attendanceKeys.records() });

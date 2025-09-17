@@ -251,7 +251,7 @@ export default function BreaksPage() {
                       {Math.floor(breakDuration / 60)}:{(breakDuration % 60).toString().padStart(2, '0')}
                     </div>
                     <p className="text-gray-600">
-                      Break started at {formatTime(currentBreak.breakInTime!)}
+                      Break started at {formatTime(currentBreak.breakInTime!.toTimeString().slice(0,5))}
                     </p>
                     {isExceeded && (
                       <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
@@ -350,7 +350,7 @@ export default function BreaksPage() {
                       </div>
                       <div>
                         <div className="font-medium">
-                          {formatTime(breakItem.breakInTime!)} - {breakItem.breakOutTime ? formatTime(breakItem.breakOutTime) : 'Active'}
+                          {formatTime(breakItem.breakInTime!.toTimeString().slice(0,5))} - {breakItem.breakOutTime ? formatTime(breakItem.breakOutTime.toTimeString().slice(0,5)) : 'Active'}
                         </div>
                         <div className="text-sm text-gray-600">
                           Duration: {breakItem.breakDuration} minutes

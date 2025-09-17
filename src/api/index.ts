@@ -14,5 +14,6 @@ export {
   issueService,
   breakService,
   warningService,
-  assignmentService
+  assignmentService,
+  flowaceService
 } from './services';

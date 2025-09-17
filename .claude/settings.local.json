@@ -7,7 +7,14 @@
       "Bash(npm run generate:*)",
       "Bash(npx prisma generate:*)",
       "Bash(npm run dev:*)",
-      "Bash(npx next:*)"
+      "Bash(npx next:*)",
+      "Bash(npm install:*)",
+      "Bash(npx prisma:*)",
+      "Bash(curl:*)",
+      "Bash(rm:*)",
+      "Bash(npx tsc:*)",
+      "Bash(grep:*)",
+      "Bash(npm run lint)"
     ],
     "deny": [],
     "ask": []

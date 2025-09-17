@@ -17,7 +17,7 @@ export const useAttendanceManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   
   // Editing states
-  const [editingRecord, setEditingRecord] = useState<number | null>(null);
+  const [editingRecord, setEditingRecord] = useState<string | number | null>(null);
   const [editForm, setEditForm] = useState<Partial<AttendanceRecord>>({});
 
   // Stabilize React Query parameters to prevent infinite loops
@@ -101,7 +101,8 @@ export const useAttendanceManagement = () => {
 
   // Edit record functions
   const handleEditRecord = (record: AttendanceRecord) => {
-    setEditingRecord(typeof record.id === 'string' ? parseInt(record.id, 10) : record.id);
+    // Keep the original record ID format (including any prefix like 'att_')
+    setEditingRecord(record.id);
     setEditForm({
       status: record.status,
       checkInTime: record.checkInTime,
