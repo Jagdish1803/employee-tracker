@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
 import {
   Home,
   Calendar,
@@ -37,16 +38,10 @@ const navigation = [
 
 export default function EmployeeSidebar({ isCollapsed }: EmployeeSidebarProps) {
   const pathname = usePathname();
-
-  // Mock employee data for demo
-  const employee = {
-    name: 'Employee User',
-    employeeCode: 'EMP001'
-  };
+  const { employee, logout } = useEmployeeAuth();
 
   const handleSignOut = () => {
-    // Navigate back to home page
-    window.location.href = '/';
+    logout();
   };
 
   return (

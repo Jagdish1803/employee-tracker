@@ -13,6 +13,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
+import { EmployeeAuthProvider } from '@/contexts/EmployeeAuthContext';
+import { EmployeeAuthGuard } from '@/components/auth/EmployeeAuthGuard';
 
 interface EmployeeLayoutProps {
   children: React.ReactNode;
@@ -77,6 +79,10 @@ function EmployeeLayoutContent({ children }: EmployeeLayoutProps) {
 
 export default function EmployeeLayout({ children }: EmployeeLayoutProps) {
   return (
-    <EmployeeLayoutContent>{children}</EmployeeLayoutContent>
+    <EmployeeAuthProvider>
+      <EmployeeAuthGuard>
+        <EmployeeLayoutContent>{children}</EmployeeLayoutContent>
+      </EmployeeAuthGuard>
+    </EmployeeAuthProvider>
   );
 }

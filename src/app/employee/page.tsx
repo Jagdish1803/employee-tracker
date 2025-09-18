@@ -3,13 +3,10 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { User, Clock, FileText, AlertTriangle } from 'lucide-react';
+import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
 
 export default function EmployeeDashboard() {
-  // Mock employee data for demo
-  const employee = {
-    name: 'Employee User',
-    employeeCode: 'EMP001'
-  };
+  const { employee } = useEmployeeAuth();
 
   return (
     <div className="p-6 space-y-6">

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,14 +27,14 @@ interface Assignment {
 
 
 export default function WorkLog() {
+  const { employee } = useEmployeeAuth();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [logs, setLogs] = useState<Record<number, number>>({});
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
 
-  // Mock employee ID (in real app, this would come from auth context)
-  const employeeId = 1;
+  const employeeId = employee?.id || 1;
 
   const fetchExistingLogs = useCallback(async () => {
     try {
@@ -54,9 +55,9 @@ export default function WorkLog() {
   useEffect(() => {
     fetchAssignments();
     fetchExistingLogs();
-  }, [selectedDate, fetchExistingLogs]);
+  }, [selectedDate, fetchExistingLogs, fetchAssignments]);
 
-  const fetchAssignments = async () => {
+  const fetchAssignments = useCallback(async () => {
     try {
       setLoading(true);
       const response = await assignmentService.getAll();
@@ -73,7 +74,7 @@ export default function WorkLog() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [employeeId]);
 
   const handleLogChange = (tagId: number, count: number) => {
     setLogs(prev => ({
