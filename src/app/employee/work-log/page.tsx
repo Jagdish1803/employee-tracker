@@ -33,19 +33,42 @@ export default function WorkLog() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [submissionStatus, setSubmissionStatus] = useState<{
+    isLocked: boolean;
+    submissionTime: string;
+    statusMessage: string;
+  } | null>(null);
 
   const employeeId = employee?.id || 1;
 
   const fetchExistingLogs = useCallback(async () => {
     try {
       const response = await logService.getByDate(employeeId, selectedDate);
-      if (response && Array.isArray(response)) {
+
+      // Handle the new API response structure that includes submissionStatus
+      if (response && typeof response === 'object' && 'data' in response) {
+        const apiResponse = response as unknown as {
+          data: { tagId: number; count: number }[];
+          submissionStatus: { isLocked: boolean; submissionTime: string; statusMessage: string } | null
+        };
+
+        const existingLogs: Record<number, number> = {};
+        if (Array.isArray(apiResponse.data)) {
+          apiResponse.data.forEach((log) => {
+            existingLogs[log.tagId] = log.count;
+          });
+        }
+        setLogs(existingLogs);
+        setSubmissionStatus(apiResponse.submissionStatus);
+      } else if (Array.isArray(response)) {
+        // Fallback for old response format
         const existingLogs: Record<number, number> = {};
         response.forEach((log: unknown) => {
           const logData = log as { tagId: number; count: number };
           existingLogs[logData.tagId] = logData.count;
         });
         setLogs(existingLogs);
+        setSubmissionStatus(null);
       }
     } catch (error) {
       console.error('Error fetching logs:', error);
@@ -56,13 +79,24 @@ export default function WorkLog() {
     try {
       setLoading(true);
       const response = await assignmentService.getAll();
+
+      let employeeAssignments: Assignment[] = [];
+
+      // Handle new API response structure
       if (response && Array.isArray(response)) {
-        // Filter assignments for current employee
-        const employeeAssignments = response.filter(
+        employeeAssignments = response.filter(
           (assignment) => assignment.employeeId === employeeId
-        ) || [];
-        setAssignments(employeeAssignments);
+        );
+      } else if (response && typeof response === 'object' && 'data' in response) {
+        const apiResponse = response as { data: Assignment[] };
+        if (Array.isArray(apiResponse.data)) {
+          employeeAssignments = apiResponse.data.filter(
+            (assignment) => assignment.employeeId === employeeId
+          );
+        }
       }
+
+      setAssignments(employeeAssignments);
     } catch (error) {
       console.error('Error fetching assignments:', error);
       toast.error('Failed to load assignments');
@@ -75,6 +109,19 @@ export default function WorkLog() {
     fetchAssignments();
     fetchExistingLogs();
   }, [selectedDate, fetchExistingLogs, fetchAssignments]);
+
+  // Initialize logs with default 0 values for assignments
+  useEffect(() => {
+    if (assignments.length > 0) {
+      const initialLogs: Record<number, number> = {};
+      assignments.forEach(assignment => {
+        if (assignment.tagId) {
+          initialLogs[assignment.tagId] = logs[assignment.tagId] || 0;
+        }
+      });
+      setLogs(prevLogs => ({ ...initialLogs, ...prevLogs }));
+    }
+  }, [assignments, logs]);
 
   const handleLogChange = (tagId: number, count: number) => {
     setLogs(prev => ({
@@ -237,17 +284,47 @@ export default function WorkLog() {
         </CardContent>
       </Card>
 
+      {/* Submission Status */}
+      {submissionStatus?.isLocked && (
+        <Card className="border-green-200 bg-green-50">
+          <CardContent className="pt-4">
+            <div className="flex items-center space-x-2">
+              <div className="h-2 w-2 bg-green-500 rounded-full"></div>
+              <div>
+                <p className="text-sm font-medium text-green-800">
+                  Work log submitted successfully!
+                </p>
+                <p className="text-xs text-green-600">
+                  Submitted on {new Date(submissionStatus.submissionTime).toLocaleString()}
+                </p>
+                <p className="text-xs text-green-600">
+                  Status: {submissionStatus.statusMessage}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Submit Button */}
       <div className="flex justify-end space-x-2">
         <Button variant="outline" disabled={loading}>
           <Eye className="h-4 w-4 mr-2" />
           Preview
         </Button>
-        <Button onClick={handleSubmit} disabled={submitLoading || assignments.length === 0}>
+        <Button
+          onClick={handleSubmit}
+          disabled={submitLoading || assignments.length === 0 || submissionStatus?.isLocked}
+        >
           {submitLoading ? (
             <>
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
               Submitting...
+            </>
+          ) : submissionStatus?.isLocked ? (
+            <>
+              <div className="h-4 w-4 bg-green-500 rounded-full mr-2" />
+              Already Submitted
             </>
           ) : (
             <>

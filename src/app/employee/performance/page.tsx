@@ -1,10 +1,13 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BarChart3, TrendingUp, Clock, Target, Award, Calendar } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
+import { flowaceService } from '@/api';
+import { toast } from 'react-hot-toast';
 
 interface PerformanceData {
   totalMinutes: number;
@@ -25,71 +28,127 @@ interface WeeklyStats {
 }
 
 export default function MyPerformance() {
+  const { employee } = useEmployeeAuth();
   const [performanceData, setPerformanceData] = useState<PerformanceData | null>(null);
   const [weeklyStats, setWeeklyStats] = useState<WeeklyStats | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'quarter'>('month');
+  // Removed unused flowaceRecords state
+  const [loading, setLoading] = useState(true);
+
+  const employeeId = employee?.id || 1;
+
+  const fetchPerformanceData = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      // Fetch real Flowace data for the current employee
+      const flowaceResponse = await flowaceService.getByEmployee(employeeId);
+
+      console.log('Flowace response:', flowaceResponse);
+
+      if (flowaceResponse.success && flowaceResponse.records) {
+        // Process flowace records for performance data
+
+        // Calculate performance data from Flowace records
+        const records = flowaceResponse.records;
+
+        const totalLoggedHours = records.reduce((sum, record) => sum + (record.loggedHours || 0), 0);
+        const totalActiveHours = records.reduce((sum, record) => sum + (record.activeHours || 0), 0);
+        const totalProductiveHours = records.reduce((sum, record) => sum + (record.productiveHours || 0), 0);
+
+        const totalMinutes = totalLoggedHours * 60;
+        const totalDays = records.length;
+        const avgMinutesPerDay = totalDays > 0 ? totalMinutes / totalDays : 0;
+
+        // Calculate daily performance
+        const dailyPerformance: Record<string, number> = {};
+        records.forEach(record => {
+          if (record.date && record.loggedHours) {
+            dailyPerformance[record.date] = record.loggedHours * 60; // Convert to minutes
+          }
+        });
+
+        // Calculate productivity stats (removed unused variable)
+
+        const performanceData: PerformanceData = {
+          totalMinutes: Math.round(totalMinutes),
+          totalDays,
+          avgMinutesPerDay: Math.round(avgMinutesPerDay),
+          tagPerformance: {
+            'Active Hours': {
+              totalMinutes: Math.round(totalActiveHours * 60),
+              totalCount: records.filter(r => (r.activeHours || 0) > 0).length,
+              timePerUnit: totalActiveHours > 0 ? Math.round((totalActiveHours * 60) / records.filter(r => (r.activeHours || 0) > 0).length) : 0
+            },
+            'Productive Hours': {
+              totalMinutes: Math.round(totalProductiveHours * 60),
+              totalCount: records.filter(r => (r.productiveHours || 0) > 0).length,
+              timePerUnit: totalProductiveHours > 0 ? Math.round((totalProductiveHours * 60) / records.filter(r => (r.productiveHours || 0) > 0).length) : 0
+            },
+            'Logged Hours': {
+              totalMinutes: Math.round(totalLoggedHours * 60),
+              totalCount: records.filter(r => (r.loggedHours || 0) > 0).length,
+              timePerUnit: totalLoggedHours > 0 ? Math.round((totalLoggedHours * 60) / records.filter(r => (r.loggedHours || 0) > 0).length) : 0
+            }
+          },
+          dailyPerformance
+        };
+
+        // Calculate recent week stats (last 7 records)
+        const recentRecords = records.slice(-7);
+        const weeklyTotalMinutes = recentRecords.reduce((sum, r) => sum + ((r.loggedHours || 0) * 60), 0);
+        const weeklyStats: WeeklyStats = {
+          totalMinutes: Math.round(weeklyTotalMinutes),
+          daysWorked: recentRecords.filter(r => (r.loggedHours || 0) > 0).length,
+          avgPerDay: recentRecords.length > 0 ? Math.round(weeklyTotalMinutes / recentRecords.length) : 0
+        };
+
+        setPerformanceData(performanceData);
+        setWeeklyStats(weeklyStats);
+      } else {
+        // Fallback to basic data if no Flowace records
+        const basicPerformance: PerformanceData = {
+          totalMinutes: 0,
+          totalDays: 0,
+          avgMinutesPerDay: 0,
+          tagPerformance: {},
+          dailyPerformance: {}
+        };
+
+        const basicWeeklyStats: WeeklyStats = {
+          totalMinutes: 0,
+          daysWorked: 0,
+          avgPerDay: 0
+        };
+
+        setPerformanceData(basicPerformance);
+        setWeeklyStats(basicWeeklyStats);
+      }
+    } catch (error) {
+      console.error('Error fetching performance data:', error);
+      toast.error('Failed to load performance data');
+
+      // Set empty data on error
+      setPerformanceData({
+        totalMinutes: 0,
+        totalDays: 0,
+        avgMinutesPerDay: 0,
+        tagPerformance: {},
+        dailyPerformance: {}
+      });
+      setWeeklyStats({
+        totalMinutes: 0,
+        daysWorked: 0,
+        avgPerDay: 0
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [employeeId]);
 
   useEffect(() => {
     fetchPerformanceData();
-  }, [selectedPeriod]);
-
-  const fetchPerformanceData = async () => {
-    try {
-
-      // Mock data
-      const mockPerformanceData: PerformanceData = {
-        totalMinutes: 9600, // 160 hours
-        totalDays: 22,
-        avgMinutesPerDay: 436,
-        tagPerformance: {
-          'Code Review': {
-            totalMinutes: 2400,
-            totalCount: 48,
-            timePerUnit: 50
-          },
-          'Bug Fixing': {
-            totalMinutes: 1800,
-            totalCount: 18,
-            timePerUnit: 100
-          },
-          'Feature Development': {
-            totalMinutes: 3600,
-            totalCount: 12,
-            timePerUnit: 300
-          },
-          'Testing': {
-            totalMinutes: 1200,
-            totalCount: 24,
-            timePerUnit: 50
-          },
-          'Documentation': {
-            totalMinutes: 600,
-            totalCount: 6,
-            timePerUnit: 100
-          }
-        },
-        dailyPerformance: {
-          '2024-01-15': 480,
-          '2024-01-16': 420,
-          '2024-01-17': 450,
-          '2024-01-18': 400,
-          '2024-01-19': 460
-        }
-      };
-
-      const mockWeeklyStats: WeeklyStats = {
-        totalMinutes: 2210,
-        daysWorked: 5,
-        avgPerDay: 442
-      };
-
-      setPerformanceData(mockPerformanceData);
-      setWeeklyStats(mockWeeklyStats);
-    } catch (error) {
-      console.error('Error fetching performance data:', error);
-    } finally {
-    }
-  };
+  }, [fetchPerformanceData]);
 
   const formatMinutes = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
@@ -103,6 +162,31 @@ export default function MyPerformance() {
     if (avgMinutesPerDay >= 360) return { label: 'Average', color: 'bg-yellow-500', percentage: 70 };
     return { label: 'Below Average', color: 'bg-red-500', percentage: 50 };
   };
+
+  if (loading) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">My Performance</h1>
+            <p className="text-muted-foreground">Track your work performance and productivity metrics</p>
+          </div>
+        </div>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (!performanceData || !weeklyStats) return null;
 

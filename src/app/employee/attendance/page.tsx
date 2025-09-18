@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,9 @@ import {
   TrendingUp,
   Download
 } from 'lucide-react';
+import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
+import { attendanceService } from '@/api';
+import { toast } from 'react-hot-toast';
 
 interface AttendanceRecord {
   id: number;
@@ -44,82 +47,81 @@ interface AttendanceSummary {
 }
 
 export default function MyAttendance() {
+  const { employee } = useEmployeeAuth();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [summary, setSummary] = useState<AttendanceSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const employeeId = employee?.id || 1;
 
-  useEffect(() => {
-    fetchAttendanceData();
-  }, [currentMonth]);
-
-  const fetchAttendanceData = async () => {
+  const fetchAttendanceData = useCallback(async () => {
     try {
       setLoading(true);
 
-      // Mock data - in real app, fetch from API
-      const mockRecords: AttendanceRecord[] = [
-        {
-          id: 1,
-          employeeId: 1,
-          date: '2024-01-15',
-          status: 'PRESENT',
-          checkInTime: '09:00',
-          checkOutTime: '18:00',
-          lunchOutTime: '13:00',
-          lunchInTime: '14:00',
-          hoursWorked: 8,
-          remarks: ''
-        },
-        {
-          id: 2,
-          employeeId: 1,
-          date: '2024-01-16',
-          status: 'LATE',
-          checkInTime: '09:30',
-          checkOutTime: '18:30',
-          lunchOutTime: '13:30',
-          lunchInTime: '14:30',
-          hoursWorked: 8,
-          remarks: 'Traffic delay'
-        },
-        {
-          id: 3,
-          employeeId: 1,
-          date: '2024-01-17',
-          status: 'HALF_DAY',
-          checkInTime: '09:00',
-          checkOutTime: '13:00',
-          hoursWorked: 4,
-          remarks: 'Medical appointment'
+      const month = currentMonth.getMonth() + 1;
+      const year = currentMonth.getFullYear();
+
+      // Fetch real attendance data from API
+      const [attendanceResponse, summaryResponse] = await Promise.all([
+        attendanceService.getByEmployee(employeeId, {
+          month: month.toString(),
+          year: year.toString()
+        }),
+        attendanceService.getEmployeeSummary(employeeId, month.toString(), year.toString())
+      ]);
+
+      console.log('Attendance response:', attendanceResponse);
+      console.log('Summary response:', summaryResponse);
+
+      // Set attendance records
+      if (Array.isArray(attendanceResponse)) {
+        setAttendanceRecords(attendanceResponse as AttendanceRecord[]);
+      } else {
+        setAttendanceRecords([]);
+      }
+
+      // Set summary
+      if (summaryResponse && typeof summaryResponse === 'object') {
+        setSummary(summaryResponse as unknown as AttendanceSummary);
+      } else {
+        // Create a basic summary if none available
+        const basicSummary: AttendanceSummary = {
+          employeeId: employeeId,
+          month: month.toString().padStart(2, '0'),
+          year: year.toString(),
+          totalWorkingDays: 22, // Default working days in a month
+          presentDays: attendanceResponse?.filter((r: unknown) => (r as AttendanceRecord).status === 'PRESENT').length || 0,
+          absentDays: attendanceResponse?.filter((r: unknown) => (r as AttendanceRecord).status === 'ABSENT').length || 0,
+          halfDays: attendanceResponse?.filter((r: unknown) => (r as AttendanceRecord).status === 'HALF_DAY').length || 0,
+          lateDays: attendanceResponse?.filter((r: unknown) => (r as AttendanceRecord).status === 'LATE').length || 0,
+          leaveDays: attendanceResponse?.filter((r: unknown) => (r as AttendanceRecord).status === 'LEAVE_APPROVED').length || 0,
+          totalHoursWorked: attendanceResponse?.reduce((sum: number, r: unknown) => sum + ((r as AttendanceRecord).hoursWorked || 0), 0) || 0,
+          averageHoursPerDay: 0,
+          attendancePercentage: 0
+        };
+
+        if (basicSummary.totalWorkingDays > 0) {
+          basicSummary.averageHoursPerDay = basicSummary.totalHoursWorked / basicSummary.totalWorkingDays;
+          basicSummary.attendancePercentage = (basicSummary.presentDays / basicSummary.totalWorkingDays) * 100;
         }
-      ];
 
-      const mockSummary: AttendanceSummary = {
-        employeeId: 1,
-        month: '01',
-        year: '2024',
-        totalWorkingDays: 22,
-        presentDays: 18,
-        absentDays: 2,
-        halfDays: 1,
-        lateDays: 3,
-        leaveDays: 1,
-        totalHoursWorked: 168,
-        averageHoursPerDay: 7.6,
-        attendancePercentage: 85.4
-      };
-
-      setAttendanceRecords(mockRecords);
-      setSummary(mockSummary);
+        setSummary(basicSummary);
+      }
     } catch (error) {
       console.error('Error fetching attendance:', error);
+      toast.error('Failed to load attendance data');
+      setAttendanceRecords([]);
+      setSummary(null);
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentMonth, employeeId]);
+
+  useEffect(() => {
+    fetchAttendanceData();
+  }, [fetchAttendanceData]);
 
   const getStatusIcon = (status: AttendanceRecord['status']) => {
     switch (status) {
