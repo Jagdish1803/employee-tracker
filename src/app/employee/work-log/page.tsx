@@ -52,11 +52,6 @@ export default function WorkLog() {
     }
   }, [employeeId, selectedDate]);
 
-  useEffect(() => {
-    fetchAssignments();
-    fetchExistingLogs();
-  }, [selectedDate, fetchExistingLogs, fetchAssignments]);
-
   const fetchAssignments = useCallback(async () => {
     try {
       setLoading(true);
@@ -75,6 +70,11 @@ export default function WorkLog() {
       setLoading(false);
     }
   }, [employeeId]);
+
+  useEffect(() => {
+    fetchAssignments();
+    fetchExistingLogs();
+  }, [selectedDate, fetchExistingLogs, fetchAssignments]);
 
   const handleLogChange = (tagId: number, count: number) => {
     setLogs(prev => ({
