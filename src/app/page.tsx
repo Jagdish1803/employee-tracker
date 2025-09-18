@@ -1,89 +1,109 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { Separator } from "@/components/ui/separator"
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { User, Shield } from 'lucide-react';
 
 export default function HomePage() {
-  const [code, setCode] = useState('');
   const router = useRouter();
 
-  const handleLogin = (role: 'employee' | 'admin') => {
-    if (!code.trim()) return;
-    if (role === 'employee') {
-      router.push(`/employee?code=${encodeURIComponent(code.trim())}`);
-    } else {
-      router.push(`/admin?code=${encodeURIComponent(code.trim())}`);
-    }
+  const handleEmployeeLogin = () => {
+    router.push('/employee');
+  };
+
+  const handleAdminLogin = () => {
+    router.push('/admin');
   };
 
   return (
-    <SidebarProvider>
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator
-              orientation="vertical"
-              className="mr-2 h-4"
-            />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">
-                    Employee Tracker
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Home</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
-        </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-            <div className="flex flex-1 items-center justify-center">
-              <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-8 w-full max-w-md">
-                <h2 className="text-2xl font-bold mb-4 text-center">Access System</h2>
-                <p className="text-gray-600 mb-6 text-center">Enter your code to login</p>
-                <input
-                  type="text"
-                  value={code}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCode(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg mb-6 focus:outline-none focus:ring focus:border-blue-300"
-                  placeholder="Enter code (e.g. ZOOT1049 or ADMIN-001)"
-                />
-                <Button className="w-full mb-3" onClick={() => handleLogin('employee')}>
-                  Login as Employee
-                </Button>
-                <Button variant="outline" className="w-full" onClick={() => handleLogin('admin')}>
-                  Login as Admin
-                </Button>
-              </div>
-            </div>
-            <div className="bg-muted/50 aspect-video rounded-xl" />
-            <div className="bg-muted/50 aspect-video rounded-xl" />
-          </div>
-          <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min" />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="w-full max-w-4xl">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Employee Tracker</h1>
+          <p className="text-xl text-gray-600">Choose your portal to access the system</p>
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+
+        <div className="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto">
+          {/* Employee Portal Card */}
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={handleEmployeeLogin}>
+            <CardHeader className="text-center pb-2">
+              <div className="flex justify-center mb-4">
+                <div className="p-3 bg-blue-100 rounded-full">
+                  <User className="h-8 w-8 text-blue-600" />
+                </div>
+              </div>
+              <CardTitle className="text-2xl">Employee Portal</CardTitle>
+              <CardDescription>
+                Access your personal dashboard and work tools
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-sm text-gray-600 space-y-2">
+                <div className="flex items-center space-x-2">
+                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                  <span>Simple login with employee code</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                  <span>No password required</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                  <span>Track work and manage tasks</span>
+                </div>
+              </div>
+              <Button className="w-full" onClick={handleEmployeeLogin}>
+                Access Employee Portal
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Admin Portal Card */}
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer border-purple-200" onClick={handleAdminLogin}>
+            <CardHeader className="text-center pb-2">
+              <div className="flex justify-center mb-4">
+                <div className="p-3 bg-purple-100 rounded-full">
+                  <Shield className="h-8 w-8 text-purple-600" />
+                </div>
+              </div>
+              <CardTitle className="text-2xl">Admin Panel</CardTitle>
+              <CardDescription>
+                Administrative access for system management
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-sm text-gray-600 space-y-2">
+                <div className="flex items-center space-x-2">
+                  <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                  <span>Full system access</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                  <span>Secure login required</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                  <span>Manage employees and settings</span>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                className="w-full border-purple-300 text-purple-700 hover:bg-purple-50"
+                onClick={handleAdminLogin}
+              >
+                Access Admin Panel
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="text-center mt-12 text-sm text-gray-500">
+          <p>Need help? Contact your system administrator</p>
+        </div>
+      </div>
+    </div>
   );
 }

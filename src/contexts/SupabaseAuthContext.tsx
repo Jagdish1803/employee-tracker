@@ -12,10 +12,8 @@ interface SupabaseAuthContextType {
   employee: Employee | null
   session: Session | null
   loading: boolean
-  signUp: (employeeCode: string, password: string) => Promise<{ success: boolean; error?: string }>
-  signIn: (employeeCode: string, password: string) => Promise<{ success: boolean; error?: string }>
+  signInWithCode: (employeeCode: string) => Promise<{ success: boolean; error?: string }>
   signOut: () => Promise<void>
-  resetPassword: (employeeCode: string) => Promise<{ success: boolean; error?: string }>
 }
 
 const SupabaseAuthContext = createContext<SupabaseAuthContextType | undefined>(undefined)
@@ -86,7 +84,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     }
   }
 
-  const signUp = async (employeeCode: string, password: string) => {
+  const signInWithCode = async (employeeCode: string) => {
     try {
       setLoading(true)
 
@@ -107,49 +105,29 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       // Convert employee code to email format
       const email = employeeCodeToEmail(employeeCode)
 
-      // Sign up with Supabase
-      const { data, error } = await supabase.auth.signUp({
+      // For employees, use a simple password (since they don't need to remember it)
+      const simplePassword = `${employeeCode.toLowerCase()}123`
+
+      // Try to sign in first
+      const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
-        password,
+        password: simplePassword
+      })
+
+      if (!signInError) {
+        return { success: true }
+      }
+
+      // If sign in failed, try to sign up
+      const { error } = await supabase.auth.signUp({
+        email,
+        password: simplePassword,
         options: {
           data: {
             employee_code: employeeCode,
             display_name: employeeCode
           }
         }
-      })
-
-      if (error) {
-        return { success: false, error: error.message }
-      }
-
-      if (data.user && !data.session) {
-        return {
-          success: true,
-          error: 'Please check your email for verification link (if email confirmation is enabled)'
-        }
-      }
-
-      return { success: true }
-    } catch (error) {
-      console.error('Sign up error:', error)
-      return { success: false, error: 'An unexpected error occurred' }
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const signIn = async (employeeCode: string, password: string) => {
-    try {
-      setLoading(true)
-
-      // Convert employee code to email format
-      const email = employeeCodeToEmail(employeeCode)
-
-      // Sign in with Supabase
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password
       })
 
       if (error) {
@@ -178,34 +156,13 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     }
   }
 
-  const resetPassword = async (employeeCode: string) => {
-    try {
-      const email = employeeCodeToEmail(employeeCode)
-
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`
-      })
-
-      if (error) {
-        return { success: false, error: error.message }
-      }
-
-      return { success: true }
-    } catch (error) {
-      console.error('Password reset error:', error)
-      return { success: false, error: 'An unexpected error occurred' }
-    }
-  }
-
   const value = {
     user,
     employee,
     session,
     loading,
-    signUp,
-    signIn,
-    signOut,
-    resetPassword
+    signInWithCode,
+    signOut
   }
 
   return (

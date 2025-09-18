@@ -1,250 +1,234 @@
-'use client';
-import React, { useState } from 'react';
-import { AlertTriangle, Calendar, Clock, Eye } from 'lucide-react';
-import { Warning, WarningType } from '@/types';
+'use client'
+
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useEmployeeWarnings } from '@/hooks/useWarnings';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AlertTriangle, CheckCircle2, XCircle, Calendar } from 'lucide-react';
 
-export default function EmployeeWarningsPage() {
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'dismissed'>('all');
-  const [typeFilter, setTypeFilter] = useState<'all' | WarningType>('all');
+interface Warning {
+  id: number;
+  employeeId: number;
+  warningType: 'ATTENDANCE' | 'LEAVE_MISUSE' | 'BREAK_EXCEEDED' | 'WORK_QUALITY' | 'BEHAVIORAL' | 'SYSTEM_MISUSE';
+  warningMessage: string;
+  warningDate: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
-  // Get employee ID from session/context - for now using mock
-  const employeeId = 1; // This should come from auth context
-  
-  const { data: warningsResponse, isLoading } = useEmployeeWarnings(employeeId);
-  const warnings = warningsResponse?.data?.data || [];
+export default function MyWarnings() {
+  const [warnings, setWarnings] = useState<Warning[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Filter warnings
-  const filteredWarnings = warnings.filter((warning: Warning) => {
-    if (statusFilter !== 'all' && ((statusFilter === 'active' && !warning.isActive) || (statusFilter === 'dismissed' && warning.isActive))) {
-      return false;
+  useEffect(() => {
+    fetchWarnings();
+  }, []);
+
+  const fetchWarnings = async () => {
+    try {
+      setLoading(true);
+
+      // Mock data
+      const mockWarnings: Warning[] = [
+        {
+          id: 1,
+          employeeId: 1,
+          warningType: 'BREAK_EXCEEDED',
+          warningMessage: 'Break time exceeded recommended duration (45 minutes) on January 15, 2024',
+          warningDate: '2024-01-15',
+          isActive: true,
+          createdAt: '2024-01-15T15:30:00',
+          updatedAt: '2024-01-15T15:30:00'
+        },
+        {
+          id: 2,
+          employeeId: 1,
+          warningType: 'ATTENDANCE',
+          warningMessage: 'Late arrival (30 minutes) without prior notification',
+          warningDate: '2024-01-10',
+          isActive: false,
+          createdAt: '2024-01-10T09:30:00',
+          updatedAt: '2024-01-12T10:00:00'
+        }
+      ];
+
+      setWarnings(mockWarnings);
+    } catch (error) {
+      console.error('Error fetching warnings:', error);
+    } finally {
+      setLoading(false);
     }
-    if (typeFilter !== 'all' && warning.warningType !== typeFilter) {
-      return false;
-    }
-    return true;
-  });
+  };
 
-  const getWarningTypeColor = (type: WarningType) => {
+  const getWarningTypeColor = (type: Warning['warningType']) => {
     switch (type) {
-      case 'ATTENDANCE': return 'bg-red-100 text-red-800';
-      case 'LEAVE_MISUSE': return 'bg-orange-100 text-orange-800';
-      case 'BREAK_EXCEEDED': return 'bg-yellow-100 text-yellow-800';
-      case 'WORK_QUALITY': return 'bg-blue-100 text-blue-800';
-      case 'BEHAVIORAL': return 'bg-purple-100 text-purple-800';
-      case 'SYSTEM_MISUSE': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'ATTENDANCE':
+        return 'bg-red-100 text-red-800';
+      case 'BREAK_EXCEEDED':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'WORK_QUALITY':
+        return 'bg-orange-100 text-orange-800';
+      case 'BEHAVIORAL':
+        return 'bg-purple-100 text-purple-800';
+      case 'SYSTEM_MISUSE':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-red-100 text-red-800';
     }
   };
 
-  const getWarningPriority = (warning: Warning) => {
-    const daysOld = Math.floor(
-      (new Date().getTime() - new Date(warning.warningDate).getTime()) / (1000 * 60 * 60 * 24)
-    );
-    
-    if (daysOld <= 1) return { level: 'high', color: 'text-red-600', bg: 'bg-red-50 border-red-200' };
-    if (daysOld <= 7) return { level: 'medium', color: 'text-yellow-600', bg: 'bg-yellow-50 border-yellow-200' };
-    return { level: 'low', color: 'text-gray-600', bg: 'bg-gray-50 border-gray-200' };
+  const formatWarningType = (type: Warning['warningType']) => {
+    switch (type) {
+      case 'ATTENDANCE':
+        return 'Attendance';
+      case 'BREAK_EXCEEDED':
+        return 'Break Time';
+      case 'WORK_QUALITY':
+        return 'Work Quality';
+      case 'BEHAVIORAL':
+        return 'Behavioral';
+      case 'SYSTEM_MISUSE':
+        return 'System Misuse';
+      case 'LEAVE_MISUSE':
+        return 'Leave Misuse';
+      default:
+        return type;
+    }
   };
 
-  // Calculate stats
-  const stats = {
-    total: filteredWarnings.length,
-    active: filteredWarnings.filter((w: Warning) => w.isActive).length,
-    dismissed: filteredWarnings.filter((w: Warning) => !w.isActive).length,
-    recent: filteredWarnings.filter((w: Warning) => {
-      const daysOld = Math.floor(
-        (new Date().getTime() - new Date(w.warningDate).getTime()) / (1000 * 60 * 60 * 24)
-      );
-      return daysOld <= 7;
-    }).length,
-  };
-
-  if (isLoading) {
-    return (
-      <div className="p-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      </div>
-    );
-  }
+  const activeWarnings = warnings.filter(w => w.isActive);
+  const resolvedWarnings = warnings.filter(w => !w.isActive);
 
   return (
-    <div className="p-8">
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold flex items-center">
-            <AlertTriangle className="h-7 w-7 mr-2 text-red-600" />
-            My Warnings
-          </h1>
-          <p className="text-muted-foreground mt-1">View and track your warnings</p>
+          <h1 className="text-3xl font-bold">My Warnings</h1>
+          <p className="text-muted-foreground">View your warnings and disciplinary notices</p>
         </div>
       </div>
 
-      {/* Filters */}
-      <Card className="mb-6">
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Warnings</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{warnings.length}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active</CardTitle>
+            <XCircle className="h-4 w-4 text-red-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{activeWarnings.length}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Resolved</CardTitle>
+            <CheckCircle2 className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{resolvedWarnings.length}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Active Warnings */}
+      <Card>
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
+          <CardTitle className="flex items-center space-x-2">
+            <AlertTriangle className="h-5 w-5 text-red-500" />
+            <span>Active Warnings ({activeWarnings.length})</span>
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center space-x-4">
-            <div className="grid gap-2">
-              <label className="text-sm font-medium">Status</label>
-              <Select value={statusFilter} onValueChange={(value: 'all' | 'active' | 'dismissed') => setStatusFilter(value)}>
-                <SelectTrigger className="w-auto">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Warnings</SelectItem>
-                  <SelectItem value="active">Active Only</SelectItem>
-                  <SelectItem value="dismissed">Dismissed Only</SelectItem>
-                </SelectContent>
-              </Select>
+          {activeWarnings.length === 0 ? (
+            <div className="text-center py-8">
+              <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-4" />
+              <p className="text-muted-foreground">No active warnings</p>
             </div>
-            <div className="grid gap-2">
-              <label className="text-sm font-medium">Type</label>
-              <Select value={typeFilter} onValueChange={(value: 'all' | WarningType) => setTypeFilter(value)}>
-                <SelectTrigger className="w-auto">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="ATTENDANCE">Attendance</SelectItem>
-                  <SelectItem value="LEAVE_MISUSE">Leave Misuse</SelectItem>
-                  <SelectItem value="BREAK_EXCEEDED">Break Exceeded</SelectItem>
-                  <SelectItem value="WORK_QUALITY">Work Quality</SelectItem>
-                  <SelectItem value="BEHAVIORAL">Behavioral</SelectItem>
-                  <SelectItem value="SYSTEM_MISUSE">System Misuse</SelectItem>
-                </SelectContent>
-              </Select>
+          ) : (
+            <div className="space-y-4">
+              {activeWarnings.map((warning) => (
+                <div key={warning.id} className="border border-red-200 bg-red-50 rounded-lg p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center space-x-2">
+                      <Badge className={getWarningTypeColor(warning.warningType)}>
+                        {formatWarningType(warning.warningType)}
+                      </Badge>
+                      <Badge variant="destructive">Active</Badge>
+                    </div>
+                    <div className="text-right text-sm text-muted-foreground">
+                      <div className="flex items-center space-x-1">
+                        <Calendar className="h-4 w-4" />
+                        <span>{new Date(warning.warningDate).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-red-800 font-medium">{warning.warningMessage}</p>
+                  <p className="text-xs text-red-600 mt-2">
+                    Issued on {new Date(warning.createdAt).toLocaleString()}
+                  </p>
+                </div>
+              ))}
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <AlertTriangle className="h-8 w-8 text-blue-500" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">Total Warnings</p>
-                <p className="text-2xl font-bold">{stats.total}</p>
-              </div>
+      {/* Warning History */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Warning History ({resolvedWarnings.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading warnings...</p>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Eye className="h-8 w-8 text-red-500" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">Active</p>
-                <p className="text-2xl font-bold">{stats.active}</p>
-              </div>
+          ) : resolvedWarnings.length === 0 ? (
+            <div className="text-center py-8">
+              <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">No warning history</p>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Calendar className="h-8 w-8 text-green-500" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">Dismissed</p>
-                <p className="text-2xl font-bold">{stats.dismissed}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Clock className="h-8 w-8 text-yellow-500" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">Recent (7 days)</p>
-                <p className="text-2xl font-bold">{stats.recent}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Warnings List */}
-      {filteredWarnings.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-12">
-            <AlertTriangle className="mx-auto h-12 w-12 text-muted-foreground" />
-            <h3 className="mt-4 text-lg font-medium">No warnings found</h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              {statusFilter === 'all' && typeFilter === 'all' 
-                ? "You don't have any warnings at the moment."
-                : "No warnings found matching the selected filters."
-              }
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {filteredWarnings.map((warning: Warning) => {
-            const priority = getWarningPriority(warning);
-            const daysOld = Math.floor(
-              (new Date().getTime() - new Date(warning.warningDate).getTime()) / (1000 * 60 * 60 * 24)
-            );
-            
-            return (
-              <Card key={warning.id} className={`${priority.bg} ${warning.isActive ? '' : 'opacity-60'}`}>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center space-x-3">
-                      <AlertTriangle className={`h-5 w-5 ${priority.color}`} />
-                      <div>
-                        <div className="flex items-center space-x-2">
-                          <h3 className="font-semibold text-lg">
-                            {new Date(warning.warningDate).toLocaleDateString()}
-                          </h3>
-                          <Badge className={getWarningTypeColor(warning.warningType)}>
-                            {warning.warningType}
-                          </Badge>
-                          {!warning.isActive && (
-                            <Badge variant="secondary">Dismissed</Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {daysOld === 0 ? 'Today' : daysOld === 1 ? 'Yesterday' : `${daysOld} days ago`}
-                        </p>
+          ) : (
+            <div className="space-y-4">
+              {resolvedWarnings.map((warning) => (
+                <div key={warning.id} className="border rounded-lg p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center space-x-2">
+                      <Badge className={getWarningTypeColor(warning.warningType)}>
+                        {formatWarningType(warning.warningType)}
+                      </Badge>
+                      <Badge variant="outline">Resolved</Badge>
+                    </div>
+                    <div className="text-right text-sm text-muted-foreground">
+                      <div className="flex items-center space-x-1">
+                        <Calendar className="h-4 w-4" />
+                        <span>{new Date(warning.warningDate).toLocaleDateString()}</span>
                       </div>
                     </div>
-                    {warning.isActive && (
-                      <Badge variant="destructive">Active</Badge>
-                    )}
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-700">
-                    {warning.warningMessage}
-                  </p>
-                  <div className="mt-4 text-xs text-muted-foreground">
-                    Created: {new Date(warning.createdAt).toLocaleString()}
-                    {warning.updatedAt !== warning.createdAt && (
-                      <span className="ml-2">
-                        • Updated: {new Date(warning.updatedAt).toLocaleString()}
-                      </span>
-                    )}
+                  <p className="font-medium mb-2">{warning.warningMessage}</p>
+                  <div className="text-xs text-muted-foreground">
+                    <p>Issued: {new Date(warning.createdAt).toLocaleString()}</p>
+                    <p>Resolved: {new Date(warning.updatedAt).toLocaleString()}</p>
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

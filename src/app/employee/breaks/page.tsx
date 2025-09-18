@@ -1,381 +1,376 @@
-// src/app/employee/breaks/page.tsx
-'use client';
+'use client'
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { toast } from 'react-hot-toast';
-import { Coffee, AlertTriangle, LogOut, Calendar, Play, Pause } from 'lucide-react';
-import { employeeService } from '@/api';
-import { Break, Employee } from '@/types';
-import { getCurrentISTDate, formatTime } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useBreakManagement } from '@/hooks/useBreaks';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+  Coffee,
+  Play,
+  Square,
+  Clock,
+  Timer,
+  AlertTriangle,
+  TrendingDown,
+  Calendar
+} from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
-export default function BreaksPage() {
-  const [employee, setEmployee] = useState<Employee | null>(null);
-  const [breakDuration, setBreakDuration] = useState(0);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [employeeCode, setEmployeeCode] = useState('');
-  const [loggingIn, setLoggingIn] = useState(false);
-  const [actionLoading, setActionLoading] = useState(false);
-  const router = useRouter();
+interface Break {
+  id: number;
+  employeeId: number;
+  breakDate: string;
+  breakInTime?: string;
+  breakOutTime?: string;
+  breakDuration: number;
+  isActive: boolean;
+  warningSent: boolean;
+  createdAt: string;
+}
 
-  // Use React Query for break management
-  const {
-    todayBreaks,
-    activeBreaks,
-    breaks: breakHistory,
-    isLoading: loading,
-    breakIn,
-    breakOut
-  } = useBreakManagement({ date: getCurrentISTDate() });
+interface BreakSummary {
+  totalBreaks: number;
+  totalDuration: number;
+  averageDuration: number;
+  longestBreak: number;
+  warningsReceived: number;
+}
 
-  // Get current active break for this employee
-  const currentBreak = activeBreaks.find((breakRecord: Break) => 
-    breakRecord.employeeId === employee?.id
-  ) || null;
+export default function BreakTracker() {
+  const [currentBreak, setCurrentBreak] = useState<Break | null>(null);
+  const [breakHistory, setBreakHistory] = useState<Break[]>([]);
+  const [summary, setSummary] = useState<BreakSummary | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
-  // Calculate break summary
-  const breakSummary = {
-    totalBreaks: todayBreaks.length,
-    totalMinutes: todayBreaks.reduce((total: number, breakRecord: Break) => {
-      if (breakRecord.breakOutTime && breakRecord.breakInTime) {
-        const duration = new Date(breakRecord.breakOutTime).getTime() - new Date(breakRecord.breakInTime).getTime();
-        return total + Math.floor(duration / (1000 * 60));
-      }
-      return total;
-    }, 0),
-    avgMinutes: todayBreaks.length > 0 ? Math.floor(
-      todayBreaks.reduce((total: number, breakRecord: Break) => {
-        if (breakRecord.breakOutTime && breakRecord.breakInTime) {
-          const duration = new Date(breakRecord.breakOutTime).getTime() - new Date(breakRecord.breakInTime).getTime();
-          return total + Math.floor(duration / (1000 * 60));
-        }
-        return total;
-      }, 0) / todayBreaks.filter((breakRecord: Break) => breakRecord.breakOutTime).length
-    ) : 0
-  };
+  // Mock employee ID
+  const employeeId = 1;
 
+  // Update current time every second when on break
   useEffect(() => {
-    // Check if employee is already logged in
-    const savedEmployee = localStorage.getItem('employee');
-    if (savedEmployee) {
-      try {
-        const emp = JSON.parse(savedEmployee);
-        setEmployee(emp);
-        setIsLoggedIn(true);
-        // React Query will automatically load data when employee is set
-      } catch {
-        localStorage.removeItem('employee');
-      }
-    }
-  }, []);
-
-  // Timer for active break
-  useEffect(() => {
-    if (currentBreak?.isActive && currentBreak.breakInTime) {
-      const timer = setInterval(() => {
-        const now = new Date();
-        const breakStart = new Date(currentBreak.breakInTime!);
-        const diffInMinutes = Math.floor((now.getTime() - breakStart.getTime()) / (1000 * 60));
-        setBreakDuration(diffInMinutes);
+    let interval: NodeJS.Timeout;
+    if (currentBreak?.isActive) {
+      interval = setInterval(() => {
+        setCurrentTime(new Date());
       }, 1000);
-
-      return () => clearInterval(timer);
     }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [currentBreak]);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!employeeCode.trim()) {
-      toast.error('Please enter your employee code');
+  useEffect(() => {
+    fetchBreakData();
+  }, []);
+
+  const fetchBreakData = async () => {
+    try {
+      // Mock data - in real app, fetch from API
+      const mockBreaks: Break[] = [
+        {
+          id: 1,
+          employeeId: 1,
+          breakDate: new Date().toISOString().split('T')[0],
+          breakInTime: '10:30:00',
+          breakOutTime: '10:45:00',
+          breakDuration: 15,
+          isActive: false,
+          warningSent: false,
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: 2,
+          employeeId: 1,
+          breakDate: new Date().toISOString().split('T')[0],
+          breakInTime: '14:00:00',
+          breakOutTime: '14:20:00',
+          breakDuration: 20,
+          isActive: false,
+          warningSent: false,
+          createdAt: new Date().toISOString()
+        }
+      ];
+
+      const mockSummary: BreakSummary = {
+        totalBreaks: 15,
+        totalDuration: 285,
+        averageDuration: 19,
+        longestBreak: 35,
+        warningsReceived: 2
+      };
+
+      setBreakHistory(mockBreaks);
+      setSummary(mockSummary);
+
+      // Check if there's an active break
+      const activeBreak = mockBreaks.find(b => b.isActive);
+      if (activeBreak) {
+        setCurrentBreak(activeBreak);
+      }
+    } catch (error) {
+      console.error('Error fetching break data:', error);
+    }
+  };
+
+  const handleBreakIn = async () => {
+    if (currentBreak?.isActive) {
+      toast.error('You are already on a break');
       return;
     }
 
-    setLoggingIn(true);
     try {
-      const response = await employeeService.login(employeeCode.trim());
-      if (response.data.success && response.data.data) {
-        const emp = response.data.data;
-        setEmployee(emp);
-        setIsLoggedIn(true);
-        localStorage.setItem('employee', JSON.stringify(emp));
-        toast.success('Login successful!');
-        // React Query will automatically load data when employee is set
-      }
-    } catch (error: unknown) {
-      const errorMessage = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Login failed';
-      toast.error(errorMessage);
-    } finally {
-      setLoggingIn(false);
-    }
-  };
+      setLoading(true);
 
-  const handleLogout = () => {
-    setEmployee(null);
-    setIsLoggedIn(false);
-    setEmployeeCode('');
-    localStorage.removeItem('employee');
-    toast.success('Logged out successfully');
-  };
+      // Mock API call
+      const newBreak: Break = {
+        id: Date.now(),
+        employeeId,
+        breakDate: new Date().toISOString().split('T')[0],
+        breakInTime: new Date().toTimeString().slice(0, 8),
+        breakDuration: 0,
+        isActive: true,
+        warningSent: false,
+        createdAt: new Date().toISOString()
+      };
 
-  // React Query handles data loading automatically
-
-  const handleBreakIn = async () => {
-    if (!employee) return;
-
-    setActionLoading(true);
-    try {
-      await breakIn({ employeeId: employee.id });
+      setCurrentBreak(newBreak);
       toast.success('Break started');
-      // React Query will automatically refetch and update data
-    } catch (error: unknown) {
-      const errorMessage = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Failed to start break';
-      toast.error(errorMessage);
+    } catch (error) {
+      console.error('Error starting break:', error);
+      toast.error('Failed to start break');
     } finally {
-      setActionLoading(false);
+      setLoading(false);
     }
   };
 
   const handleBreakOut = async () => {
-    if (!employee) return;
+    if (!currentBreak?.isActive) {
+      toast.error('You are not currently on a break');
+      return;
+    }
 
-    setActionLoading(true);
     try {
-      await breakOut({ employeeId: employee.id });
-      setBreakDuration(0);
-      toast.success('Break ended');
-      // React Query will automatically refetch and update data
-    } catch (error: unknown) {
-      const errorMessage = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Failed to end break';
-      toast.error(errorMessage);
+      setLoading(true);
+
+      const now = new Date();
+      const breakInTime = new Date(`${currentBreak.breakDate}T${currentBreak.breakInTime}`);
+      const duration = Math.floor((now.getTime() - breakInTime.getTime()) / (1000 * 60));
+
+      const updatedBreak: Break = {
+        ...currentBreak,
+        breakOutTime: now.toTimeString().slice(0, 8),
+        breakDuration: duration,
+        isActive: false
+      };
+
+      setBreakHistory(prev => [updatedBreak, ...prev.filter(b => b.id !== currentBreak.id)]);
+      setCurrentBreak(null);
+
+      toast.success(`Break ended. Duration: ${duration} minutes`);
+
+      // Show warning if break was too long (over 30 minutes)
+      if (duration > 30) {
+        toast.error('Break exceeded recommended duration (30 minutes)');
+      }
+    } catch (error) {
+      console.error('Error ending break:', error);
+      toast.error('Failed to end break');
     } finally {
-      setActionLoading(false);
+      setLoading(false);
     }
   };
 
-  const isExceeded = breakDuration > 20;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const totalBreakTime = todayBreaks.reduce((total, breakItem) => total + breakItem.breakDuration, 0);
+  const getCurrentBreakDuration = () => {
+    if (!currentBreak?.isActive || !currentBreak.breakInTime) return 0;
 
-  // Login form
-  if (!isLoggedIn) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-center">Employee Login</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <Label htmlFor="employeeCode">Employee Code</Label>
-                <Input
-                  id="employeeCode"
-                  type="text"
-                  value={employeeCode}
-                  onChange={(e) => setEmployeeCode(e.target.value)}
-                  placeholder="Enter your employee code"
-                  required
-                  autoFocus
-                />
-              </div>
-              <Button
-                type="submit"
-                disabled={loggingIn || !employeeCode.trim()}
-                className="w-full"
-              >
-                {loggingIn ? 'Logging in...' : 'Login'}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+    const breakInTime = new Date(`${currentBreak.breakDate}T${currentBreak.breakInTime}`);
+    return Math.floor((currentTime.getTime() - breakInTime.getTime()) / (1000 * 60));
+  };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  const formatDuration = (minutes: number) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+  };
+
+  const formatTime = (timeString: string) => {
+    return timeString.slice(0, 5); // HH:MM
+  };
+
+  const currentDuration = getCurrentBreakDuration();
+  const isLongBreak = currentDuration > 30;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Break Tracker</h1>
-              <p className="text-sm text-gray-600">
-                Welcome, {employee?.name} ({employee?.employeeCode})
-              </p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Button onClick={() => router.push('/employee')} variant="outline">
-                Dashboard
-              </Button>
-              <Button onClick={handleLogout} variant="outline">
-                <LogOut className="w-4 h-4 mr-2" />
-                Logout
-              </Button>
-            </div>
-          </div>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Break Tracker</h1>
+          <p className="text-muted-foreground">Manage your break times and view history</p>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Break Controls */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Coffee className="h-5 w-5 mr-2" />
-              Break Controls
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center space-y-6">
-              {currentBreak?.isActive ? (
+      {/* Current Break Status */}
+      <Card className={currentBreak?.isActive ? (isLongBreak ? 'border-red-200 bg-red-50' : 'border-blue-200 bg-blue-50') : ''}>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Coffee className="h-5 w-5" />
+            <span>Current Break Status</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {currentBreak?.isActive ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
                 <div>
-                  <div className="mb-4">
-                    <div className="text-6xl font-bold text-blue-600 mb-2">
-                      {Math.floor(breakDuration / 60)}:{(breakDuration % 60).toString().padStart(2, '0')}
-                    </div>
-                    <p className="text-gray-600">
-                      Break started at {formatTime(currentBreak.breakInTime!.toTimeString().slice(0,5))}
-                    </p>
-                    {isExceeded && (
-                      <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
-                        <div className="flex items-center justify-center">
-                          <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
-                          <span className="text-red-700 font-medium">
-                            Break exceeded 20 minutes!
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <Button
-                    onClick={handleBreakOut}
-                    disabled={actionLoading}
-                    size="lg"
-                    className="bg-red-600 hover:bg-red-700"
-                  >
-                    <Pause className="w-5 h-5 mr-2" />
-                    {actionLoading ? 'Ending Break...' : 'End Break'}
-                  </Button>
+                  <p className="text-2xl font-bold text-blue-600">Break In Progress</p>
+                  <p className="text-muted-foreground">
+                    Started at {currentBreak.breakInTime && formatTime(currentBreak.breakInTime)}
+                  </p>
                 </div>
-              ) : (
-                <div>
-                  <div className="mb-6">
-                    <Coffee className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600 text-lg">You are not currently on a break</p>
-                  </div>
-                  <Button
-                    onClick={handleBreakIn}
-                    disabled={actionLoading}
-                    size="lg"
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    <Play className="w-5 h-5 mr-2" />
-                    {actionLoading ? 'Starting Break...' : 'Start Break'}
-                  </Button>
+                <Badge variant={isLongBreak ? 'destructive' : 'default'} className="text-lg px-4 py-2">
+                  {formatDuration(currentDuration)}
+                </Badge>
+              </div>
+
+              {isLongBreak && (
+                <div className="flex items-center space-x-2 p-3 bg-red-100 rounded-lg border border-red-200">
+                  <AlertTriangle className="h-5 w-5 text-red-600" />
+                  <p className="text-red-800 font-medium">
+                    Break time exceeded recommended duration (30 minutes)
+                  </p>
                 </div>
               )}
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Today's Break Summary */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Calendar className="h-5 w-5 mr-2" />
-              Today&apos;s Break Summary
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">{breakSummary.totalBreaks}</div>
-                <p className="text-gray-600">Total Breaks</p>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{breakSummary.totalMinutes}</div>
-                <p className="text-gray-600">Total Minutes</p>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">
-                  {breakSummary.totalBreaks > 0 ? Math.round(breakSummary.totalMinutes / breakSummary.totalBreaks) : 0}
-                </div>
-                <p className="text-gray-600">Avg Minutes</p>
-              </div>
+              <Button
+                onClick={handleBreakOut}
+                disabled={loading}
+                variant={isLongBreak ? 'destructive' : 'default'}
+                className="w-full"
+              >
+                <Square className="h-4 w-4 mr-2" />
+                {loading ? 'Ending Break...' : 'End Break'}
+              </Button>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Break History */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Today&apos;s Break History</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {breakHistory.length === 0 ? (
-              <div className="text-center py-8">
-                <Coffee className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-4 text-lg font-medium text-gray-900">No breaks today</h3>
-                <p className="mt-2 text-sm text-gray-600">
-                  Start your first break when you&apos;re ready.
-                </p>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <p className="text-2xl font-bold text-muted-foreground">No Active Break</p>
+                <p className="text-muted-foreground">Ready to start a break</p>
               </div>
-            ) : (
-              <div className="space-y-3">
-                {breakHistory.map((breakItem, index) => (
-                  <div
-                    key={breakItem.id}
-                    className="flex items-center justify-between p-4 border rounded-lg"
-                  >
-                    <div className="flex items-center space-x-4">
-                      <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-blue-600 font-semibold">{index + 1}</span>
-                      </div>
-                      <div>
-                        <div className="font-medium">
-                          {formatTime(breakItem.breakInTime!.toTimeString().slice(0,5))} - {breakItem.breakOutTime ? formatTime(breakItem.breakOutTime.toTimeString().slice(0,5)) : 'Active'}
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          Duration: {breakItem.breakDuration} minutes
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center">
-                      {breakItem.breakDuration > 20 ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                          <AlertTriangle className="w-3 h-3 mr-1" />
-                          Exceeded
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          Normal
-                        </span>
-                      )}
+              <Button onClick={handleBreakIn} disabled={loading} className="w-full">
+                <Play className="h-4 w-4 mr-2" />
+                {loading ? 'Starting Break...' : 'Start Break'}
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Break Summary */}
+      {summary && (
+        <div className="grid gap-4 md:grid-cols-5">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Breaks</CardTitle>
+              <Coffee className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{summary.totalBreaks}</div>
+              <p className="text-xs text-muted-foreground">This month</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Time</CardTitle>
+              <Timer className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatDuration(summary.totalDuration)}</div>
+              <p className="text-xs text-muted-foreground">All breaks</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Average</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatDuration(summary.averageDuration)}</div>
+              <p className="text-xs text-muted-foreground">Per break</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Longest</CardTitle>
+              <TrendingDown className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatDuration(summary.longestBreak)}</div>
+              <p className="text-xs text-muted-foreground">Single break</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Warnings</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-yellow-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{summary.warningsReceived}</div>
+              <p className="text-xs text-muted-foreground">This month</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Break History */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Calendar className="h-5 w-5" />
+            <span>Today&apos;s Breaks</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {breakHistory.length === 0 ? (
+            <div className="text-center py-8">
+              <Coffee className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">No breaks taken today</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {breakHistory.map((breakRecord) => (
+                <div key={breakRecord.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <Coffee className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium">
+                        {breakRecord.breakInTime && formatTime(breakRecord.breakInTime)} - {' '}
+                        {breakRecord.breakOutTime && formatTime(breakRecord.breakOutTime)}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(breakRecord.createdAt).toLocaleDateString()}
+                      </p>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                  <div className="text-right">
+                    <Badge variant={breakRecord.breakDuration > 30 ? 'destructive' : 'default'}>
+                      {formatDuration(breakRecord.breakDuration)}
+                    </Badge>
+                    {breakRecord.warningSent && (
+                      <p className="text-xs text-red-500 mt-1">Warning sent</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
