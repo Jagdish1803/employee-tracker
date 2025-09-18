@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient, Prisma, AssetStatus, AssetType, AssignmentStatus } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -23,21 +23,21 @@ export async function GET(request: NextRequest) {
     // Search in asset name, serial number, model, brand
     if (search) {
       where.OR = [
-        { assetName: { contains: search, mode: 'insensitive' } },
-        { serialNumber: { contains: search, mode: 'insensitive' } },
-        { model: { contains: search, mode: 'insensitive' } },
-        { brand: { contains: search, mode: 'insensitive' } },
+        { assetName: { contains: search, mode: Prisma.QueryMode.insensitive } },
+        { serialNumber: { contains: search, mode: Prisma.QueryMode.insensitive } },
+        { model: { contains: search, mode: Prisma.QueryMode.insensitive } },
+        { brand: { contains: search, mode: Prisma.QueryMode.insensitive } },
       ];
     }
 
     // Filter by status
     if (status && status !== 'all') {
-      where.status = status;
+      where.status = status as AssetStatus;
     }
 
     // Filter by asset type
     if (assetType && assetType !== 'all') {
-      where.assetType = assetType;
+      where.assetType = assetType as AssetType;
     }
 
     // Filter by employee name or code through assignments
@@ -45,15 +45,15 @@ export async function GET(request: NextRequest) {
       where.assignments = {
         some: {
           AND: [
-            { status: 'ACTIVE' },
+            { status: 'ACTIVE' as AssignmentStatus },
             employeeName ? {
               employee: {
-                name: { contains: employeeName, mode: 'insensitive' }
+                name: { contains: employeeName, mode: Prisma.QueryMode.insensitive }
               }
             } : {},
             employeeCode ? {
               employee: {
-                employeeCode: { contains: employeeCode, mode: 'insensitive' }
+                employeeCode: { contains: employeeCode, mode: Prisma.QueryMode.insensitive }
               }
             } : {},
           ].filter(condition => Object.keys(condition).length > 0)

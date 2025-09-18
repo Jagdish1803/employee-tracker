@@ -6,10 +6,11 @@ const prisma = new PrismaClient();
 // GET /api/assets/[id] - Get single asset with history
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const assetId = parseInt(params.id);
+    const { id } = await params;
+    const assetId = parseInt(id);
 
     if (isNaN(assetId)) {
       return NextResponse.json(
@@ -61,10 +62,11 @@ export async function GET(
 // PUT /api/assets/[id] - Update asset
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const assetId = parseInt(params.id);
+    const { id } = await params;
+    const assetId = parseInt(id);
     const body = await request.json();
 
     if (isNaN(assetId)) {
@@ -153,10 +155,11 @@ export async function PUT(
 // DELETE /api/assets/[id] - Delete asset
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const assetId = parseInt(params.id);
+    const { id } = await params;
+    const assetId = parseInt(id);
 
     if (isNaN(assetId)) {
       return NextResponse.json(

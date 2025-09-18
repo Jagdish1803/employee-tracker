@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Laptop, Plus, Edit, Trash2, Users, Search, ChevronLeft, ChevronRight, UserPlus, RotateCcw, History } from 'lucide-react';
-import { Asset, AssetType, AssetAssignment } from '@/types';
+import { Asset, AssetType, AssetAssignment, AssetStatus } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -101,7 +101,7 @@ export default function AssetsPage() {
     setFilters(prev => ({
       ...prev,
       [key]: value,
-      page: key === 'page' ? value : 1
+      page: key === 'page' ? (typeof value === 'string' ? parseInt(value) || 1 : value) : 1
     }));
   };
 
@@ -417,7 +417,7 @@ export default function AssetsPage() {
                   <TableCell>
                     <div>
                       <Badge variant="outline">{asset.assetTag}</Badge>
-                      {asset.assignments && asset.assignments.length > 0 && (
+                      {asset.assignments && asset.assignments.length > 0 && asset.assignments[0].employee && (
                         <div className="text-xs text-muted-foreground mt-1">
                           Assigned to: {asset.assignments[0].employee.name}
                         </div>
@@ -706,7 +706,7 @@ export default function AssetsPage() {
                       <div className="flex items-center gap-2">
                         <Users className="h-4 w-4" />
                         <span className="font-medium">
-                          {assignment.employee.name} ({assignment.employee.employeeCode})
+                          {assignment.employee?.name} ({assignment.employee?.employeeCode})
                         </span>
                       </div>
                       <Badge variant={assignment.status === 'ACTIVE' ? 'default' : 'secondary'}>
@@ -726,7 +726,10 @@ export default function AssetsPage() {
                       )}
                       <div>
                         <span className="font-medium">Duration:</span>{' '}
-                        {assignment.duration} days
+                        {assignment.returnDate
+                          ? Math.ceil((new Date(assignment.returnDate).getTime() - new Date(assignment.assignedDate).getTime()) / (1000 * 60 * 60 * 24))
+                          : Math.ceil((new Date().getTime() - new Date(assignment.assignedDate).getTime()) / (1000 * 60 * 60 * 24))
+                        } days
                       </div>
                       {assignment.returnCondition && (
                         <div>

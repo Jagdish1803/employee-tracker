@@ -42,12 +42,12 @@ export function AdminAuthProvider({ children }: AdminAuthProviderProps) {
       if (!userEmail) return
 
       const employeeCode = emailToEmployeeCode(userEmail)
-      const response = await employeeService.getByCode(employeeCode)
+      const response = await employeeService.getAll()
 
-      if (response.success && response.data) {
-        const employee = response.data as Employee
+      if (response.data.success && response.data.data) {
+        const employee = response.data.data.find((emp: Employee) => emp.employeeCode === employeeCode)
         // Only allow admin or super_admin roles to access admin panel
-        if (employee.role === 'admin' || employee.role === 'super_admin') {
+        if (employee && (employee.role === 'admin' || employee.role === 'super_admin')) {
           setAdmin(employee)
         } else {
           setAdmin(null)

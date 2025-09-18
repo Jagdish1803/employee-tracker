@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient, Prisma, AssetType, AssignmentStatus } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -36,10 +36,10 @@ export async function GET(request: NextRequest) {
     if (employeeName || employeeCode) {
       where.employee = {};
       if (employeeName) {
-        where.employee.name = { contains: employeeName, mode: 'insensitive' };
+        where.employee.name = { contains: employeeName, mode: Prisma.QueryMode.insensitive };
       }
       if (employeeCode) {
-        where.employee.employeeCode = { contains: employeeCode, mode: 'insensitive' };
+        where.employee.employeeCode = { contains: employeeCode, mode: Prisma.QueryMode.insensitive };
       }
     }
 
@@ -47,16 +47,16 @@ export async function GET(request: NextRequest) {
     if (assetName || assetType) {
       where.asset = {};
       if (assetName) {
-        where.asset.assetName = { contains: assetName, mode: 'insensitive' };
+        where.asset.assetName = { contains: assetName, mode: Prisma.QueryMode.insensitive };
       }
       if (assetType && assetType !== 'all') {
-        where.asset.assetType = assetType;
+        where.asset.assetType = assetType as AssetType;
       }
     }
 
     // Filter by assignment status
     if (status && status !== 'all') {
-      where.status = status;
+      where.status = status as AssignmentStatus;
     }
 
     // Filter by date range

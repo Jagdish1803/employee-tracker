@@ -193,7 +193,7 @@ export function AssetAssignmentDialog({
                   <div className="flex items-center gap-3 mb-2">
                     <User className="h-4 w-4" />
                     <span className="font-medium">
-                      {assignment.employee.name} ({assignment.employee.employeeCode})
+                      {assignment.employee?.name} ({assignment.employee?.employeeCode})
                     </span>
                   </div>
                   <div className="text-sm text-muted-foreground">
