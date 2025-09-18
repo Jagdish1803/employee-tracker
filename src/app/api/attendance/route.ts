@@ -130,11 +130,13 @@ export async function GET(request: NextRequest) {
     console.log(`Found ${attendanceRecords.length} records from AttendanceRecord table`);
     console.log(`Found ${attendanceData.length} records from Attendance table`);
 
-    // Helper function for safe time formatting
+    // Helper function for safe time formatting with IST timezone
     const formatTime = (dateTime: Date | null | undefined): string | null => {
       if (!dateTime) return null;
       try {
-        return dateTime.toTimeString().slice(0, 5);
+        // Convert to IST timezone before formatting
+        const istTime = new Date(dateTime.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+        return istTime.toTimeString().slice(0, 5);
       } catch (error) {
         console.error('Error formatting time:', error);
         return null;
@@ -315,14 +317,22 @@ export async function POST(request: NextRequest) {
         if (timeStr.includes('T') || timeStr.includes(' ')) {
           return new Date(timeStr);
         } else {
-          // Time only format (HH:MM)
+          // Time only format (HH:MM) - treat as IST
           const [hours, minutes] = timeStr.split(':').map(Number);
           if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
             throw new Error(`Invalid time format: ${timeStr}`);
           }
-          const dateWithTime = new Date(date);
-          dateWithTime.setHours(hours, minutes, 0, 0);
-          return dateWithTime;
+          
+          // Create date in IST timezone
+          const dateStr = date.toISOString().split('T')[0];
+          const istTimeStr = `${dateStr}T${timeStr}:00`;
+          
+          // Parse as IST and convert to UTC for database storage
+          const istDate = new Date(istTimeStr);
+          // Subtract IST offset (5.5 hours) to get UTC
+          const utcDate = new Date(istDate.getTime() - (5.5 * 60 * 60 * 1000));
+          
+          return utcDate;
         }
       } catch (error) {
         console.error(`Error parsing time ${timeStr}:`, error);

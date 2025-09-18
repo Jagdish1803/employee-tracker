@@ -55,11 +55,11 @@ export default function WorkLogForm({
   useEffect(() => {
     const initialLogs: Record<number, number> = {};
     assignments.forEach(assignment => {
-      initialLogs[assignment.tagId] = logs[assignment.tagId] || 0;
+      initialLogs[assignment.tagId] = 0;
     });
     setLogs(initialLogs);
     setHasChanges(false);
-  }, [assignments, logs]);
+  }, [assignments]);
 
   const loadExistingData = useCallback(async () => {
     try {

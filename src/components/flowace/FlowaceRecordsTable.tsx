@@ -56,7 +56,7 @@ export function FlowaceRecordsTable({
     return timeStr.split(':').slice(0, 2).join(':');
   };
 
-  const formatHoursMinutesSeconds = (hours: number, _record?: FlowaceRecord, _field?: string) => {
+  const formatHoursMinutesSeconds = (hours: number) => {
     if (hours === 0) return '00:00:00';
 
     const totalMilliseconds = Math.round(hours * 3600 * 1000);

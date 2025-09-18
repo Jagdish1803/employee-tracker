@@ -1,17 +1,19 @@
-import { 
-  Home, 
-  BarChart3, 
-  Users, 
-  Tag, 
-  ClipboardList, 
-  CalendarDays, 
-  Upload, 
-  Edit, 
-  AlertTriangle, 
-  Coffee, 
+import {
+  Home,
+  BarChart3,
+  Users,
+  Tag,
+  ClipboardList,
+  CalendarDays,
+  Upload,
+  Edit,
+  AlertTriangle,
+  Coffee,
   FileText,
   Building2,
-  LogOut
+  LogOut,
+  Shield,
+  Laptop
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -42,7 +44,7 @@ const navigation = [
     name: "Tags", 
     href: "/admin/tags", 
     icon: Tag,
-    badge: "4"
+    badge:null
   },
   { 
     name: "Assignments", 
@@ -72,7 +74,7 @@ const navigation = [
     name: "Missing Data", 
     href: "/admin/missing-data", 
     icon: AlertTriangle,
-    badge: "2"
+    badge: null
   },
   { 
     name: "Warnings", 
@@ -86,11 +88,23 @@ const navigation = [
     icon: Coffee,
     badge: null
   },
-  { 
-    name: "Issues", 
-    href: "/admin/issues", 
+  {
+    name: "Issues",
+    href: "/admin/issues",
     icon: FileText,
-    badge: "3"
+    badge: null
+  },
+  {
+    name: "Admin Panel",
+    href: "/admin/admin-panel",
+    icon: Shield,
+    badge: null
+  },
+  {
+    name: "Assets",
+    href: "/admin/assets",
+    icon: Laptop,
+    badge: null
   },
 ];
 

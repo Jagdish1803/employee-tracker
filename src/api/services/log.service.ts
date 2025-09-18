@@ -7,8 +7,15 @@ export class LogService {
   async getByDate(employeeId: number, date: string): Promise<unknown[]> {
     try {
       const response = await apiClient.get(`${this.basePath}/by-date`, {
-        params: { employeeId, date }
+        params: { employeeId, logDate: date }
       });
+
+      // Handle new API response structure
+      if (response.data && response.data.success) {
+        return response.data.data || [];
+      }
+
+      // Fallback for direct array response
       return response.data || [];
     } catch (error) {
       console.error('Error fetching logs by date:', error);

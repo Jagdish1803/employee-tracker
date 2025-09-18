@@ -1,26 +1,26 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
-import { 
-  Clock, Calendar, Coffee, FileText, BarChart3, 
+import {
+  Clock, Calendar, Coffee, FileText, BarChart3,
   AlertTriangle, CheckCircle
 } from 'lucide-react';
 import {
-  logService, breakService, issueService, warningService, employeeService
+  logService, breakService, issueService, warningService
 } from '@/api';
 import { Log, Break, Issue, Warning } from '@/types';
 import { getCurrentISTDate, formatDateTime, formatMinutesToHours } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 export default function EmployeeDashboard() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const { employee, signOut } = useSupabaseAuth();
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [loading, setLoading] = useState(true);
-  const [loginLoading, setLoginLoading] = useState(false);
   const [dashboardData, setDashboardData] = useState({
     todayLogs: [] as Log[],
     currentBreak: null as Break | null,
@@ -33,86 +33,7 @@ export default function EmployeeDashboard() {
     },
   });
 
-  // Employee code login state
-  const [employeeCode, setEmployeeCode] = useState('');
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [employeeId, setEmployeeId] = useState<number | null>(null);
-
-  const attemptLogin = useCallback(async (code: string) => {
-    try {
-      setLoginLoading(true);
-      const response = await employeeService.login(code);
-
-      if (response.data.success && response.data.data) {
-        setEmployeeId(response.data.data.id);
-        setLoggedIn(true);
-        toast.success('Login successful');
-      } else {
-        toast.error('Invalid employee code');
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      toast.error('Invalid employee code');
-    } finally {
-      setLoginLoading(false);
-    }
-  }, []);
-
-  const handleAutoLogin = useCallback(async (code: string) => {
-    await attemptLogin(code);
-  }, [attemptLogin]);
-
-  // Update current date/time every minute
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentDateTime(new Date());
-    }, 60000);
-    return () => clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    // Check for code in URL parameters first
-    const codeFromUrl = searchParams.get('code');
-    if (codeFromUrl && !loggedIn) {
-      setEmployeeCode(codeFromUrl);
-      handleAutoLogin(codeFromUrl);
-    }
-  }, [searchParams, handleAutoLogin, loggedIn]);
-
-  useEffect(() => {
-    if (loggedIn && employeeId) {
-      loadDashboardData(employeeId);
-    }
-  }, [loggedIn, employeeId]);
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!employeeCode.trim()) {
-      toast.error('Please enter your employee code');
-      return;
-    }
-    await attemptLogin(employeeCode.trim());
-  };
-
-  const handleLogout = () => {
-    setLoggedIn(false);
-    setEmployeeId(null);
-    setEmployeeCode('');
-    setDashboardData({
-      todayLogs: [],
-      currentBreak: null,
-      recentIssues: [],
-      activeWarnings: [],
-      weeklyStats: {
-        totalMinutes: 0,
-        daysWorked: 0,
-        avgPerDay: 0,
-      },
-    });
-    router.push('/');
-  };
-
-  const loadDashboardData = async (employeeId: number) => {
+  const loadDashboardData = useCallback(async (employeeId: number) => {
     try {
       setLoading(true);
       const today = getCurrentISTDate();
@@ -156,7 +77,21 @@ export default function EmployeeDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  // Update current date/time every minute
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentDateTime(new Date());
+    }, 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (employee) {
+      loadDashboardData(employee.id);
+    }
+  }, [employee, loadDashboardData]);
 
   // Calculate today's stats
   const todayStats = {
@@ -166,34 +101,6 @@ export default function EmployeeDashboard() {
     pendingIssues: dashboardData.recentIssues.filter(issue => issue.issueStatus === 'pending').length,
   };
 
-  if (!loggedIn) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <form className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm" onSubmit={handleLogin}>
-          <h2 className="text-2xl font-bold mb-4 text-center">Employee Login</h2>
-          <div className="mb-4">
-            <label htmlFor="employeeCode" className="block text-sm font-medium text-gray-700 mb-2">Employee Code</label>
-            <input
-              id="employeeCode"
-              type="text"
-              value={employeeCode}
-              onChange={e => setEmployeeCode(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300"
-              placeholder="Enter your code (e.g. ZOOT1049)"
-              autoFocus
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loginLoading}
-            className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loginLoading ? 'Logging in...' : 'Login'}
-          </button>
-        </form>
-      </div>
-    );
-  }
 
   if (loading) {
     return (
@@ -222,8 +129,8 @@ export default function EmployeeDashboard() {
           </p>
         </div>
         <div className="flex items-center space-x-4">
-          <span className="text-sm font-medium">Code: {employeeCode}</span>
-          <Button onClick={handleLogout} variant="outline" size="sm">
+          <span className="text-sm font-medium">Code: {employee?.employeeCode}</span>
+          <Button onClick={signOut} variant="outline" size="sm">
             Logout
           </Button>
         </div>

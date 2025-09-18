@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
-import { AlertTriangle, Calendar, Users, Download, FileX } from 'lucide-react';
+import { AlertTriangle, Calendar, Users, Download, FileX, Search } from 'lucide-react';
 import { employeeService, logService } from '@/api';
 import { Employee, Log } from '@/types';
 import { getCurrentISTDate, getWorkingDaysBetween, formatDate } from '@/lib/utils';
@@ -31,6 +31,16 @@ export default function MissingDataPage() {
   });
   const [dateTo, setDateTo] = useState(getCurrentISTDate());
   const [analyzing, setAnalyzing] = useState(false);
+
+  // Pagination and search state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredMissingData, setFilteredMissingData] = useState<MissingDataRecord[]>([]);
+  const pageSize = 10;
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredMissingData.length / pageSize);
+  const paginatedMissingData = filteredMissingData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const analyzeMissingData = useCallback(async () => {
     if (!dateFrom || !dateTo || employees.length === 0) return;
@@ -82,6 +92,20 @@ export default function MissingDataPage() {
     }
   }, [dateFrom, dateTo, employees]);
 
+  // Filter missing data based on search term
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredMissingData(missingData);
+    } else {
+      const filtered = missingData.filter(record =>
+        record.employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        record.employee.employeeCode.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredMissingData(filtered);
+    }
+    setCurrentPage(1); // Reset to first page when filtering
+  }, [searchTerm, missingData]);
+
   const loadEmployees = async () => {
     try {
       const response = await employeeService.getAll();
@@ -118,8 +142,8 @@ export default function MissingDataPage() {
     ];
 
     const workingDays = getWorkingDaysBetween(dateFrom, dateTo);
-    
-    const csvData = missingData.map(record => [
+
+    const csvData = filteredMissingData.map(record => [
       record.employee.name,
       record.employee.employeeCode,
       workingDays.length,
@@ -152,7 +176,7 @@ export default function MissingDataPage() {
   const workingDays = getWorkingDaysBetween(dateFrom, dateTo);
   const totalPossibleSubmissions = employees.length * workingDays.length;
   const totalMissingSubmissions = missingData.reduce((sum, record) => sum + record.totalMissing, 0);
-  const overallCompletionRate = totalPossibleSubmissions > 0 
+  const overallCompletionRate = totalPossibleSubmissions > 0
     ? Math.round(((totalPossibleSubmissions - totalMissingSubmissions) / totalPossibleSubmissions) * 100)
     : 100;
 
@@ -227,6 +251,34 @@ export default function MissingDataPage() {
         </CardContent>
       </Card>
 
+      {/* Employee Search */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Search className="h-5 w-5 mr-2" />
+            Employee Search
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="max-w-sm">
+            <Label htmlFor="employeeSearch">Search Employees</Label>
+            <Input
+              id="employeeSearch"
+              type="text"
+              placeholder="Search by name or employee code..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="mt-2"
+            />
+          </div>
+          {searchTerm && (
+            <p className="text-sm text-muted-foreground mt-2">
+              Showing {filteredMissingData.length} of {missingData.length} employees
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <Card>
@@ -279,20 +331,35 @@ export default function MissingDataPage() {
       </div>
 
       {/* Missing Data Analysis */}
-      {missingData.length === 0 ? (
+      {filteredMissingData.length === 0 ? (
         <Card>
           <CardContent className="text-center py-12">
             <Users className="mx-auto h-12 w-12 text-muted-foreground" />
-            <h3 className="mt-4 text-lg font-medium">No data to analyze</h3>
+            <h3 className="mt-4 text-lg font-medium">
+              {searchTerm ? 'No employees found matching your search' : 'No data to analyze'}
+            </h3>
             <p className="mt-2 text-sm text-muted-foreground">
-              Select a date range to analyze missing data submissions.
+              {searchTerm
+                ? 'Try adjusting your search terms.'
+                : 'Select a date range to analyze missing data submissions.'
+              }
             </p>
+            {searchTerm && (
+              <Button onClick={() => setSearchTerm('')} variant="outline" className="mt-4">
+                Clear Search
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>Missing Data Analysis</CardTitle>
+            <CardTitle className="flex items-center justify-between">
+              <span>Missing Data Analysis</span>
+              <div className="text-sm text-muted-foreground">
+                Total: {filteredMissingData.length} employees {searchTerm && `(filtered from ${missingData.length})`}
+              </div>
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
@@ -307,7 +374,7 @@ export default function MissingDataPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {missingData.map((record) => (
+                  {paginatedMissingData.map((record) => (
                     <tr key={record.employee.id} className="hover:bg-muted/25">
                       <td className="px-6 py-4">
                         <div className="flex items-center">
@@ -365,6 +432,52 @@ export default function MissingDataPage() {
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="px-6 py-4 border-t border-muted bg-muted/25">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-muted-foreground">
+                    Showing {Math.min((currentPage - 1) * pageSize + 1, filteredMissingData.length)} to {Math.min(currentPage * pageSize, filteredMissingData.length)} of {filteredMissingData.length} employees
+                    {searchTerm && ` (filtered from ${missingData.length})`}
+                  </div>
+                  <div className="flex space-x-1">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="text-muted-foreground border-muted hover:bg-muted"
+                    >
+                      Previous
+                    </Button>
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      const page = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                      return (
+                        <Button
+                          key={page}
+                          size="sm"
+                          variant={currentPage === page ? 'default' : 'outline'}
+                          onClick={() => setCurrentPage(page)}
+                          className={currentPage === page ? 'bg-primary text-primary-foreground' : 'text-muted-foreground border-muted hover:bg-muted'}
+                        >
+                          {page}
+                        </Button>
+                      );
+                    })}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="text-muted-foreground border-muted hover:bg-muted"
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

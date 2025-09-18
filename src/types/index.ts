@@ -6,6 +6,10 @@ export interface Employee {
   name: string;
   email: string;
   employeeCode: string;
+  department?: string;
+  position?: string;
+  role?: 'user' | 'admin' | 'super_admin';
+  supabaseUserId?: string;
   createdAt: Date;
 }
 
@@ -476,4 +480,109 @@ export interface PaginatedResponse<T> {
   page: number;
   limit: number;
   totalPages: number;
+}
+
+// Asset Management Types
+export type AssetType = 'LAPTOP' | 'DESKTOP' | 'MONITOR' | 'KEYBOARD' | 'MOUSE' | 'HEADSET' | 'PHONE' | 'TABLET' | 'PRINTER' | 'FURNITURE' | 'SOFTWARE_LICENSE' | 'OTHER';
+export type AssetCondition = 'EXCELLENT' | 'GOOD' | 'FAIR' | 'POOR' | 'DAMAGED' | 'NEEDS_REPAIR';
+export type AssetStatus = 'AVAILABLE' | 'ASSIGNED' | 'IN_MAINTENANCE' | 'RETIRED' | 'LOST' | 'STOLEN';
+export type AssignmentStatus = 'ACTIVE' | 'RETURNED' | 'LOST' | 'DAMAGED_RETURN';
+export type MaintenanceType = 'ROUTINE_MAINTENANCE' | 'REPAIR' | 'UPGRADE' | 'REPLACEMENT' | 'WARRANTY_SERVICE' | 'INSPECTION';
+
+export interface Asset {
+  id: number;
+  assetName: string;
+  assetType: AssetType;
+  assetTag: string;
+  serialNumber?: string;
+  model?: string;
+  brand?: string;
+  purchaseDate?: Date;
+  warrantyExpiry?: Date;
+  purchasePrice?: number;
+  condition: AssetCondition;
+  status: AssetStatus;
+  location?: string;
+  description?: string;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  assignments?: AssetAssignment[];
+  maintenanceLogs?: AssetMaintenance[];
+}
+
+export interface AssetAssignment {
+  id: number;
+  assetId: number;
+  employeeId: number;
+  assignedDate: Date;
+  returnDate?: Date;
+  assignedBy?: number;
+  returnedBy?: number;
+  status: AssignmentStatus;
+  assignmentNotes?: string;
+  returnNotes?: string;
+  returnCondition?: AssetCondition;
+  createdAt: Date;
+  updatedAt: Date;
+  asset?: Asset;
+  employee?: Employee;
+}
+
+export interface AssetMaintenance {
+  id: number;
+  assetId: number;
+  maintenanceType: MaintenanceType;
+  description: string;
+  maintenanceDate: Date;
+  cost?: number;
+  performedBy?: string;
+  notes?: string;
+  nextDueDate?: Date;
+  createdAt: Date;
+  asset?: Asset;
+}
+
+export interface CreateAssetRequest {
+  assetName: string;
+  assetType: AssetType;
+  assetTag: string;
+  serialNumber?: string;
+  model?: string;
+  brand?: string;
+  purchaseDate?: string;
+  warrantyExpiry?: string;
+  purchasePrice?: number;
+  condition: AssetCondition;
+  location?: string;
+  description?: string;
+  notes?: string;
+}
+
+export interface UpdateAssetRequest {
+  assetName?: string;
+  assetType?: AssetType;
+  assetTag?: string;
+  serialNumber?: string;
+  model?: string;
+  brand?: string;
+  purchaseDate?: string;
+  warrantyExpiry?: string;
+  purchasePrice?: number;
+  condition?: AssetCondition;
+  status?: AssetStatus;
+  location?: string;
+  description?: string;
+  notes?: string;
+}
+
+export interface CreateAssetAssignmentRequest {
+  assetId: number;
+  employeeId: number;
+  assignmentNotes?: string;
+}
+
+export interface ReturnAssetRequest {
+  returnCondition: AssetCondition;
+  returnNotes?: string;
 }

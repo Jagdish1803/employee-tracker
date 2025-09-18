@@ -45,13 +45,13 @@ export function AttendanceUploadDialog({
     if (!isOpen) {
       setSelectedFile(null);
       setLocalProgress(0);
-      // Safe reset call
-      try {
-        uploadMutation.reset?.();
-      } catch (error) {
-        console.warn('Reset function not available:', error);
+      // Safe reset call - only call if the function exists
+      if (uploadMutation?.reset && typeof uploadMutation.reset === 'function') {
+        uploadMutation.reset();
       }
     }
+    // We only want this to run when the dialog closes, not when uploadMutation changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {

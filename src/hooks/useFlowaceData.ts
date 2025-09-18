@@ -17,7 +17,7 @@ export function useFlowaceData() {
   const [availableDates, setAvailableDates] = useState<string[]>([]);
 
   // Load data functions
-  const loadFlowaceRecords = useCallback(async (_forceRefresh = false) => {
+  const loadFlowaceRecords = useCallback(async () => {
     try {
       setLoading(true);
       const response = await flowaceService.getAll();

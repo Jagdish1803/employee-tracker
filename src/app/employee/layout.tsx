@@ -1,23 +1,26 @@
 // src/app/employee/layout.tsx - Enhanced Employee Layout
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  Home, 
-  Calendar, 
-  Coffee, 
-  FileText, 
+import {
+  Home,
+  Calendar,
+  Coffee,
+  FileText,
   BarChart3,
   User,
   Menu,
   X,
   CalendarDays,
-  AlertTriangle
+  AlertTriangle,
+  LogOut
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { SupabaseAuthProvider, useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { SupabaseAuthGuard } from '@/components/auth/SupabaseAuthGuard';
 
 interface EmployeeLayoutProps {
   children: React.ReactNode;
@@ -33,19 +36,10 @@ const navigation = [
   { name: 'Performance', href: '/employee/performance', icon: BarChart3 },
 ];
 
-export default function EmployeeLayout({ children }: EmployeeLayoutProps) {
+function EmployeeLayoutContent({ children }: EmployeeLayoutProps) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [employee, setEmployee] = useState<{ name: string; employeeCode: string; email: string } | null>(null);
-
-  useEffect(() => {
-    // Set demo employee data
-    setEmployee({
-      name: 'Employee',
-      employeeCode: 'EMP-001',
-      email: 'employee@company.com'
-    });
-  }, []);
+  const { employee, signOut } = useSupabaseAuth();
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -110,22 +104,32 @@ export default function EmployeeLayout({ children }: EmployeeLayoutProps) {
           {/* User Profile Section - Mobile */}
           {employee && (
             <div className="p-4 border-t border-gray-200">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="h-8 w-8 rounded-full bg-gray-900 flex items-center justify-center">
-                    <span className="text-xs font-medium text-white">
-                      {employee.name?.charAt(0)?.toUpperCase() || 'E'}
-                    </span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="h-8 w-8 rounded-full bg-gray-900 flex items-center justify-center">
+                      <span className="text-xs font-medium text-white">
+                        {employee.name?.charAt(0)?.toUpperCase() || 'E'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="ml-3 flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {employee.name}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {employee.employeeCode}
+                    </p>
                   </div>
                 </div>
-                <div className="ml-3 flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    {employee.name}
-                  </p>
-                  <p className="text-xs text-gray-500 truncate">
-                    {employee.employeeCode}
-                  </p>
-                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={signOut}
+                  className="p-1 text-gray-500 hover:text-gray-700"
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
               </div>
             </div>
           )}
@@ -174,22 +178,32 @@ export default function EmployeeLayout({ children }: EmployeeLayoutProps) {
           {/* User Profile Section - Desktop */}
           {employee && (
             <div className="p-4 border-t border-gray-200">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="h-8 w-8 rounded-full bg-gray-900 flex items-center justify-center">
-                    <span className="text-xs font-medium text-white">
-                      {employee.name?.charAt(0)?.toUpperCase() || 'E'}
-                    </span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="h-8 w-8 rounded-full bg-gray-900 flex items-center justify-center">
+                      <span className="text-xs font-medium text-white">
+                        {employee.name?.charAt(0)?.toUpperCase() || 'E'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="ml-3 flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {employee.name}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {employee.employeeCode}
+                    </p>
                   </div>
                 </div>
-                <div className="ml-3 flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    {employee.name}
-                  </p>
-                  <p className="text-xs text-gray-500 truncate">
-                    {employee.employeeCode}
-                  </p>
-                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={signOut}
+                  className="p-1 text-gray-500 hover:text-gray-700"
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
               </div>
             </div>
           )}
@@ -227,9 +241,19 @@ export default function EmployeeLayout({ children }: EmployeeLayoutProps) {
 
         {/* Page content */}
         <main className="flex-1 p-6 bg-white overflow-y-auto custom-scrollbar">
-          {children}
+          <SupabaseAuthGuard>
+            {children}
+          </SupabaseAuthGuard>
         </main>
       </div>
     </div>
+  );
+}
+
+export default function EmployeeLayout({ children }: EmployeeLayoutProps) {
+  return (
+    <SupabaseAuthProvider>
+      <EmployeeLayoutContent>{children}</EmployeeLayoutContent>
+    </SupabaseAuthProvider>
   );
 }

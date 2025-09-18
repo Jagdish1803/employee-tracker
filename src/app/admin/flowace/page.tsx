@@ -327,7 +327,7 @@ export default function AdminFlowacePage() {
             canNavigateNext={canNavigateNext}
             onNavigateDate={navigateToDate}
             onCalendarClick={() => setShowCalendarDialog(true)}
-            onRefresh={() => loadFlowaceRecords(true)}
+            onRefresh={() => loadFlowaceRecords()}
           />
 
           {/* Summary Statistics */}

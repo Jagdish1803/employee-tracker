@@ -131,7 +131,7 @@ function parseSrpDataRow(line: string, attendanceDate: string) {
   };
 }
 
-export function parseStandardCSV(_content: string, _selectedDate?: string) {
+export function parseStandardCSV() {
   // Implementation for standard CSV parsing
   // This would be moved from the route file
   return {
