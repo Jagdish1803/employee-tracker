@@ -138,7 +138,8 @@ export function AssetAssignmentDialog({
               <div>
                 <div className="font-medium">{asset.assetName}</div>
                 <div className="text-sm text-muted-foreground">
-                  {asset.brand} {asset.model} • {asset.assetTag}
+                  {asset.brand} {asset.model}
+                  {asset.serialNumber && ` • ${asset.serialNumber}`}
                 </div>
               </div>
             </div>

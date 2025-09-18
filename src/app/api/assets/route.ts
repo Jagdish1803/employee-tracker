@@ -137,9 +137,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate asset tag more efficiently using timestamp
-    const timestamp = Date.now().toString().slice(-6); // Last 6 digits of timestamp
-    const assetTag = `${assetType}${timestamp}`;
+    // Asset tag will be optional and not auto-generated
 
     // Check if serial number already exists (only if provided)
     if (serialNumber) {
@@ -160,7 +158,6 @@ export async function POST(request: NextRequest) {
       data: {
         assetName,
         assetType,
-        assetTag,
         serialNumber: serialNumber || null,
         purchaseDate: purchaseDate ? new Date(purchaseDate + 'T00:00:00.000Z') : null,
         condition: 'GOOD', // Default condition

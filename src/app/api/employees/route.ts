@@ -16,6 +16,7 @@ export async function GET(_request: NextRequest) {
         name: true,
         email: true,
         employeeCode: true,
+        role: true,
         createdAt: true,
       },
       orderBy: { name: 'asc' },

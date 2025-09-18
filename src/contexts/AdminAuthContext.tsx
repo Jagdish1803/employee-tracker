@@ -34,7 +34,7 @@ export function AdminAuthProvider({ children }: AdminAuthProviderProps) {
   const [admin, setAdmin] = useState<Employee | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const isAdmin = admin?.role === 'admin' || admin?.role === 'super_admin'
+  const isAdmin = admin?.role === 'ADMIN'
 
   const loadAdminData = useCallback(async () => {
     try {
@@ -47,7 +47,7 @@ export function AdminAuthProvider({ children }: AdminAuthProviderProps) {
       if (response.data.success && response.data.data) {
         const employee = response.data.data.find((emp: Employee) => emp.employeeCode === employeeCode)
         // Only allow admin or super_admin roles to access admin panel
-        if (employee && (employee.role === 'admin' || employee.role === 'super_admin')) {
+        if (employee && employee.role === 'ADMIN') {
           setAdmin(employee)
         } else {
           setAdmin(null)

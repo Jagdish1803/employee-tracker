@@ -416,7 +416,7 @@ export default function AssetsPage() {
                   </TableCell>
                   <TableCell>
                     <div>
-                      <Badge variant="outline">{asset.assetTag}</Badge>
+                      {asset.serialNumber && <Badge variant="outline">{asset.serialNumber}</Badge>}
                       {asset.assignments && asset.assignments.length > 0 && asset.assignments[0].employee && (
                         <div className="text-xs text-muted-foreground mt-1">
                           Assigned to: {asset.assignments[0].employee.name}

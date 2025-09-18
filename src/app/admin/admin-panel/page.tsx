@@ -48,7 +48,7 @@ export default function AdminPanelPage() {
   const [editForm, setEditForm] = useState({
     name: '',
     email: '',
-    role: 'user' as 'user' | 'admin'
+    role: 'EMPLOYEE' as 'EMPLOYEE' | 'ADMIN'
   });
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -180,10 +180,10 @@ export default function AdminPanelPage() {
 
   const getRoleBadge = (role: string) => {
     const roleConfig = {
-      'admin': { variant: 'secondary' as const, label: 'Admin' },
-      'user': { variant: 'outline' as const, label: 'User' }
+      'ADMIN': { variant: 'secondary' as const, label: 'Admin' },
+      'EMPLOYEE': { variant: 'outline' as const, label: 'Employee' }
     };
-    const config = roleConfig[role as keyof typeof roleConfig] || roleConfig.user;
+    const config = roleConfig[role as keyof typeof roleConfig] || roleConfig.EMPLOYEE;
     return (
       <Badge variant={config.variant}>
         {config.label}
@@ -193,8 +193,8 @@ export default function AdminPanelPage() {
 
   const roleStats = {
     total: employees.length,
-    admin: employees.filter(emp => emp.role === 'admin').length,
-    user: employees.filter(emp => emp.role === 'user' || !emp.role).length
+    admin: employees.filter(emp => emp.role === 'ADMIN').length,
+    user: employees.filter(emp => emp.role === 'EMPLOYEE' || !emp.role).length
   };
 
   if (isLoading) {
@@ -290,8 +290,8 @@ export default function AdminPanelPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="user">Users</SelectItem>
-                  <SelectItem value="admin">Admins</SelectItem>
+                  <SelectItem value="EMPLOYEE">Employees</SelectItem>
+                  <SelectItem value="ADMIN">Admins</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -347,7 +347,7 @@ export default function AdminPanelPage() {
                       <span>{employee.email}</span>
                     </div>
                   </TableCell>
-                  <TableCell>{getRoleBadge(employee.role || 'user')}</TableCell>
+                  <TableCell>{getRoleBadge(employee.role || 'EMPLOYEE')}</TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-1">
                       <Button
@@ -358,7 +358,7 @@ export default function AdminPanelPage() {
                           setEditForm({
                             name: employee.name,
                             email: employee.email || '',
-                            role: (employee.role === 'super_admin' ? 'admin' : employee.role) || 'user'
+                            role: employee.role || 'EMPLOYEE'
                           });
                           setEditDialogOpen(true);
                         }}
@@ -501,7 +501,7 @@ export default function AdminPanelPage() {
               <Label htmlFor="editRole">Role</Label>
               <Select
                 value={editForm.role}
-                onValueChange={(value: 'user' | 'admin') =>
+                onValueChange={(value: 'EMPLOYEE' | 'ADMIN') =>
                   setEditForm(prev => ({ ...prev, role: value }))
                 }
               >
@@ -509,8 +509,8 @@ export default function AdminPanelPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="user">User</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="EMPLOYEE">Employee</SelectItem>
+                  <SelectItem value="ADMIN">Admin</SelectItem>
                 </SelectContent>
               </Select>
             </div>

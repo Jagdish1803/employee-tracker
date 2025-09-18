@@ -402,7 +402,7 @@ model Asset {
   id              Int              @id @default(autoincrement())
   assetName       String           @map("asset_name")
   assetType       AssetType        @map("asset_type")
-  assetTag        String           @unique @map("asset_tag") // Unique identifier like "LAPTOP001"
+  assetTag        String?          @unique @map("asset_tag") // Optional asset tag
   serialNumber    String?          @map("serial_number")
   model           String?
   brand           String?

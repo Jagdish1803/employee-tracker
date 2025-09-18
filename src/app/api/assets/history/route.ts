@@ -77,7 +77,6 @@ export async function GET(request: NextRequest) {
           select: {
             id: true,
             assetName: true,
-            assetTag: true,
             assetType: true,
             serialNumber: true,
             model: true,

@@ -131,6 +131,7 @@ export const useCreateAsset = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['assets'] });
+      queryClient.refetchQueries({ queryKey: ['assets'] });
     },
   });
 };
@@ -159,6 +160,7 @@ export const useUpdateAsset = () => {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['assets'] });
       queryClient.invalidateQueries({ queryKey: ['asset', variables.id] });
+      queryClient.refetchQueries({ queryKey: ['assets'] });
     },
   });
 };
@@ -180,9 +182,13 @@ export const useDeleteAsset = () => {
 
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      // Invalidate all asset-related queries
       queryClient.invalidateQueries({ queryKey: ['assets'] });
+      queryClient.invalidateQueries({ queryKey: ['asset', variables] });
       queryClient.invalidateQueries({ queryKey: ['asset-history'] });
+      // Force refetch to ensure UI updates immediately
+      queryClient.refetchQueries({ queryKey: ['assets'] });
     },
   });
 };
