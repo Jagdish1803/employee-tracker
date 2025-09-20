@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminSidebar from '@/components/admin-sidebar';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
@@ -13,8 +13,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { AdminAuthProvider } from '@/contexts/AdminAuthContext';
-import { UnifiedAuthGuard } from '@/components/auth/UnifiedAuthGuard';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -77,12 +77,60 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
   );
 }
 
+function AdminAuth({ children }: { children: React.ReactNode }) {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [code, setCode] = useState('');
+
+  useEffect(() => {
+    const authStatus = localStorage.getItem('adminAuth');
+    if (authStatus === 'true') {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (code === 'ADMIN-001') {
+      setIsAuthenticated(true);
+      localStorage.setItem('adminAuth', 'true');
+    } else {
+      alert('Invalid admin code');
+    }
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Admin Access</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <Input
+                type="text"
+                placeholder="Enter admin code"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                required
+              />
+              <Button type="submit" className="w-full">
+                Access Admin Panel
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}
+
 export default function AdminLayout({ children }: AdminLayoutProps) {
   return (
-    <AdminAuthProvider>
-      <UnifiedAuthGuard>
-        <AdminLayoutContent>{children}</AdminLayoutContent>
-      </UnifiedAuthGuard>
-    </AdminAuthProvider>
+    <AdminAuth>
+      <AdminLayoutContent>{children}</AdminLayoutContent>
+    </AdminAuth>
   );
 }

@@ -6,11 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   CalendarDays,
-  Clock,
   CheckCircle2,
   AlertCircle,
   XCircle,
-  TrendingUp,
   Download
 } from 'lucide-react';
 import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
@@ -123,24 +121,6 @@ export default function MyAttendance() {
     fetchAttendanceData();
   }, [fetchAttendanceData]);
 
-  const getStatusIcon = (status: AttendanceRecord['status']) => {
-    switch (status) {
-      case 'PRESENT':
-        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
-      case 'LATE':
-        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
-      case 'ABSENT':
-        return <XCircle className="h-4 w-4 text-red-500" />;
-      case 'HALF_DAY':
-        return <Clock className="h-4 w-4 text-blue-500" />;
-      case 'LEAVE_APPROVED':
-        return <CheckCircle2 className="h-4 w-4 text-purple-500" />;
-      case 'WFH_APPROVED':
-        return <CheckCircle2 className="h-4 w-4 text-indigo-500" />;
-      default:
-        return <AlertCircle className="h-4 w-4 text-gray-500" />;
-    }
-  };
 
   const getStatusBadgeVariant = (status: AttendanceRecord['status']) => {
     switch (status) {
@@ -194,61 +174,36 @@ export default function MyAttendance() {
         </Button>
       </div>
 
-      {/* Summary Cards */}
+      {/* Summary Card */}
       {summary && (
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Attendance Rate</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{summary.attendancePercentage}%</div>
-              <p className="text-xs text-muted-foreground">
-                This month
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Present Days</CardTitle>
-              <CheckCircle2 className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{summary.presentDays}</div>
-              <p className="text-xs text-muted-foreground">
-                Out of {summary.totalWorkingDays} working days
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Hours</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{summary.totalHoursWorked}h</div>
-              <p className="text-xs text-muted-foreground">
-                Avg {summary.averageHoursPerDay}h per day
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Late Days</CardTitle>
-              <AlertCircle className="h-4 w-4 text-yellow-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{summary.lateDays}</div>
-              <p className="text-xs text-muted-foreground">
-                This month
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <CalendarDays className="h-5 w-5" />
+              <span>Monthly Summary</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Attendance Rate</p>
+                <p className="text-2xl font-bold">{Math.round(summary.attendancePercentage)}%</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Present Days</p>
+                <p className="text-2xl font-bold">{summary.presentDays}/{summary.totalWorkingDays}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Total Hours</p>
+                <p className="text-2xl font-bold">{Math.round(summary.totalHoursWorked)}h</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Late Days</p>
+                <p className="text-2xl font-bold">{summary.lateDays}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -265,39 +220,34 @@ export default function MyAttendance() {
         {/* Recent Records */}
         <Card>
           <CardHeader>
-            <CardTitle>Recent Records</CardTitle>
+            <CardTitle>Recent Attendance</CardTitle>
+            <p className="text-sm text-muted-foreground">Last 10 records</p>
           </CardHeader>
           <CardContent>
             {loading ? (
               <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
                 <p className="text-muted-foreground">Loading records...</p>
               </div>
             ) : attendanceRecords.length === 0 ? (
               <div className="text-center py-8">
-                <CalendarDays className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">No attendance records found</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {attendanceRecords.slice(0, 10).map((record) => (
                   <div key={record.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      {getStatusIcon(record.status)}
-                      <div>
-                        <p className="font-medium">{new Date(record.date).toLocaleDateString()}</p>
-                        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                          {record.checkInTime && (
-                            <span>In: {record.checkInTime}</span>
-                          )}
-                          {record.checkOutTime && (
-                            <span>Out: {record.checkOutTime}</span>
-                          )}
-                          {record.hoursWorked && (
-                            <span>({record.hoursWorked}h)</span>
-                          )}
-                        </div>
-                      </div>
+                    <div>
+                      <p className="font-medium">{new Date(record.date).toLocaleDateString()}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {record.checkInTime && record.checkOutTime ? (
+                          `${record.checkInTime} - ${record.checkOutTime}`
+                        ) : record.checkInTime ? (
+                          `In: ${record.checkInTime}`
+                        ) : (
+                          'No time recorded'
+                        )}
+                        {record.hoursWorked && ` (${record.hoursWorked}h)`}
+                      </p>
                     </div>
                     <Badge variant={getStatusBadgeVariant(record.status)}>
                       {formatStatus(record.status)}

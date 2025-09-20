@@ -2,16 +2,11 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { format, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import {
   Activity,
-  Clock,
-  TrendingUp,
-  Calendar as CalendarIcon,
-  BarChart3,
   Download
 } from 'lucide-react';
 import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
@@ -119,18 +114,6 @@ export default function FlowaceActivity() {
     return m > 0 ? `${h}h ${m}m` : `${h}h`;
   };
 
-  const getProductivityColor = (percentage: number) => {
-    if (percentage >= 80) return 'text-green-600';
-    if (percentage >= 60) return 'text-yellow-600';
-    return 'text-red-600';
-  };
-
-  const getActivityBadge = (record: FlowaceRecord) => {
-    const productivity = record.productivityPercentage || 0;
-    if (productivity >= 80) return { label: 'High', variant: 'default' as const };
-    if (productivity >= 60) return { label: 'Medium', variant: 'secondary' as const };
-    return { label: 'Low', variant: 'destructive' as const };
-  };
 
   return (
     <div className="p-6 space-y-6">
@@ -146,62 +129,35 @@ export default function FlowaceActivity() {
         </Button>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Active Hours</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatHours(summary.totalActiveHours)}</div>
-            <p className="text-xs text-muted-foreground">
-              This month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Productivity</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${getProductivityColor(summary.avgProductivity)}`}>
-              {summary.avgProductivity}%
+      {/* Summary Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Activity className="h-5 w-5" />
+            <span>Monthly Activity Summary</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Total Active Hours</p>
+              <p className="text-2xl font-bold">{formatHours(summary.totalActiveHours)}</p>
             </div>
-            <p className="text-xs text-muted-foreground">
-              This month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Working Days</CardTitle>
-            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{summary.totalWorkingDays}</div>
-            <p className="text-xs text-muted-foreground">
-              Days with activity
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Daily Hours</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatHours(summary.avgActiveHours)}</div>
-            <p className="text-xs text-muted-foreground">
-              Per working day
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Avg Productivity</p>
+              <p className="text-2xl font-bold">{summary.avgProductivity}%</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Working Days</p>
+              <p className="text-2xl font-bold">{summary.totalWorkingDays}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Avg Daily Hours</p>
+              <p className="text-2xl font-bold">{formatHours(summary.avgActiveHours)}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Calendar View */}
@@ -221,44 +177,16 @@ export default function FlowaceActivity() {
               onMonthChange={setCurrentMonth}
               className="rounded-md border"
               modifiers={{
-                hasActivity: (date) => !!getRecordForDate(date),
-                highProductivity: (date) => {
-                  const record = getRecordForDate(date);
-                  return record ? (record.productivityPercentage || 0) >= 80 : false;
-                },
-                mediumProductivity: (date) => {
-                  const record = getRecordForDate(date);
-                  return record ? (record.productivityPercentage || 0) >= 60 && (record.productivityPercentage || 0) < 80 : false;
-                },
-                lowProductivity: (date) => {
-                  const record = getRecordForDate(date);
-                  return record ? (record.productivityPercentage || 0) < 60 : false;
-                }
+                hasActivity: (date) => !!getRecordForDate(date)
               }}
               modifiersStyles={{
-                highProductivity: { backgroundColor: '#dcfce7', color: '#166534' },
-                mediumProductivity: { backgroundColor: '#fef3c7', color: '#92400e' },
-                lowProductivity: { backgroundColor: '#fee2e2', color: '#991b1b' }
+                hasActivity: { fontWeight: 'bold', textDecoration: 'underline' }
               }}
             />
-
-            {/* Legend */}
-            <div className="mt-4 space-y-2">
-              <p className="text-sm font-medium">Legend:</p>
-              <div className="grid grid-cols-1 gap-2 text-xs">
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-green-100 border border-green-300 rounded"></div>
-                  <span>High Productivity (80%+)</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-yellow-100 border border-yellow-300 rounded"></div>
-                  <span>Medium Productivity (60-79%)</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-red-100 border border-red-300 rounded"></div>
-                  <span>Low Productivity (&lt;60%)</span>
-                </div>
-              </div>
+            <div className="mt-4">
+              <p className="text-xs text-muted-foreground">
+                Dates with recorded activity are shown in bold and underlined
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -273,77 +201,35 @@ export default function FlowaceActivity() {
           <CardContent>
             {loading ? (
               <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
                 <p className="text-muted-foreground">Loading activity data...</p>
               </div>
             ) : selectedRecord ? (
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Productivity:</span>
-                  <Badge variant={getActivityBadge(selectedRecord).variant}>
-                    {selectedRecord.productivityPercentage}% - {getActivityBadge(selectedRecord).label}
-                  </Badge>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="font-medium">Work Hours</p>
-                    <p className="text-muted-foreground">
-                      {selectedRecord.workStartTime} - {selectedRecord.workEndTime}
-                    </p>
+                <div className="grid grid-cols-1 gap-3">
+                  <div className="flex justify-between">
+                    <span className="text-sm">Productivity</span>
+                    <span className="font-medium">{selectedRecord.productivityPercentage}%</span>
                   </div>
-                  <div>
-                    <p className="font-medium">Total Logged</p>
-                    <p className="text-muted-foreground">
-                      {formatHours(selectedRecord.loggedHours || 0)}
-                    </p>
+                  <div className="flex justify-between">
+                    <span className="text-sm">Work Hours</span>
+                    <span className="font-medium">{selectedRecord.workStartTime} - {selectedRecord.workEndTime}</span>
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="font-medium">Active Hours</p>
-                    <p className="text-green-600 font-medium">
-                      {formatHours(selectedRecord.activeHours || 0)}
-                    </p>
+                  <div className="flex justify-between">
+                    <span className="text-sm">Active Hours</span>
+                    <span className="font-medium">{formatHours(selectedRecord.activeHours || 0)}</span>
                   </div>
-                  <div>
-                    <p className="font-medium">Idle Hours</p>
-                    <p className="text-red-600 font-medium">
-                      {formatHours(selectedRecord.idleHours || 0)}
-                    </p>
+                  <div className="flex justify-between">
+                    <span className="text-sm">Productive Hours</span>
+                    <span className="font-medium">{formatHours(selectedRecord.productiveHours || 0)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm">Total Logged</span>
+                    <span className="font-medium">{formatHours(selectedRecord.loggedHours || 0)}</span>
                   </div>
                 </div>
-
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="font-medium">Productive</p>
-                    <p className="text-green-600">
-                      {formatHours(selectedRecord.productiveHours || 0)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-medium">Unproductive</p>
-                    <p className="text-red-600">
-                      {formatHours(selectedRecord.unproductiveHours || 0)}
-                    </p>
-                  </div>
-                </div>
-
-                {selectedRecord.activityPercentage && (
-                  <div className="pt-2 border-t">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium">Activity Level:</span>
-                      <span className={getProductivityColor(selectedRecord.activityPercentage)}>
-                        {selectedRecord.activityPercentage}%
-                      </span>
-                    </div>
-                  </div>
-                )}
               </div>
             ) : selectedDate ? (
               <div className="text-center py-8">
-                <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">No activity recorded for this date</p>
               </div>
             ) : (
@@ -359,37 +245,30 @@ export default function FlowaceActivity() {
       <Card>
         <CardHeader>
           <CardTitle>Recent Activity</CardTitle>
+          <p className="text-sm text-muted-foreground">Last 7 days</p>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
               <p className="text-muted-foreground">Loading recent activity...</p>
             </div>
           ) : flowaceRecords.length === 0 ? (
             <div className="text-center py-8">
-              <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground">No activity records found</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {flowaceRecords.slice(0, 7).reverse().map((record) => (
                 <div key={record.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <Activity className="h-4 w-4 text-blue-500" />
-                    <div>
-                      <p className="font-medium">{format(new Date(record.date), 'MMM d, yyyy')}</p>
-                      <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                        <span>{formatHours(record.activeHours || 0)} active</span>
-                        <span>•</span>
-                        <span>{record.workStartTime} - {record.workEndTime}</span>
-                      </div>
-                    </div>
+                  <div>
+                    <p className="font-medium">{format(new Date(record.date), 'MMM d, yyyy')}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {formatHours(record.activeHours || 0)} active • {record.workStartTime} - {record.workEndTime}
+                    </p>
                   </div>
                   <div className="text-right">
-                    <Badge variant={getActivityBadge(record).variant}>
-                      {record.productivityPercentage}%
-                    </Badge>
+                    <p className="font-medium">{record.productivityPercentage}%</p>
+                    <p className="text-xs text-muted-foreground">productivity</p>
                   </div>
                 </div>
               ))}

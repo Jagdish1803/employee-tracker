@@ -8,10 +8,7 @@ import {
   Coffee,
   Play,
   Square,
-  Clock,
-  Timer,
   AlertTriangle,
-  TrendingDown,
   Calendar
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -76,20 +73,23 @@ export default function BreakTracker() {
       console.log('Break history:', historyResponse);
       console.log('Break summary:', summaryResponse);
 
-      // Process break status
+      // Process break status - handle the new API format
       if (statusResponse && typeof statusResponse === 'object') {
         const status = statusResponse as {
-          isActive?: boolean;
           id?: number;
+          employeeId?: number;
+          breakDate?: string;
           breakInTime?: string;
+          isActive?: boolean;
           created_at?: string;
         };
-        if (status.isActive) {
+
+        if (status.isActive && status.id) {
           setCurrentBreak({
             id: status.id,
-            employeeId: employeeId,
-            breakDate: new Date().toISOString().split('T')[0],
-            breakInTime: status.breakInTime || new Date().toTimeString().slice(0, 8),
+            employeeId: status.employeeId || employeeId,
+            breakDate: status.breakDate || new Date().toISOString().split('T')[0],
+            breakInTime: status.breakInTime ? new Date(status.breakInTime).toTimeString().slice(0, 8) : new Date().toTimeString().slice(0, 8),
             breakDuration: 0,
             isActive: true,
             warningSent: false,
@@ -339,62 +339,34 @@ export default function BreakTracker() {
 
       {/* Break Summary */}
       {summary && (
-        <div className="grid gap-4 md:grid-cols-5">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Breaks</CardTitle>
-              <Coffee className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{summary.totalBreaks}</div>
-              <p className="text-xs text-muted-foreground">This month</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Time</CardTitle>
-              <Timer className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatDuration(summary.totalDuration)}</div>
-              <p className="text-xs text-muted-foreground">All breaks</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Average</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatDuration(summary.averageDuration)}</div>
-              <p className="text-xs text-muted-foreground">Per break</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Longest</CardTitle>
-              <TrendingDown className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatDuration(summary.longestBreak)}</div>
-              <p className="text-xs text-muted-foreground">Single break</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Warnings</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-yellow-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{summary.warningsReceived}</div>
-              <p className="text-xs text-muted-foreground">This month</p>
-            </CardContent>
-          </Card>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Coffee className="h-5 w-5" />
+              <span>Break Summary</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Breaks</p>
+                <p className="text-2xl font-bold">{summary.totalBreaks}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Total Time</p>
+                <p className="text-2xl font-bold">{formatDuration(summary.totalDuration)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Average Duration</p>
+                <p className="text-2xl font-bold">{formatDuration(summary.averageDuration)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Longest Break</p>
+                <p className="text-2xl font-bold">{formatDuration(summary.longestBreak)}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Break History */}
