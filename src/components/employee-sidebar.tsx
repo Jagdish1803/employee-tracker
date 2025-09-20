@@ -9,7 +9,6 @@ import {
   Calendar,
   Coffee,
   FileText,
-  BarChart3,
   User,
   CalendarDays,
   AlertTriangle,
@@ -72,12 +71,6 @@ const navigation = [
     name: 'Warnings',
     href: '/employee/warnings',
     icon: AlertTriangle,
-    badge: null
-  },
-  {
-    name: 'Performance',
-    href: '/employee/performance',
-    icon: BarChart3,
     badge: null
   },
   {

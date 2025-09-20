@@ -19,6 +19,8 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
+import { issueService } from '@/api';
 
 interface Issue {
   id: number;
@@ -28,6 +30,18 @@ interface Issue {
   issueStatus: 'pending' | 'in_progress' | 'resolved';
   raisedDate: string;
   resolvedDate?: string;
+  adminResponse?: string;
+  daysElapsed: number;
+}
+
+interface APIIssue {
+  id: number;
+  employeeId: number;
+  issueCategory: string;
+  issueDescription: string;
+  issueStatus: 'pending' | 'in_progress' | 'resolved';
+  raisedDate: string | Date;
+  resolvedDate?: string | Date;
   adminResponse?: string;
   daysElapsed: number;
 }
@@ -43,12 +57,14 @@ const issueCategories = [
 ];
 
 export default function MyIssues() {
+  const { employee } = useEmployeeAuth();
   const [issues, setIssues] = useState<Issue[]>([]);
   const [filteredIssues, setFilteredIssues] = useState<Issue[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'in_progress' | 'resolved'>('all');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   // Form state for new issue
   const [newIssue, setNewIssue] = useState({
@@ -56,8 +72,31 @@ export default function MyIssues() {
     issueDescription: ''
   });
 
-  // Mock employee ID
-  const employeeId = 1;
+  const employeeId = employee?.id || 1;
+
+  const fetchIssues = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await issueService.getByEmployee(employeeId);
+
+      if (response.data && response.data.success) {
+        const issuesData = (response.data.data || []).map((issue: APIIssue) => ({
+          ...issue,
+          raisedDate: typeof issue.raisedDate === 'string' ? issue.raisedDate : new Date(issue.raisedDate).toISOString(),
+          resolvedDate: issue.resolvedDate ? (typeof issue.resolvedDate === 'string' ? issue.resolvedDate : new Date(issue.resolvedDate).toISOString()) : undefined
+        }));
+        setIssues(issuesData);
+      } else {
+        setIssues([]);
+      }
+    } catch (error) {
+      console.error('Error fetching issues:', error);
+      toast.error('Failed to load issues');
+      setIssues([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [employeeId]);
 
   const filterIssues = useCallback(() => {
     let filtered = issues;
@@ -78,58 +117,11 @@ export default function MyIssues() {
 
   useEffect(() => {
     fetchIssues();
-  }, []);
+  }, [fetchIssues]);
 
   useEffect(() => {
     filterIssues();
   }, [issues, searchTerm, statusFilter, filterIssues]);
-
-  const fetchIssues = async () => {
-    try {
-      setLoading(true);
-
-      // Mock data
-      const mockIssues: Issue[] = [
-        {
-          id: 1,
-          employeeId: 1,
-          issueCategory: 'IT Support',
-          issueDescription: 'Laptop is running very slow, need performance optimization',
-          issueStatus: 'in_progress',
-          raisedDate: '2024-01-15',
-          adminResponse: 'IT team has been notified. They will check your laptop tomorrow.',
-          daysElapsed: 3
-        },
-        {
-          id: 2,
-          employeeId: 1,
-          issueCategory: 'Equipment',
-          issueDescription: 'Office chair height adjustment is broken',
-          issueStatus: 'resolved',
-          raisedDate: '2024-01-10',
-          resolvedDate: '2024-01-12',
-          adminResponse: 'Chair has been replaced with a new one.',
-          daysElapsed: 2
-        },
-        {
-          id: 3,
-          employeeId: 1,
-          issueCategory: 'Stationery',
-          issueDescription: 'Need more notebooks and pens for daily work',
-          issueStatus: 'pending',
-          raisedDate: '2024-01-18',
-          daysElapsed: 1
-        }
-      ];
-
-      setIssues(mockIssues);
-    } catch (error) {
-      console.error('Error fetching issues:', error);
-      toast.error('Failed to load issues');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleCreateIssue = async () => {
     if (!newIssue.issueCategory || !newIssue.issueDescription.trim()) {
@@ -138,23 +130,26 @@ export default function MyIssues() {
     }
 
     try {
-      const mockNewIssue: Issue = {
-        id: Date.now(),
+      setSubmitting(true);
+      const response = await issueService.create({
         employeeId,
         issueCategory: newIssue.issueCategory,
-        issueDescription: newIssue.issueDescription,
-        issueStatus: 'pending',
-        raisedDate: new Date().toISOString().split('T')[0],
-        daysElapsed: 0
-      };
+        issueDescription: newIssue.issueDescription
+      });
 
-      setIssues(prev => [mockNewIssue, ...prev]);
-      setNewIssue({ issueCategory: '', issueDescription: '' });
-      setIsCreateDialogOpen(false);
-      toast.success('Issue created successfully');
+      if (response.data && response.data.success) {
+        toast.success('Issue created successfully');
+        setNewIssue({ issueCategory: '', issueDescription: '' });
+        setIsCreateDialogOpen(false);
+        await fetchIssues(); // Refresh the list
+      } else {
+        toast.error('Failed to create issue');
+      }
     } catch (error) {
       console.error('Error creating issue:', error);
       toast.error('Failed to create issue');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -257,8 +252,8 @@ export default function MyIssues() {
                 <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleCreateIssue}>
-                  Submit Issue
+                <Button onClick={handleCreateIssue} disabled={submitting}>
+                  {submitting ? 'Submitting...' : 'Submit Issue'}
                 </Button>
               </div>
             </div>

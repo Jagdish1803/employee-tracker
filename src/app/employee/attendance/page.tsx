@@ -195,8 +195,8 @@ export default function MyAttendance() {
                 <p className="text-2xl font-bold">{Math.round(summary.totalHoursWorked)}h</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Late Days</p>
-                <p className="text-2xl font-bold">{summary.lateDays}</p>
+                <p className="text-sm text-muted-foreground">Absent Days</p>
+                <p className="text-2xl font-bold">{summary.absentDays}</p>
               </div>
             </div>
           </CardContent>
