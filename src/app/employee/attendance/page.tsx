@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
 import {
   CalendarDays,
   Clock,
@@ -17,6 +16,7 @@ import {
 import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
 import { attendanceService } from '@/api';
 import { toast } from 'react-hot-toast';
+import { AttendanceCalendar } from '@/components/attendance/AttendanceCalendar';
 
 interface AttendanceRecord {
   id: number;
@@ -252,48 +252,15 @@ export default function MyAttendance() {
       )}
 
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Calendar View */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Calendar View</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Click on a date to view details
-            </p>
-          </CardHeader>
-          <CardContent>
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
-              month={currentMonth}
-              onMonthChange={setCurrentMonth}
-              className="rounded-md border"
-            />
-
-            {/* Legend */}
-            <div className="mt-4 space-y-2">
-              <p className="text-sm font-medium">Legend:</p>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-green-100 rounded"></div>
-                  <span>Present</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-yellow-100 rounded"></div>
-                  <span>Late</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-red-100 rounded"></div>
-                  <span>Absent</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-blue-100 rounded"></div>
-                  <span>Half Day</span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Enhanced Calendar View */}
+        <AttendanceCalendar
+          selectedDate={selectedDate}
+          onSelect={setSelectedDate}
+          currentMonth={currentMonth}
+          onMonthChange={setCurrentMonth}
+          attendanceRecords={attendanceRecords}
+          loading={loading}
+        />
 
         {/* Recent Records */}
         <Card>

@@ -3,7 +3,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useSearchParams, useRouter } from 'next/navigation';
 import {
   Users, Tag, FileText, AlertTriangle, BarChart3, Clock, Coffee,
   Settings, Calendar, TrendingUp, Activity, CheckCircle2, Eye,
@@ -11,7 +10,6 @@ import {
 } from 'lucide-react';
 import { employeeService, tagService, issueService, logService } from '@/api';
 import { getCurrentISTDate } from '@/lib/utils';
-import { getAdminSession, saveAdminSession, isValidAdminCode } from '@/lib/admin-auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -27,8 +25,6 @@ interface DashboardData {
 }
 
 export default function AdminDashboard() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
   const [data, setData] = useState<DashboardData>({
     totalEmployees: 0,
     totalTags: 0,
@@ -38,36 +34,10 @@ export default function AdminDashboard() {
     recentActivity: [],
   });
   const [loading, setLoading] = useState(true);
-  const [mounted, setMounted] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    loadDashboardData();
   }, []);
-
-  useEffect(() => {
-    if (mounted) {
-      // Check if admin is already logged in
-      const existingSession = getAdminSession();
-      const code = searchParams.get('code');
-      
-      if (existingSession) {
-        setIsAuthenticated(true);
-        loadDashboardData();
-        return;
-      }
-      
-      if (!code || !isValidAdminCode(code)) {
-        router.push('/');
-        return;
-      }
-      
-      // Save new admin session
-      saveAdminSession(code);
-      setIsAuthenticated(true);
-      loadDashboardData();
-    }
-  }, [mounted, searchParams, router]);
 
   const loadDashboardData = async () => {
     try {
@@ -106,7 +76,7 @@ export default function AdminDashboard() {
     }
   };
 
-  if (!mounted || loading || !isAuthenticated) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[500px]">
         <div className="text-center">

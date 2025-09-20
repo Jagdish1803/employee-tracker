@@ -15,7 +15,8 @@ import {
   AlertTriangle,
   LogOut,
   ClipboardList,
-  Laptop
+  Laptop,
+  Activity
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,7 @@ const navigation = [
   { name: 'Work Log', href: '/employee/work-log', icon: Calendar },
   { name: 'My Assignments', href: '/employee/assignments', icon: ClipboardList },
   { name: 'Attendance', href: '/employee/attendance', icon: CalendarDays },
+  { name: 'Flowace Activity', href: '/employee/flowace', icon: Activity },
   { name: 'Break Tracker', href: '/employee/breaks', icon: Coffee },
   { name: 'My Issues', href: '/employee/issues', icon: FileText },
   { name: 'Warnings', href: '/employee/warnings', icon: AlertTriangle },

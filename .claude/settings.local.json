@@ -18,7 +18,8 @@
       "Bash(npm run lint:*)",
       "Bash(dir:*)",
       "Bash(findstr:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []

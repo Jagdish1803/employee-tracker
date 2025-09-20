@@ -5,7 +5,7 @@ import AdminSidebar from '@/components/admin-sidebar';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { PanelLeft } from 'lucide-react';
-import { 
+import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
@@ -13,23 +13,25 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
+import { AdminAuthProvider } from '@/contexts/AdminAuthContext';
+import { UnifiedAuthGuard } from '@/components/auth/UnifiedAuthGuard';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
-export default function AdminLayout({ children }: AdminLayoutProps) {
+function AdminLayoutContent({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
     <div className="fixed inset-0 flex bg-background overflow-hidden">
       {/* Sidebar */}
-      <div 
+      <div
         className={`
-          ${sidebarOpen ? 'w-64' : 'w-16'} 
-          transition-all duration-300 ease-in-out 
-          flex-shrink-0 
-          border-r border-border 
+          ${sidebarOpen ? 'w-64' : 'w-16'}
+          transition-all duration-300 ease-in-out
+          flex-shrink-0
+          border-r border-border
           bg-sidebar
           h-full
           overflow-hidden
@@ -72,5 +74,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function AdminLayout({ children }: AdminLayoutProps) {
+  return (
+    <AdminAuthProvider>
+      <UnifiedAuthGuard>
+        <AdminLayoutContent>{children}</AdminLayoutContent>
+      </UnifiedAuthGuard>
+    </AdminAuthProvider>
   );
 }

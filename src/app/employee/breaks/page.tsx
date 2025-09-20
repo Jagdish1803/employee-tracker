@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,9 +15,11 @@ import {
   Calendar
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
+import { breakService, BreakSummary } from '@/api';
 
-interface Break {
-  id: number;
+interface BreakStatus {
+  id?: number;
   employeeId: number;
   breakDate: string;
   breakInTime?: string;
@@ -28,7 +30,7 @@ interface Break {
   createdAt: string;
 }
 
-interface BreakSummary {
+interface EnhancedBreakSummary {
   totalBreaks: number;
   totalDuration: number;
   averageDuration: number;
@@ -37,14 +39,14 @@ interface BreakSummary {
 }
 
 export default function BreakTracker() {
-  const [currentBreak, setCurrentBreak] = useState<Break | null>(null);
-  const [breakHistory, setBreakHistory] = useState<Break[]>([]);
-  const [summary, setSummary] = useState<BreakSummary | null>(null);
+  const { employee } = useEmployeeAuth();
+  const [currentBreak, setCurrentBreak] = useState<BreakStatus | null>(null);
+  const [breakHistory, setBreakHistory] = useState<BreakStatus[]>([]);
+  const [summary, setSummary] = useState<EnhancedBreakSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  // Mock employee ID
-  const employeeId = 1;
+  const employeeId = employee?.id || 1;
 
   // Update current time every second when on break
   useEffect(() => {
@@ -59,58 +61,118 @@ export default function BreakTracker() {
     };
   }, [currentBreak]);
 
-  useEffect(() => {
-    fetchBreakData();
-  }, []);
-
-  const fetchBreakData = async () => {
+  const fetchBreakData = useCallback(async () => {
     try {
-      // Mock data - in real app, fetch from API
-      const mockBreaks: Break[] = [
-        {
-          id: 1,
-          employeeId: 1,
-          breakDate: new Date().toISOString().split('T')[0],
-          breakInTime: '10:30:00',
-          breakOutTime: '10:45:00',
-          breakDuration: 15,
-          isActive: false,
-          warningSent: false,
-          createdAt: new Date().toISOString()
-        },
-        {
-          id: 2,
-          employeeId: 1,
-          breakDate: new Date().toISOString().split('T')[0],
-          breakInTime: '14:00:00',
-          breakOutTime: '14:20:00',
-          breakDuration: 20,
-          isActive: false,
-          warningSent: false,
-          createdAt: new Date().toISOString()
+      setLoading(true);
+
+      // Fetch break status, history, and summary in parallel
+      const [statusResponse, historyResponse, summaryResponse] = await Promise.all([
+        breakService.getStatus(employeeId),
+        breakService.getHistory(employeeId),
+        breakService.getSummary(employeeId)
+      ]);
+
+      console.log('Break status:', statusResponse);
+      console.log('Break history:', historyResponse);
+      console.log('Break summary:', summaryResponse);
+
+      // Process break status
+      if (statusResponse && typeof statusResponse === 'object') {
+        const status = statusResponse as {
+          isActive?: boolean;
+          id?: number;
+          breakInTime?: string;
+          created_at?: string;
+        };
+        if (status.isActive) {
+          setCurrentBreak({
+            id: status.id,
+            employeeId: employeeId,
+            breakDate: new Date().toISOString().split('T')[0],
+            breakInTime: status.breakInTime || new Date().toTimeString().slice(0, 8),
+            breakDuration: 0,
+            isActive: true,
+            warningSent: false,
+            createdAt: status.created_at || new Date().toISOString()
+          });
+        } else {
+          setCurrentBreak(null);
         }
-      ];
-
-      const mockSummary: BreakSummary = {
-        totalBreaks: 15,
-        totalDuration: 285,
-        averageDuration: 19,
-        longestBreak: 35,
-        warningsReceived: 2
-      };
-
-      setBreakHistory(mockBreaks);
-      setSummary(mockSummary);
-
-      // Check if there's an active break
-      const activeBreak = mockBreaks.find(b => b.isActive);
-      if (activeBreak) {
-        setCurrentBreak(activeBreak);
+      } else {
+        setCurrentBreak(null);
       }
+
+      // Process break history - convert BreakRecord[] to BreakStatus[]
+      if (Array.isArray(historyResponse)) {
+        const todayDate = new Date().toISOString().split('T')[0];
+        const processedHistory: BreakStatus[] = [];
+
+        // Group break records by pairs (in/out)
+        const todayRecords = historyResponse.filter(record =>
+          record.timestamp.startsWith(todayDate)
+        );
+
+        for (let i = 0; i < todayRecords.length; i += 2) {
+          const inRecord = todayRecords.find(r => r.type === 'in');
+          const outRecord = todayRecords.find(r => r.type === 'out' && r.timestamp > (inRecord?.timestamp || ''));
+
+          if (inRecord) {
+            const breakInTime = new Date(inRecord.timestamp);
+            const breakOutTime = outRecord ? new Date(outRecord.timestamp) : null;
+            const duration = breakOutTime
+              ? Math.floor((breakOutTime.getTime() - breakInTime.getTime()) / (1000 * 60))
+              : 0;
+
+            processedHistory.push({
+              id: inRecord.id,
+              employeeId: inRecord.employeeId,
+              breakDate: todayDate,
+              breakInTime: breakInTime.toTimeString().slice(0, 8),
+              breakOutTime: breakOutTime?.toTimeString().slice(0, 8),
+              breakDuration: duration,
+              isActive: !outRecord,
+              warningSent: duration > 30,
+              createdAt: inRecord.created_at || inRecord.timestamp
+            });
+          }
+        }
+
+        setBreakHistory(processedHistory);
+      } else {
+        setBreakHistory([]);
+      }
+
+      // Process break summary
+      if (summaryResponse && typeof summaryResponse === 'object') {
+        const apiSummary = summaryResponse as BreakSummary;
+        setSummary({
+          totalBreaks: apiSummary.breakCount || 0,
+          totalDuration: apiSummary.totalBreakTime || 0,
+          averageDuration: apiSummary.averageBreakTime || 0,
+          longestBreak: apiSummary.longestBreak || 0,
+          warningsReceived: 0 // This would need to be calculated separately
+        });
+      } else {
+        setSummary({
+          totalBreaks: 0,
+          totalDuration: 0,
+          averageDuration: 0,
+          longestBreak: 0,
+          warningsReceived: 0
+        });
+      }
+
     } catch (error) {
       console.error('Error fetching break data:', error);
+      toast.error('Failed to load break data');
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [employeeId]);
+
+  useEffect(() => {
+    fetchBreakData();
+  }, [fetchBreakData]);
 
   const handleBreakIn = async () => {
     if (currentBreak?.isActive) {
@@ -121,16 +183,18 @@ export default function BreakTracker() {
     try {
       setLoading(true);
 
-      // Mock API call
-      const newBreak: Break = {
-        id: Date.now(),
+      const response = await breakService.breakIn(employeeId);
+      console.log('Break in response:', response);
+
+      const newBreak: BreakStatus = {
+        id: response.id,
         employeeId,
         breakDate: new Date().toISOString().split('T')[0],
-        breakInTime: new Date().toTimeString().slice(0, 8),
+        breakInTime: new Date(response.timestamp).toTimeString().slice(0, 8),
         breakDuration: 0,
         isActive: true,
         warningSent: false,
-        createdAt: new Date().toISOString()
+        createdAt: response.created_at || response.timestamp
       };
 
       setCurrentBreak(newBreak);
@@ -152,13 +216,16 @@ export default function BreakTracker() {
     try {
       setLoading(true);
 
+      const response = await breakService.breakOut(employeeId);
+      console.log('Break out response:', response);
+
       const now = new Date();
       const breakInTime = new Date(`${currentBreak.breakDate}T${currentBreak.breakInTime}`);
       const duration = Math.floor((now.getTime() - breakInTime.getTime()) / (1000 * 60));
 
-      const updatedBreak: Break = {
+      const updatedBreak: BreakStatus = {
         ...currentBreak,
-        breakOutTime: now.toTimeString().slice(0, 8),
+        breakOutTime: new Date(response.timestamp).toTimeString().slice(0, 8),
         breakDuration: duration,
         isActive: false
       };
@@ -172,6 +239,9 @@ export default function BreakTracker() {
       if (duration > 30) {
         toast.error('Break exceeded recommended duration (30 minutes)');
       }
+
+      // Refresh break data to get updated summary
+      fetchBreakData();
     } catch (error) {
       console.error('Error ending break:', error);
       toast.error('Failed to end break');

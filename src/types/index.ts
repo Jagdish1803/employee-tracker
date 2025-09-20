@@ -587,3 +587,9 @@ export interface ReturnAssetRequest {
   returnCondition: AssetCondition;
   returnNotes?: string;
 }
+
+// Re-export organized types for better structure
+export * from './common';
+export * from './employee';
+export * from './attendance';
+export * from './flowace';
