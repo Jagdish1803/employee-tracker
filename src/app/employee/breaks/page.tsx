@@ -194,15 +194,16 @@ export default function BreakTracker() {
       const response = await breakService.breakIn(employeeId);
       console.log('Break in response:', response);
 
+      const timestamp = response.timestamp || new Date().toISOString();
       const newBreak: BreakStatus = {
         id: response.id,
         employeeId,
         breakDate: new Date().toISOString().split('T')[0],
-        breakInTime: new Date(response.timestamp).toTimeString().slice(0, 8),
+        breakInTime: new Date(timestamp).toTimeString().slice(0, 8),
         breakDuration: 0,
         isActive: true,
         warningSent: false,
-        createdAt: response.created_at || response.timestamp
+        createdAt: response.created_at || timestamp
       };
 
       setCurrentBreak(newBreak);

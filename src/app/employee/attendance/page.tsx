@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   CalendarDays,
   Download,
@@ -176,7 +177,7 @@ export default function MyAttendance() {
           <Badge variant="outline" className="px-3 py-1">
             {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
           </Badge>
-          <Button variant="outline" className="hover:bg-blue-50">
+          <Button variant="outline" className="hover:bg-gray-50">
             <Download className="h-4 w-4 mr-2" />
             Export Report
           </Button>
@@ -190,19 +191,19 @@ export default function MyAttendance() {
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center justify-between text-sm font-medium text-green-700">
                 <span>Attendance Rate</span>
-                <CheckCircle className="h-5 w-5 text-green-600" />
+                <CheckCircle className="h-5 w-5 text-gray-700" />
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-green-600 mb-1">
+              <div className="text-3xl font-bold text-gray-700 mb-1">
                 {Math.round(summary.attendancePercentage)}%
               </div>
-              <p className="text-sm text-green-600/70">
+              <p className="text-sm text-gray-700/70">
                 {summary.presentDays} of {summary.totalWorkingDays} days
               </p>
               <div className="mt-2 w-full bg-green-100 rounded-full h-2">
                 <div
-                  className="bg-green-500 h-2 rounded-full transition-all duration-500"
+                  className="bg-gray-500 h-2 rounded-full transition-all duration-500"
                   style={{ width: `${Math.round(summary.attendancePercentage)}%` }}
                 ></div>
               </div>
@@ -213,17 +214,17 @@ export default function MyAttendance() {
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center justify-between text-sm font-medium text-blue-700">
                 <span>Total Hours</span>
-                <Clock className="h-5 w-5 text-blue-600" />
+                <Clock className="h-5 w-5 text-gray-700" />
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-blue-600 mb-1">
+              <div className="text-3xl font-bold text-gray-700 mb-1">
                 {Math.round(summary.totalHoursWorked)}h
               </div>
-              <p className="text-sm text-blue-600/70">
+              <p className="text-sm text-gray-700/70">
                 Avg: {Math.round(summary.averageHoursPerDay * 10) / 10}h per day
               </p>
-              <div className="mt-2 flex items-center space-x-1 text-xs text-blue-600">
+              <div className="mt-2 flex items-center space-x-1 text-xs text-gray-700">
                 <TrendingUp className="h-3 w-3" />
                 <span>This month</span>
               </div>
@@ -255,17 +256,17 @@ export default function MyAttendance() {
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center justify-between text-sm font-medium text-purple-700">
                 <span>Leave Days</span>
-                <Home className="h-5 w-5 text-purple-600" />
+                <Home className="h-5 w-5 text-gray-700" />
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-purple-600 mb-1">
+              <div className="text-3xl font-bold text-gray-700 mb-1">
                 {summary.leaveDays}
               </div>
-              <p className="text-sm text-purple-600/70">
+              <p className="text-sm text-gray-700/70">
                 {summary.halfDays} half days
               </p>
-              <div className="mt-2 flex items-center space-x-1 text-xs text-purple-600">
+              <div className="mt-2 flex items-center space-x-1 text-xs text-gray-700">
                 <Coffee className="h-3 w-3" />
                 <span>Work-life balance</span>
               </div>
@@ -277,9 +278,9 @@ export default function MyAttendance() {
       <div className="grid gap-6 md:grid-cols-2">
         {/* Enhanced Attendance Summary */}
         <Card className="hover:shadow-lg transition-all duration-300">
-          <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
+          <CardHeader className="bg-gray-50 rounded-t-lg">
             <CardTitle className="flex items-center space-x-2">
-              <TrendingUp className="h-5 w-5 text-blue-600" />
+              <TrendingUp className="h-5 w-5 text-gray-700" />
               <span>Monthly Overview</span>
             </CardTitle>
             <p className="text-sm text-muted-foreground">Your attendance summary for this month</p>
@@ -287,35 +288,35 @@ export default function MyAttendance() {
           <CardContent className="p-6">
             {summary ? (
               <div className="grid grid-cols-2 gap-4">
-                <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <div className="text-3xl font-bold text-green-600 mb-1">
+                <div className="text-center p-4 bg-gray-50 rounded-lg">
+                  <div className="text-3xl font-bold text-gray-700 mb-1">
                     {summary.presentDays}
                   </div>
-                  <p className="text-sm text-green-600/70">Present Days</p>
+                  <p className="text-sm text-gray-700/70">Present Days</p>
                 </div>
-                <div className="text-center p-4 bg-red-50 rounded-lg">
-                  <div className="text-3xl font-bold text-red-600 mb-1">
+                <div className="text-center p-4 bg-gray-100 rounded-lg">
+                  <div className="text-3xl font-bold text-gray-800 mb-1">
                     {summary.absentDays}
                   </div>
-                  <p className="text-sm text-red-600/70">Absent Days</p>
+                  <p className="text-sm text-gray-800/70">Absent Days</p>
                 </div>
-                <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                  <div className="text-3xl font-bold text-yellow-600 mb-1">
+                <div className="text-center p-4 bg-gray-50 rounded-lg">
+                  <div className="text-3xl font-bold text-gray-700 mb-1">
                     {summary.lateDays}
                   </div>
-                  <p className="text-sm text-yellow-600/70">Late Days</p>
+                  <p className="text-sm text-gray-700/70">Late Days</p>
                 </div>
-                <div className="text-center p-4 bg-purple-50 rounded-lg">
-                  <div className="text-3xl font-bold text-purple-600 mb-1">
+                <div className="text-center p-4 bg-gray-50 rounded-lg">
+                  <div className="text-3xl font-bold text-gray-700 mb-1">
                     {summary.attendancePercentage.toFixed(1)}%
                   </div>
-                  <p className="text-sm text-purple-600/70">Attendance Rate</p>
+                  <p className="text-sm text-gray-700/70">Attendance Rate</p>
                 </div>
-                <div className="col-span-2 text-center p-4 bg-blue-50 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600 mb-1">
+                <div className="col-span-2 text-center p-4 bg-gray-50 rounded-lg">
+                  <div className="text-2xl font-bold text-gray-700 mb-1">
                     {summary.totalHoursWorked.toFixed(1)}h
                   </div>
-                  <p className="text-sm text-blue-600/70">Total Hours Worked</p>
+                  <p className="text-sm text-gray-700/70">Total Hours Worked</p>
                 </div>
               </div>
             ) : (
@@ -327,30 +328,37 @@ export default function MyAttendance() {
           </CardContent>
         </Card>
 
-        {/* Enhanced Recent Records */}
+        {/* Attendance Details with Tabs */}
         <Card className="hover:shadow-lg transition-all duration-300">
-          <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 rounded-t-lg">
+          <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <Calendar className="h-5 w-5 text-blue-600" />
-              <span>Recent Attendance</span>
+              <Calendar className="h-5 w-5" />
+              <span>Attendance Details</span>
             </CardTitle>
-            <p className="text-sm text-muted-foreground">Last 10 records with detailed information</p>
           </CardHeader>
-          <CardContent className="p-0">
-            {loading ? (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                <p className="text-muted-foreground">Loading attendance records...</p>
-              </div>
-            ) : attendanceRecords.length === 0 ? (
-              <div className="text-center py-12">
-                <CalendarDays className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground text-lg font-medium">No attendance records found</p>
-                <p className="text-sm text-muted-foreground mt-1">Records will appear here once attendance is tracked</p>
-              </div>
-            ) : (
-              <div className="divide-y divide-gray-100">
-                {attendanceRecords.slice(0, 10).map((record, index) => (
+          <CardContent>
+            <Tabs defaultValue="recent" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="recent">Recent Records</TabsTrigger>
+                <TabsTrigger value="status">By Status</TabsTrigger>
+                <TabsTrigger value="analytics">Analytics</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="recent" className="mt-6">
+                {loading ? (
+                  <div className="text-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading attendance records...</p>
+                  </div>
+                ) : attendanceRecords.length === 0 ? (
+                  <div className="text-center py-12">
+                    <CalendarDays className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600 text-lg font-medium">No attendance records found</p>
+                    <p className="text-sm text-gray-500 mt-1">Records will appear here once attendance is tracked</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {attendanceRecords.slice(0, 8).map((record, index) => (
                   <div key={record.id} className="p-4 hover:bg-gray-50 transition-colors duration-200">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
@@ -372,16 +380,16 @@ export default function MyAttendance() {
 
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div className="flex items-center space-x-2">
-                            <Clock className="h-4 w-4 text-green-600" />
+                            <Clock className="h-4 w-4 text-gray-700" />
                             <span className="text-muted-foreground">Check In:</span>
-                            <span className="font-medium text-green-600">
+                            <span className="font-medium text-gray-700">
                               {record.checkInTime || '--:--'}
                             </span>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <Clock className="h-4 w-4 text-red-600" />
+                            <Clock className="h-4 w-4 text-gray-800" />
                             <span className="text-muted-foreground">Check Out:</span>
-                            <span className="font-medium text-red-600">
+                            <span className="font-medium text-gray-800">
                               {record.checkOutTime || '--:--'}
                             </span>
                           </div>
@@ -389,14 +397,14 @@ export default function MyAttendance() {
 
                         {record.hoursWorked && (
                           <div className="mt-2 flex items-center space-x-2 text-sm">
-                            <TrendingUp className="h-4 w-4 text-blue-600" />
+                            <TrendingUp className="h-4 w-4 text-gray-700" />
                             <span className="text-muted-foreground">Hours Worked:</span>
-                            <span className="font-medium text-blue-600">{record.hoursWorked}h</span>
+                            <span className="font-medium text-gray-700">{record.hoursWorked}h</span>
                           </div>
                         )}
 
                         {record.remarks && (
-                          <div className="mt-2 p-2 bg-blue-50 rounded-md">
+                          <div className="mt-2 p-2 bg-gray-50 rounded-md">
                             <p className="text-xs text-blue-700 italic">
                               Note: {record.remarks}
                             </p>
@@ -422,15 +430,64 @@ export default function MyAttendance() {
                   </div>
                 ))}
 
-                {attendanceRecords.length > 10 && (
-                  <div className="p-4 bg-gray-50 text-center">
-                    <Button variant="outline" size="sm" className="text-blue-600 border-blue-200 hover:bg-blue-50">
-                      View All {attendanceRecords.length} Records
-                    </Button>
                   </div>
                 )}
-              </div>
-            )}
+              </TabsContent>
+
+              <TabsContent value="status" className="mt-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center p-4 border rounded-lg">
+                    <div className="text-2xl font-bold text-gray-900">
+                      {attendanceRecords.filter(r => r.status === 'PRESENT').length}
+                    </div>
+                    <p className="text-sm text-gray-600">Present</p>
+                  </div>
+                  <div className="text-center p-4 border rounded-lg">
+                    <div className="text-2xl font-bold text-gray-900">
+                      {attendanceRecords.filter(r => r.status === 'ABSENT').length}
+                    </div>
+                    <p className="text-sm text-gray-600">Absent</p>
+                  </div>
+                  <div className="text-center p-4 border rounded-lg">
+                    <div className="text-2xl font-bold text-gray-900">
+                      {attendanceRecords.filter(r => r.status === 'LATE').length}
+                    </div>
+                    <p className="text-sm text-gray-600">Late</p>
+                  </div>
+                  <div className="text-center p-4 border rounded-lg">
+                    <div className="text-2xl font-bold text-gray-900">
+                      {attendanceRecords.filter(r => r.status === 'HALF_DAY').length}
+                    </div>
+                    <p className="text-sm text-gray-600">Half Day</p>
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="analytics" className="mt-6">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-4 border rounded-lg">
+                      <h4 className="font-medium text-gray-900 mb-2">Average Hours/Day</h4>
+                      <div className="text-2xl font-bold text-gray-900">
+                        {summary ? summary.averageHoursPerDay.toFixed(1) : '0'}h
+                      </div>
+                    </div>
+                    <div className="p-4 border rounded-lg">
+                      <h4 className="font-medium text-gray-900 mb-2">Total Working Days</h4>
+                      <div className="text-2xl font-bold text-gray-900">
+                        {summary ? summary.totalWorkingDays : '0'}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <h4 className="font-medium text-gray-900 mb-2">Attendance Trend</h4>
+                    <p className="text-sm text-gray-600">
+                      Your attendance has been {summary && summary.attendancePercentage >= 90 ? 'excellent' : summary && summary.attendancePercentage >= 80 ? 'good' : 'needs improvement'} this month.
+                    </p>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </div>

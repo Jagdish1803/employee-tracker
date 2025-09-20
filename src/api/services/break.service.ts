@@ -57,6 +57,7 @@ export class BreakService {
   async breakIn(employeeId: number): Promise<BreakRecord> {
     try {
       const response = await apiClient.post(`${this.basePath}/in`, { employeeId });
+      console.log('Break in API response:', response.data);
 
       if (response.data && response.data.success) {
         // Convert database break record to BreakRecord format
@@ -65,12 +66,12 @@ export class BreakService {
           id: breakData.id,
           employeeId: breakData.employeeId,
           type: 'in' as const,
-          timestamp: breakData.breakInTime || breakData.createdAt,
-          created_at: breakData.createdAt
+          timestamp: breakData.breakInTime || breakData.createdAt || new Date().toISOString(),
+          created_at: breakData.createdAt || new Date().toISOString()
         };
       }
 
-      return response.data;
+      throw new Error('Break in failed: ' + (response.data?.error || 'Unknown error'));
     } catch (error) {
       console.error('BreakService.breakIn error:', error);
       throw error;
@@ -81,6 +82,7 @@ export class BreakService {
   async breakOut(employeeId: number): Promise<BreakRecord> {
     try {
       const response = await apiClient.post(`${this.basePath}/out`, { employeeId });
+      console.log('Break out API response:', response.data);
 
       if (response.data && response.data.success) {
         // Convert database break record to BreakRecord format
@@ -89,12 +91,12 @@ export class BreakService {
           id: breakData.id,
           employeeId: breakData.employeeId,
           type: 'out' as const,
-          timestamp: breakData.breakOutTime || breakData.updatedAt,
-          created_at: breakData.createdAt
+          timestamp: breakData.breakOutTime || breakData.updatedAt || new Date().toISOString(),
+          created_at: breakData.createdAt || new Date().toISOString()
         };
       }
 
-      return response.data;
+      throw new Error('Break out failed: ' + (response.data?.error || 'Unknown error'));
     } catch (error) {
       console.error('BreakService.breakOut error:', error);
       throw error;

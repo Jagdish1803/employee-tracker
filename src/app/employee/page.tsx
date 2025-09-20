@@ -180,7 +180,7 @@ export default function EmployeeDashboard() {
     <div className="min-h-screen w-full bg-gray-50">
       {/* Hero Section */}
       <div className="bg-white shadow-sm border-b w-full">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
@@ -207,23 +207,23 @@ export default function EmployeeDashboard() {
       </div>
 
       <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
-        <div className="max-w-7xl mx-auto space-y-8">
+        <div className="w-full space-y-8">
         {/* Quick Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 hover:shadow-lg transition-all">
+          <Card className="border-gray-200 hover:shadow-lg transition-all">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-green-600 mb-1">Attendance Rate</p>
-                  <p className="text-3xl font-bold text-green-700">
+                  <p className="text-sm font-medium text-gray-600 mb-1">Attendance Rate</p>
+                  <p className="text-3xl font-bold text-gray-900">
                     {Math.round(stats?.attendance.thisMonth.attendanceRate || 0)}%
                   </p>
-                  <p className="text-xs text-green-600 mt-1">
+                  <p className="text-xs text-gray-600 mt-1">
                     {stats?.attendance.thisMonth.presentDays || 0} of {stats?.attendance.thisMonth.totalDays || 22} days
                   </p>
                 </div>
-                <div className="p-3 bg-green-100 rounded-full">
-                  <Calendar className="h-6 w-6 text-green-600" />
+                <div className="p-3 bg-gray-100 rounded-full">
+                  <Calendar className="h-6 w-6 text-gray-600" />
                 </div>
               </div>
               <div className="mt-4">
@@ -235,54 +235,54 @@ export default function EmployeeDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-blue-50 to-sky-50 border-blue-200 hover:shadow-lg transition-all">
+          <Card className="border-gray-200 hover:shadow-lg transition-all">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-blue-600 mb-1">Work Hours</p>
-                  <p className="text-3xl font-bold text-blue-700">
+                  <p className="text-sm font-medium text-gray-600 mb-1">Work Hours</p>
+                  <p className="text-3xl font-bold text-gray-900">
                     {Math.round(stats?.attendance.thisMonth.totalHours || 0)}h
                   </p>
-                  <p className="text-xs text-blue-600 mt-1">This month</p>
+                  <p className="text-xs text-gray-600 mt-1">This month</p>
                 </div>
-                <div className="p-3 bg-blue-100 rounded-full">
-                  <Clock className="h-6 w-6 text-blue-600" />
+                <div className="p-3 bg-gray-100 rounded-full">
+                  <Clock className="h-6 w-6 text-gray-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200 hover:shadow-lg transition-all">
+          <Card className="border-gray-200 hover:shadow-lg transition-all">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-purple-600 mb-1">Productivity</p>
-                  <p className="text-3xl font-bold text-purple-700">
+                  <p className="text-sm font-medium text-gray-600 mb-1">Productivity</p>
+                  <p className="text-3xl font-bold text-gray-900">
                     {Math.round(stats?.performance.productivity || 0)}%
                   </p>
-                  <p className="text-xs text-purple-600 mt-1">Average this month</p>
+                  <p className="text-xs text-gray-600 mt-1">Average this month</p>
                 </div>
-                <div className="p-3 bg-purple-100 rounded-full">
-                  <TrendingUp className="h-6 w-6 text-purple-600" />
+                <div className="p-3 bg-gray-100 rounded-full">
+                  <TrendingUp className="h-6 w-6 text-gray-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200 hover:shadow-lg transition-all">
+          <Card className="border-gray-200 hover:shadow-lg transition-all">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-orange-600 mb-1">Pending Issues</p>
-                  <p className="text-3xl font-bold text-orange-700">
+                  <p className="text-sm font-medium text-gray-600 mb-1">Pending Issues</p>
+                  <p className="text-3xl font-bold text-gray-900">
                     {stats?.issues.pending || 0}
                   </p>
-                  <p className="text-xs text-orange-600 mt-1">
+                  <p className="text-xs text-gray-600 mt-1">
                     {stats?.issues.resolved || 0} resolved
                   </p>
                 </div>
-                <div className="p-3 bg-orange-100 rounded-full">
-                  <AlertCircle className="h-6 w-6 text-orange-600" />
+                <div className="p-3 bg-gray-100 rounded-full">
+                  <AlertCircle className="h-6 w-6 text-gray-600" />
                 </div>
               </div>
             </CardContent>
@@ -297,7 +297,7 @@ export default function EmployeeDashboard() {
             <Card className="bg-white shadow-sm hover:shadow-md transition-shadow">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center text-lg">
-                  <Calendar className="h-5 w-5 mr-3 text-green-600" />
+                  <Calendar className="h-5 w-5 mr-3 text-gray-600" />
                   My Attendance
                 </CardTitle>
                 <p className="text-sm text-gray-600">Track your attendance and work hours</p>
@@ -305,22 +305,22 @@ export default function EmployeeDashboard() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-700">
+                    <div className="text-2xl font-bold text-gray-900">
                       {stats?.attendance.thisMonth.presentDays || 0}
                     </div>
-                    <div className="text-sm text-green-600">Present Days</div>
+                    <div className="text-sm text-gray-600">Present Days</div>
                   </div>
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-700">
+                    <div className="text-2xl font-bold text-gray-900">
                       {Math.round(stats?.attendance.thisMonth.totalHours || 0)}
                     </div>
-                    <div className="text-sm text-blue-600">Total Hours</div>
+                    <div className="text-sm text-gray-600">Total Hours</div>
                   </div>
                   <div className="text-center p-4 bg-purple-50 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-700">
+                    <div className="text-2xl font-bold text-gray-900">
                       {Math.round((stats?.attendance.thisMonth.totalHours || 0) / (stats?.attendance.thisMonth.presentDays || 1))}
                     </div>
-                    <div className="text-sm text-purple-600">Avg Hours/Day</div>
+                    <div className="text-sm text-gray-600">Avg Hours/Day</div>
                   </div>
                 </div>
                 <Separator />
@@ -339,7 +339,7 @@ export default function EmployeeDashboard() {
             <Card className="bg-white shadow-sm hover:shadow-md transition-shadow">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center text-lg">
-                  <Activity className="h-5 w-5 mr-3 text-blue-600" />
+                  <Activity className="h-5 w-5 mr-3 text-gray-600" />
                   Activity Tracking
                 </CardTitle>
                 <p className="text-sm text-gray-600">Monitor your daily productivity and activity levels</p>
@@ -347,22 +347,22 @@ export default function EmployeeDashboard() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-700">
+                    <div className="text-2xl font-bold text-gray-900">
                       {Math.round(stats?.performance.activeHours || 0)}h
                     </div>
-                    <div className="text-sm text-blue-600">Active Hours</div>
+                    <div className="text-sm text-gray-600">Active Hours</div>
                   </div>
                   <div className="text-center p-4 bg-purple-50 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-700">
+                    <div className="text-2xl font-bold text-gray-900">
                       {Math.round(stats?.performance.productivity || 0)}%
                     </div>
-                    <div className="text-sm text-purple-600">Productivity</div>
+                    <div className="text-sm text-gray-600">Productivity</div>
                   </div>
                   <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-700">
+                    <div className="text-2xl font-bold text-gray-900">
                       {Math.round(stats?.performance.avgDailyActive || 0)}h
                     </div>
-                    <div className="text-sm text-green-600">Daily Average</div>
+                    <div className="text-sm text-gray-600">Daily Average</div>
                   </div>
                 </div>
                 <Separator />
@@ -384,15 +384,15 @@ export default function EmployeeDashboard() {
             <Card className="bg-white shadow-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center text-lg">
-                  <Target className="h-5 w-5 mr-3 text-purple-600" />
+                  <Target className="h-5 w-5 mr-3 text-gray-600" />
                   Quick Actions
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <Link href="/employee/work-log" className="block">
                   <div className="flex items-center p-3 rounded-lg border hover:bg-gray-50 transition-colors group">
-                    <div className="p-2 bg-purple-100 rounded-lg mr-3 group-hover:bg-purple-200 transition-colors">
-                      <FileText className="h-4 w-4 text-purple-600" />
+                    <div className="p-2 bg-gray-100 rounded-lg mr-3 group-hover:bg-purple-200 transition-colors">
+                      <FileText className="h-4 w-4 text-gray-600" />
                     </div>
                     <div className="flex-1">
                       <div className="font-medium">Submit Work Log</div>
@@ -404,8 +404,8 @@ export default function EmployeeDashboard() {
 
                 <Link href="/employee/issues" className="block">
                   <div className="flex items-center p-3 rounded-lg border hover:bg-gray-50 transition-colors group">
-                    <div className="p-2 bg-orange-100 rounded-lg mr-3 group-hover:bg-orange-200 transition-colors">
-                      <AlertCircle className="h-4 w-4 text-orange-600" />
+                    <div className="p-2 bg-gray-100 rounded-lg mr-3 group-hover:bg-orange-200 transition-colors">
+                      <AlertCircle className="h-4 w-4 text-gray-600" />
                     </div>
                     <div className="flex-1">
                       <div className="font-medium">Report Issue</div>
@@ -417,8 +417,8 @@ export default function EmployeeDashboard() {
 
                 <Link href="/employee/breaks" className="block">
                   <div className="flex items-center p-3 rounded-lg border hover:bg-gray-50 transition-colors group">
-                    <div className="p-2 bg-green-100 rounded-lg mr-3 group-hover:bg-green-200 transition-colors">
-                      <Coffee className="h-4 w-4 text-green-600" />
+                    <div className="p-2 bg-gray-100 rounded-lg mr-3 group-hover:bg-green-200 transition-colors">
+                      <Coffee className="h-4 w-4 text-gray-600" />
                     </div>
                     <div className="flex-1">
                       <div className="font-medium">Track Breaks</div>
@@ -430,8 +430,8 @@ export default function EmployeeDashboard() {
 
                 <Link href="/employee/assignments" className="block">
                   <div className="flex items-center p-3 rounded-lg border hover:bg-gray-50 transition-colors group">
-                    <div className="p-2 bg-blue-100 rounded-lg mr-3 group-hover:bg-blue-200 transition-colors">
-                      <Users className="h-4 w-4 text-blue-600" />
+                    <div className="p-2 bg-gray-100 rounded-lg mr-3 group-hover:bg-blue-200 transition-colors">
+                      <Users className="h-4 w-4 text-gray-600" />
                     </div>
                     <div className="flex-1">
                       <div className="font-medium">My Assignments</div>
@@ -447,7 +447,7 @@ export default function EmployeeDashboard() {
             <Card className="bg-white shadow-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center text-lg">
-                  <BarChart3 className="h-5 w-5 mr-3 text-green-600" />
+                  <BarChart3 className="h-5 w-5 mr-3 text-gray-600" />
                   This Week
                 </CardTitle>
               </CardHeader>
