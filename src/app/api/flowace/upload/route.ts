@@ -293,6 +293,15 @@ export async function POST(request: NextRequest) {
 
         // Save to database - use create instead of upsert for now to avoid constraint issues
         console.log('Saving record to database for:', record.employeeName);
+        console.log('Record data being saved:', {
+          employeeName: record.employeeName,
+          employeeCode: record.employeeCode,
+          loggedHours: record.loggedHours,
+          activeHours: record.activeHours,
+          productiveHours: record.productiveHours,
+          productivityPercentage: record.productivityPercentage
+        });
+
         const dbRecord = await prisma.flowaceRecord.create({
           data: {
             employeeId,

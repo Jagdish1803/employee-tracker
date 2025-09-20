@@ -179,17 +179,41 @@ function parseSrpFile(content: string, selectedDate?: string) {
       const checkIn = times[0] || '';
       let lunchOut = '';
       let lunchIn = '';
+      let breakOut = '';
+      let breakIn = '';
       let checkOut = '';
-      
+
       if (times.length === 2) {
+        // Simple case: check-in and check-out only
         checkOut = times[1];
       } else if (times.length === 4) {
-        lunchOut = times[1];
-        lunchIn = times[2];
+        // Most common case: check-in, break/lunch out, break/lunch in, check-out
+        // Determine if this is lunch or break based on duration
+        const outTime = new Date(`2000-01-01T${times[1]}:00`);
+        const inTime = new Date(`2000-01-01T${times[2]}:00`);
+        const durationMinutes = (inTime.getTime() - outTime.getTime()) / (1000 * 60);
+
+        if (durationMinutes > 45) {
+          // Long break (>45 min) - likely lunch
+          lunchOut = times[1];
+          lunchIn = times[2];
+        } else {
+          // Short break (<=45 min) - likely coffee/tea break
+          breakOut = times[1];
+          breakIn = times[2];
+        }
         checkOut = times[3];
       } else if (times.length === 3) {
-        lunchOut = times[1];
+        // Three times: could be check-in, break-out, check-out (no break-in recorded)
+        breakOut = times[1];
         checkOut = times[2];
+      } else if (times.length === 6) {
+        // Six times: check-in, break-out, break-in, lunch-out, lunch-in, check-out
+        breakOut = times[1];
+        breakIn = times[2];
+        lunchOut = times[3];
+        lunchIn = times[4];
+        checkOut = times[5];
       }
       
       // Smart status detection if not explicitly found
@@ -219,6 +243,8 @@ function parseSrpFile(content: string, selectedDate?: string) {
         checkInTime: checkIn.trim() || '',
         lunchOutTime: lunchOut.trim() || '',
         lunchInTime: lunchIn.trim() || '',
+        breakOutTime: breakOut.trim() || '',
+        breakInTime: breakIn.trim() || '',
         checkOutTime: checkOut.trim() || '',
         hoursWorked: hoursWorkedValue.toString(),
         shift: shift.trim(),
@@ -477,6 +503,10 @@ export async function POST(request: NextRequest) {
               validateTime(String(row.lunchOutTime), String(row.date)) : null,
             lunchInTime: row.lunchInTime ?
               validateTime(String(row.lunchInTime), String(row.date)) : null,
+            breakOutTime: row.breakOutTime ?
+              validateTime(String(row.breakOutTime), String(row.date)) : null,
+            breakInTime: row.breakInTime ?
+              validateTime(String(row.breakInTime), String(row.date)) : null,
             hoursWorked,
             shift: row.shift || '',
             shiftStart: row.shiftStart || '',
@@ -688,6 +718,8 @@ export async function POST(request: NextRequest) {
                     checkOutTime: record.checkOutTime,
                     lunchOutTime: record.lunchOutTime,
                     lunchInTime: record.lunchInTime,
+                    breakOutTime: record.breakOutTime,
+                    breakInTime: record.breakInTime,
                     totalHours: record.hoursWorked,
                     shift: record.shift ? String(record.shift) : null,
                     shiftStart: record.shiftStart ? String(record.shiftStart) : null,
@@ -703,6 +735,8 @@ export async function POST(request: NextRequest) {
                     checkOutTime: record.checkOutTime,
                     lunchOutTime: record.lunchOutTime,
                     lunchInTime: record.lunchInTime,
+                    breakOutTime: record.breakOutTime,
+                    breakInTime: record.breakInTime,
                     totalHours: record.hoursWorked,
                     shift: record.shift ? String(record.shift) : null,
                     shiftStart: record.shiftStart ? String(record.shiftStart) : null,

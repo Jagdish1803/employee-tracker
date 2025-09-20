@@ -42,6 +42,12 @@ export async function GET(request: NextRequest) {
     const employeeFilter = employeeId ? { employeeId: parseInt(employeeId) } : {};
 
     // Get records from database with filters
+    console.log('Database query filters:', {
+      employeeFilter,
+      dateFilter,
+      search
+    });
+
     const dbRecords = await prisma.flowaceRecord.findMany({
       where: {
         ...employeeFilter,
@@ -71,6 +77,17 @@ export async function GET(request: NextRequest) {
         }
       }
     });
+
+    console.log(`Found ${dbRecords.length} flowace records in database`);
+    if (dbRecords.length > 0) {
+      console.log('Sample record:', {
+        id: dbRecords[0].id,
+        employeeName: dbRecords[0].employeeName,
+        date: dbRecords[0].date,
+        loggedHours: dbRecords[0].loggedHours,
+        productiveHours: dbRecords[0].productiveHours
+      });
+    }
 
     // Transform records to match frontend expectations
     const records = dbRecords.map(record => ({

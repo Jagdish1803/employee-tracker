@@ -405,8 +405,10 @@ export interface AttendanceRecord {
   status: string;
   checkInTime: string | null;
   checkOutTime: string | null;
-  lunchOutTime?: string | null; // Break start time
-  lunchInTime?: string | null;  // Break end time
+  lunchOutTime?: string | null; // Lunch break start time
+  lunchInTime?: string | null;  // Lunch break end time
+  breakOutTime?: string | null; // General break start time
+  breakInTime?: string | null;  // General break end time
   hoursWorked: number;
   remarks: string | null;
   source: string;
@@ -441,6 +443,8 @@ export interface AttendanceCalendarView {
   checkOutTime?: string;
   lunchOutTime?: string;
   lunchInTime?: string;
+  breakOutTime?: string;
+  breakInTime?: string;
   hoursWorked?: number;
   remarks?: string;
 }

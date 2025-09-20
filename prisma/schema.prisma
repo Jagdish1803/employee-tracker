@@ -154,6 +154,8 @@ model AttendanceRecord {
   checkOutTime      DateTime?              @map("check_out_time")
   lunchOutTime      DateTime?              @map("lunch_out_time")
   lunchInTime       DateTime?              @map("lunch_in_time")
+  breakOutTime      DateTime?              @map("break_out_time")
+  breakInTime       DateTime?              @map("break_in_time")
   totalHours        Float?                 @map("total_hours")
   shift             String?                @map("shift")
   shiftStart        String?                @map("shift_start")

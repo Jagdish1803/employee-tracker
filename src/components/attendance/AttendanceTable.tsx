@@ -186,23 +186,23 @@ export function AttendanceTable({
                 </td>
                 <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-900">
                   {editingRecord === record.id ? (
-                    <Input 
-                      type="time" 
-                      value={editForm.lunchOutTime || ''}
-                      onChange={(e) => onFieldChange?.('lunchOutTime', e.target.value)} 
-                      className="w-20 h-7" 
+                    <Input
+                      type="time"
+                      value={editForm.breakOutTime || ''}
+                      onChange={(e) => onFieldChange?.('breakOutTime', e.target.value)}
+                      className="w-20 h-7"
                     />
-                  ) : (record.lunchOutTime && record.lunchOutTime !== 'null' ? record.lunchOutTime : '-')}
+                  ) : (record.breakOutTime && record.breakOutTime !== 'null' ? record.breakOutTime : '-')}
                 </td>
                 <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-900">
                   {editingRecord === record.id ? (
-                    <Input 
-                      type="time" 
-                      value={editForm.lunchInTime || ''}
-                      onChange={(e) => onFieldChange?.('lunchInTime', e.target.value)} 
-                      className="w-20 h-7" 
+                    <Input
+                      type="time"
+                      value={editForm.breakInTime || ''}
+                      onChange={(e) => onFieldChange?.('breakInTime', e.target.value)}
+                      className="w-20 h-7"
                     />
-                  ) : (record.lunchInTime && record.lunchInTime !== 'null' ? record.lunchInTime : '-')}
+                  ) : (record.breakInTime && record.breakInTime !== 'null' ? record.breakInTime : '-')}
                 </td>
                 <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-900">
                   {editingRecord === record.id ? (

@@ -64,6 +64,10 @@ export async function GET(request: NextRequest) {
         record.lunchOutTime.toTimeString().slice(0, 5) : null,
       lunchInTime: record.lunchInTime ?
         record.lunchInTime.toTimeString().slice(0, 5) : null,
+      breakOutTime: record.breakOutTime ?
+        record.breakOutTime.toTimeString().slice(0, 5) : null,
+      breakInTime: record.breakInTime ?
+        record.breakInTime.toTimeString().slice(0, 5) : null,
       hoursWorked: record.totalHours,
       remarks: record.exceptionNotes,
       source: record.importSource,
