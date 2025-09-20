@@ -179,13 +179,22 @@ export default function AdminFlowacePage() {
     }));
   };
 
+  // Delete upload history confirmation states
+  const [deleteBatchConfirmOpen, setDeleteBatchConfirmOpen] = useState(false);
+  const [batchToDelete, setBatchToDelete] = useState<string | null>(null);
+
   // Delete upload history
-  const handleDeleteBatch = async (batchId: string) => {
-    if (!window.confirm('Are you sure you want to delete this upload history entry?')) return;
+  const handleDeleteBatch = (batchId: string) => {
+    setBatchToDelete(batchId);
+    setDeleteBatchConfirmOpen(true);
+  };
+
+  const confirmDeleteBatch = async () => {
+    if (!batchToDelete) return;
 
     try {
-      setDeleting(batchId);
-      const response = await flowaceService.deleteUploadHistory(batchId);
+      setDeleting(batchToDelete);
+      const response = await flowaceService.deleteUploadHistory(batchToDelete);
 
       if (response.success) {
         await loadUploadHistory();
@@ -196,6 +205,8 @@ export default function AdminFlowacePage() {
       console.error('Failed to delete upload history:', error);
     } finally {
       setDeleting(null);
+      setDeleteBatchConfirmOpen(false);
+      setBatchToDelete(null);
     }
   };
 
@@ -410,6 +421,18 @@ export default function AdminFlowacePage() {
         confirmText="Delete"
         cancelText="Cancel"
         onConfirm={handleDeleteRecord}
+        variant="destructive"
+      />
+
+      {/* Delete Upload History Confirmation Dialog */}
+      <ConfirmationDialog
+        open={deleteBatchConfirmOpen}
+        onOpenChange={setDeleteBatchConfirmOpen}
+        title="Delete Upload History"
+        description="Are you sure you want to delete this upload history entry? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmDeleteBatch}
         variant="destructive"
       />
     </div>

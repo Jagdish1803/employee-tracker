@@ -11,6 +11,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { AttendanceTable } from '@/components/attendance/AttendanceTable';
 import { AttendanceUploadDialog } from '@/components/attendance/AttendanceUploadDialog';
 import { useAttendanceManagement } from '@/hooks/useAttendanceManagement';
@@ -37,6 +38,12 @@ export default function AdminAttendancePage() {
   const [selectedDate, setSelectedDate] = useState<string>('all');
   const [showCalendarDialog, setShowCalendarDialog] = useState(false);
   const [currentCalendarMonth, setCurrentCalendarMonth] = useState(new Date());
+
+  // Confirmation dialog states
+  const [deleteRecordConfirmOpen, setDeleteRecordConfirmOpen] = useState(false);
+  const [recordToDelete, setRecordToDelete] = useState<AttendanceRecord | null>(null);
+  const [deleteBatchConfirmOpen, setDeleteBatchConfirmOpen] = useState(false);
+  const [batchToDelete, setBatchToDelete] = useState<string | null>(null);
 
   // Calculate pagination
   const totalRecords = filteredRecords.length;
@@ -80,23 +87,6 @@ export default function AdminAttendancePage() {
     setCurrentPage(1);
   }, [selectedDate]);
 
-  // Delete batch handler
-  const handleDeleteBatch = async (batchId: string) => {
-    if (!window.confirm('Are you sure you want to delete this upload history entry?')) return;
-    
-    try {
-      await deleteBatch(batchId);
-      await loadUploadHistory();
-    } catch (error) {
-      console.error('Failed to delete upload history:', error);
-    }
-  };
-
-  // Show upload details
-  const showUploadDetail = (upload: UploadHistory) => {
-    setSelectedUpload(upload);
-    setShowUploadDetails(true);
-  };
 
   // Date navigation functions
   const navigateToDate = (direction: 'prev' | 'next') => {
@@ -198,6 +188,48 @@ export default function AdminAttendancePage() {
   // Wrapper for AttendanceTable onFieldChange to match expected type
   const handleTableFieldChange = (field: string, value: unknown) => {
     handleFieldChange(field as keyof AttendanceRecord, value);
+  };
+
+  // Show upload details
+  const showUploadDetail = (upload: UploadHistory) => {
+    setSelectedUpload(upload);
+    setShowUploadDetails(true);
+  };
+
+  // Delete record with confirmation
+  const handleDeleteRecord = (record: AttendanceRecord) => {
+    setRecordToDelete(record);
+    setDeleteRecordConfirmOpen(true);
+  };
+
+  // Delete record by ID (for AttendanceTable)
+  const handleDeleteRecordById = (id: string | number) => {
+    const record = filteredRecords.find(r => r.id === id);
+    if (record) {
+      handleDeleteRecord(record);
+    }
+  };
+
+  const confirmDeleteRecord = () => {
+    if (recordToDelete) {
+      deleteRecord(recordToDelete.id);
+      setDeleteRecordConfirmOpen(false);
+      setRecordToDelete(null);
+    }
+  };
+
+  // Delete batch with confirmation
+  const handleDeleteBatch = (batchId: string) => {
+    setBatchToDelete(batchId);
+    setDeleteBatchConfirmOpen(true);
+  };
+
+  const confirmDeleteBatch = () => {
+    if (batchToDelete) {
+      deleteBatch(batchToDelete);
+      setDeleteBatchConfirmOpen(false);
+      setBatchToDelete(null);
+    }
   };
 
   return (
@@ -420,7 +452,7 @@ export default function AdminAttendancePage() {
               totalPages={selectedDate && selectedDate !== 'all' ? dateFilteredPages : totalPages}
               onPageChange={setCurrentPage}
               onEdit={handleEditRecord}
-              onDelete={deleteRecord}
+              onDelete={handleDeleteRecordById}
               editingRecord={editingRecord}
               editForm={editForm}
               onSave={handleSaveEdit}
@@ -674,6 +706,30 @@ export default function AdminAttendancePage() {
       <AttendanceUploadDialog
         isOpen={showUploadDialog}
         onClose={() => setShowUploadDialog(false)}
+      />
+
+      {/* Delete Record Confirmation Dialog */}
+      <ConfirmationDialog
+        open={deleteRecordConfirmOpen}
+        onOpenChange={setDeleteRecordConfirmOpen}
+        title="Delete Attendance Record"
+        description={`Are you sure you want to delete the attendance record for ${recordToDelete?.employeeName} on ${recordToDelete?.date ? new Date(recordToDelete.date).toLocaleDateString() : ''}? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmDeleteRecord}
+        variant="destructive"
+      />
+
+      {/* Delete Upload History Confirmation Dialog */}
+      <ConfirmationDialog
+        open={deleteBatchConfirmOpen}
+        onOpenChange={setDeleteBatchConfirmOpen}
+        title="Delete Upload Batch"
+        description="Are you sure you want to delete this entire batch? This will remove all attendance records from this upload. This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmDeleteBatch}
+        variant="destructive"
       />
     </div>
   );

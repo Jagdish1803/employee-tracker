@@ -152,10 +152,6 @@ export const useAttendanceManagement = () => {
 
   // Delete functions using React Query mutations
   const deleteRecord = (recordId: string | number) => {
-    if (!window.confirm('Are you sure you want to delete this attendance record? This action cannot be undone.')) {
-      return;
-    }
-
     const numericId = typeof recordId === 'string' ? parseInt(recordId) : recordId;
     deleteMutation.mutate(numericId);
   };
@@ -165,9 +161,6 @@ export const useAttendanceManagement = () => {
   };
 
   const deleteBatch = (batchId: string) => {
-    if (!window.confirm('Are you sure you want to delete this entire batch? This will remove all attendance records from this upload. This action cannot be undone.')) {
-      return;
-    }
     deleteBatchMutation.mutate(batchId);
   };
 
