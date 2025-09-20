@@ -7,7 +7,17 @@ import { Calendar } from '@/components/ui/calendar';
 import { format, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import {
   Activity,
-  Download
+  Download,
+  Clock,
+  Target,
+  TrendingUp,
+  BarChart3,
+  Zap,
+  Timer,
+  Calendar as CalendarIcon,
+  CheckCircle2,
+  AlertCircle,
+  Gauge
 } from 'lucide-react';
 import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
 import { flowaceService, FlowaceRecord } from '@/api';
@@ -120,44 +130,113 @@ export default function FlowaceActivity() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Activity Tracking</h1>
-          <p className="text-muted-foreground">Monitor your daily productivity and activity levels</p>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+            Activity Tracking
+          </h1>
+          <p className="text-muted-foreground mt-1">Monitor your daily productivity and activity levels</p>
         </div>
-        <Button variant="outline">
-          <Download className="h-4 w-4 mr-2" />
-          Export Report
-        </Button>
+        <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 px-3 py-1 bg-blue-50 rounded-full">
+            <Gauge className="h-4 w-4 text-blue-600" />
+            <span className="text-sm font-medium text-blue-700">
+              {summary.avgProductivity}% Avg
+            </span>
+          </div>
+          <Button variant="outline" className="hover:bg-purple-50">
+            <Download className="h-4 w-4 mr-2" />
+            Export Report
+          </Button>
+        </div>
       </div>
 
-      {/* Summary Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Activity className="h-5 w-5" />
-            <span>Monthly Activity Summary</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Total Active Hours</p>
-              <p className="text-2xl font-bold">{formatHours(summary.totalActiveHours)}</p>
+      {/* Enhanced Summary Cards */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200 hover:shadow-lg transition-all duration-300">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center justify-between text-sm font-medium text-blue-700">
+              <span>Total Active Hours</span>
+              <Clock className="h-5 w-5 text-blue-600" />
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-blue-600 mb-1">
+              {formatHours(summary.totalActiveHours)}
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Avg Productivity</p>
-              <p className="text-2xl font-bold">{summary.avgProductivity}%</p>
+            <p className="text-sm text-blue-600/70">
+              Across {summary.totalWorkingDays} working days
+            </p>
+            <div className="mt-2 flex items-center space-x-1 text-xs text-blue-600">
+              <TrendingUp className="h-3 w-3" />
+              <span>This month</span>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Working Days</p>
-              <p className="text-2xl font-bold">{summary.totalWorkingDays}</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 hover:shadow-lg transition-all duration-300">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center justify-between text-sm font-medium text-green-700">
+              <span>Avg Productivity</span>
+              <Target className="h-5 w-5 text-green-600" />
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-green-600 mb-1">
+              {summary.avgProductivity}%
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Avg Daily Hours</p>
-              <p className="text-2xl font-bold">{formatHours(summary.avgActiveHours)}</p>
+            <p className="text-sm text-green-600/70">
+              Daily productivity score
+            </p>
+            <div className="mt-2 w-full bg-green-100 rounded-full h-2">
+              <div
+                className="bg-green-500 h-2 rounded-full transition-all duration-500"
+                style={{ width: `${Math.min(summary.avgProductivity, 100)}%` }}
+              ></div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200 hover:shadow-lg transition-all duration-300">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center justify-between text-sm font-medium text-purple-700">
+              <span>Working Days</span>
+              <CalendarIcon className="h-5 w-5 text-purple-600" />
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-purple-600 mb-1">
+              {summary.totalWorkingDays}
+            </div>
+            <p className="text-sm text-purple-600/70">
+              Days with recorded activity
+            </p>
+            <div className="mt-2 flex items-center space-x-1 text-xs text-purple-600">
+              <BarChart3 className="h-3 w-3" />
+              <span>Activity tracked</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200 hover:shadow-lg transition-all duration-300">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center justify-between text-sm font-medium text-orange-700">
+              <span>Avg Daily Hours</span>
+              <Timer className="h-5 w-5 text-orange-600" />
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-orange-600 mb-1">
+              {formatHours(summary.avgActiveHours)}
+            </div>
+            <p className="text-sm text-orange-600/70">
+              Per working day average
+            </p>
+            <div className="mt-2 flex items-center space-x-1 text-xs text-orange-600">
+              <Zap className="h-3 w-3" />
+              <span>Consistent tracking</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Calendar View */}
@@ -191,87 +270,250 @@ export default function FlowaceActivity() {
           </CardContent>
         </Card>
 
-        {/* Selected Date Details */}
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {selectedDate ? format(selectedDate, 'EEEE, MMMM d, yyyy') : 'Select a Date'}
+        {/* Enhanced Selected Date Details */}
+        <Card className="hover:shadow-lg transition-all duration-300">
+          <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-t-lg">
+            <CardTitle className="flex items-center space-x-2">
+              <Activity className="h-5 w-5 text-indigo-600" />
+              <span>
+                {selectedDate ? format(selectedDate, 'EEEE, MMMM d, yyyy') : 'Select a Date'}
+              </span>
             </CardTitle>
+            {selectedRecord && (
+              <div className="flex items-center space-x-2 mt-2">
+                <div className="flex items-center space-x-1">
+                  {selectedRecord.productivityPercentage >= 80 ? (
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                  ) : selectedRecord.productivityPercentage >= 60 ? (
+                    <AlertCircle className="h-4 w-4 text-yellow-500" />
+                  ) : (
+                    <AlertCircle className="h-4 w-4 text-red-500" />
+                  )}
+                  <span className="text-sm font-medium">
+                    {selectedRecord.productivityPercentage >= 80 ? 'High Performance' :
+                     selectedRecord.productivityPercentage >= 60 ? 'Good Performance' : 'Needs Improvement'}
+                  </span>
+                </div>
+              </div>
+            )}
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             {loading ? (
-              <div className="text-center py-8">
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-4"></div>
                 <p className="text-muted-foreground">Loading activity data...</p>
               </div>
             ) : selectedRecord ? (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 gap-3">
-                  <div className="flex justify-between">
-                    <span className="text-sm">Productivity</span>
-                    <span className="font-medium">{selectedRecord.productivityPercentage}%</span>
+              <div className="space-y-6">
+                {/* Productivity Score */}
+                <div className="text-center p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
+                  <div className="text-3xl font-bold text-green-600 mb-1">
+                    {selectedRecord.productivityPercentage}%
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Work Hours</span>
-                    <span className="font-medium">{selectedRecord.workStartTime} - {selectedRecord.workEndTime}</span>
+                  <p className="text-sm text-green-600/70">Productivity Score</p>
+                  <div className="mt-2 w-full bg-green-100 rounded-full h-2">
+                    <div
+                      className="bg-green-500 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${selectedRecord.productivityPercentage}%` }}
+                    ></div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Active Hours</span>
-                    <span className="font-medium">{formatHours(selectedRecord.activeHours || 0)}</span>
+                </div>
+
+                {/* Time Details */}
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <Clock className="h-4 w-4 text-blue-600" />
+                      <span className="text-sm font-medium">Work Hours</span>
+                    </div>
+                    <span className="font-bold text-blue-600">
+                      {selectedRecord.workStartTime} - {selectedRecord.workEndTime}
+                    </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Productive Hours</span>
-                    <span className="font-medium">{formatHours(selectedRecord.productiveHours || 0)}</span>
+
+                  <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <Target className="h-4 w-4 text-green-600" />
+                      <span className="text-sm font-medium">Active Hours</span>
+                    </div>
+                    <span className="font-bold text-green-600">
+                      {formatHours(selectedRecord.activeHours || 0)}
+                    </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Total Logged</span>
-                    <span className="font-medium">{formatHours(selectedRecord.loggedHours || 0)}</span>
+
+                  <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <Zap className="h-4 w-4 text-purple-600" />
+                      <span className="text-sm font-medium">Productive Hours</span>
+                    </div>
+                    <span className="font-bold text-purple-600">
+                      {formatHours(selectedRecord.productiveHours || 0)}
+                    </span>
                   </div>
+
+                  <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <Timer className="h-4 w-4 text-orange-600" />
+                      <span className="text-sm font-medium">Total Logged</span>
+                    </div>
+                    <span className="font-bold text-orange-600">
+                      {formatHours(selectedRecord.loggedHours || 0)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Performance Insight */}
+                <div className="p-4 border-l-4 border-indigo-500 bg-indigo-50 rounded-r-lg">
+                  <div className="flex items-center space-x-2 mb-1">
+                    <BarChart3 className="h-4 w-4 text-indigo-600" />
+                    <span className="font-medium text-indigo-800">Performance Insight</span>
+                  </div>
+                  <p className="text-sm text-indigo-700">
+                    {selectedRecord.productivityPercentage >= 80
+                      ? "Excellent work! You're maintaining high productivity levels."
+                      : selectedRecord.productivityPercentage >= 60
+                      ? "Good performance! Consider optimizing your workflow for better results."
+                      : "Room for improvement. Try to minimize distractions and focus on core tasks."}
+                  </p>
                 </div>
               </div>
             ) : selectedDate ? (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">No activity recorded for this date</p>
+              <div className="text-center py-12">
+                <CalendarIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground text-lg font-medium">No activity recorded</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  No productivity data available for {format(selectedDate, 'MMMM d, yyyy')}
+                </p>
               </div>
             ) : (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">Select a date to view activity details</p>
+              <div className="text-center py-12">
+                <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground text-lg font-medium">Select a date</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Click on the calendar to view detailed activity information
+                </p>
               </div>
             )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Recent Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-          <p className="text-sm text-muted-foreground">Last 7 days</p>
+      {/* Enhanced Recent Activity */}
+      <Card className="hover:shadow-lg transition-all duration-300">
+        <CardHeader className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-t-lg">
+          <CardTitle className="flex items-center space-x-2">
+            <BarChart3 className="h-5 w-5 text-gray-600" />
+            <span>Recent Activity</span>
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">Performance overview for the last 7 days</p>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {loading ? (
-            <div className="text-center py-8">
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-600 mx-auto mb-4"></div>
               <p className="text-muted-foreground">Loading recent activity...</p>
             </div>
           ) : flowaceRecords.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">No activity records found</p>
+            <div className="text-center py-12">
+              <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground text-lg font-medium">No activity records found</p>
+              <p className="text-sm text-muted-foreground mt-1">Activity data will appear here once tracked</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {flowaceRecords.slice(0, 7).reverse().map((record) => (
-                <div key={record.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <p className="font-medium">{format(new Date(record.date), 'MMM d, yyyy')}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {formatHours(record.activeHours || 0)} active • {record.workStartTime} - {record.workEndTime}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium">{record.productivityPercentage}%</p>
-                    <p className="text-xs text-muted-foreground">productivity</p>
+            <div className="divide-y divide-gray-100">
+              {flowaceRecords.slice(0, 7).reverse().map((record, index) => (
+                <div key={record.id} className="p-4 hover:bg-gray-50 transition-colors duration-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-3">
+                        <div className="text-lg font-semibold text-gray-900">
+                          {format(new Date(record.date), 'EEE, MMM d')}
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          {record.productivityPercentage >= 80 ? (
+                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                          ) : record.productivityPercentage >= 60 ? (
+                            <AlertCircle className="h-4 w-4 text-yellow-500" />
+                          ) : (
+                            <AlertCircle className="h-4 w-4 text-red-500" />
+                          )}
+                          <span className="text-sm font-medium">
+                            {record.productivityPercentage}% productivity
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-4 text-sm">
+                        <div className="flex items-center space-x-2">
+                          <Clock className="h-4 w-4 text-blue-600" />
+                          <span className="text-muted-foreground">Work:</span>
+                          <span className="font-medium">
+                            {record.workStartTime} - {record.workEndTime}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Target className="h-4 w-4 text-green-600" />
+                          <span className="text-muted-foreground">Active:</span>
+                          <span className="font-medium text-green-600">
+                            {formatHours(record.activeHours || 0)}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Zap className="h-4 w-4 text-purple-600" />
+                          <span className="text-muted-foreground">Productive:</span>
+                          <span className="font-medium text-purple-600">
+                            {formatHours(record.productiveHours || 0)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Progress bar for productivity */}
+                      <div className="mt-3">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                          <span>Productivity Score</span>
+                          <span>{record.productivityPercentage}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className={`h-2 rounded-full transition-all duration-300 ${
+                              record.productivityPercentage >= 80
+                                ? 'bg-green-500'
+                                : record.productivityPercentage >= 60
+                                ? 'bg-yellow-500'
+                                : 'bg-red-500'
+                            }`}
+                            style={{ width: `${record.productivityPercentage}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-end space-y-2 ml-4">
+                      <div className="text-xs text-muted-foreground">
+                        #{index + 1}
+                      </div>
+                      <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        record.productivityPercentage >= 80
+                          ? 'bg-green-100 text-green-700'
+                          : record.productivityPercentage >= 60
+                          ? 'bg-yellow-100 text-yellow-700'
+                          : 'bg-red-100 text-red-700'
+                      }`}>
+                        {record.productivityPercentage >= 80 ? 'High' :
+                         record.productivityPercentage >= 60 ? 'Good' : 'Low'}
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
+
+              {flowaceRecords.length > 7 && (
+                <div className="p-4 bg-gray-50 text-center">
+                  <Button variant="outline" size="sm" className="text-gray-600 border-gray-200 hover:bg-gray-100">
+                    View All {flowaceRecords.length} Records
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </CardContent>

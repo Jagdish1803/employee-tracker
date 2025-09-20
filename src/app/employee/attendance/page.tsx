@@ -6,7 +6,15 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   CalendarDays,
-  Download
+  Download,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  Home,
+  Coffee,
+  TrendingUp,
+  Calendar
 } from 'lucide-react';
 import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
 import { attendanceService } from '@/api';
@@ -162,45 +170,111 @@ export default function MyAttendance() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">My Attendance</h1>
-          <p className="text-muted-foreground">Track your attendance and work hours</p>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            My Attendance
+          </h1>
+          <p className="text-muted-foreground mt-1">Track your attendance and work hours</p>
         </div>
-        <Button variant="outline">
-          <Download className="h-4 w-4 mr-2" />
-          Export Report
-        </Button>
+        <div className="flex items-center space-x-2">
+          <Badge variant="outline" className="px-3 py-1">
+            {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+          </Badge>
+          <Button variant="outline" className="hover:bg-blue-50">
+            <Download className="h-4 w-4 mr-2" />
+            Export Report
+          </Button>
+        </div>
       </div>
 
-      {/* Summary Card */}
+      {/* Enhanced Summary Cards */}
       {summary && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <CalendarDays className="h-5 w-5" />
-              <span>Monthly Summary</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Attendance Rate</p>
-                <p className="text-2xl font-bold">{Math.round(summary.attendancePercentage)}%</p>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 hover:shadow-lg transition-all duration-300">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center justify-between text-sm font-medium text-green-700">
+                <span>Attendance Rate</span>
+                <CheckCircle className="h-5 w-5 text-green-600" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-green-600 mb-1">
+                {Math.round(summary.attendancePercentage)}%
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Present Days</p>
-                <p className="text-2xl font-bold">{summary.presentDays}/{summary.totalWorkingDays}</p>
+              <p className="text-sm text-green-600/70">
+                {summary.presentDays} of {summary.totalWorkingDays} days
+              </p>
+              <div className="mt-2 w-full bg-green-100 rounded-full h-2">
+                <div
+                  className="bg-green-500 h-2 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.round(summary.attendancePercentage)}%` }}
+                ></div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Hours</p>
-                <p className="text-2xl font-bold">{Math.round(summary.totalHoursWorked)}h</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200 hover:shadow-lg transition-all duration-300">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center justify-between text-sm font-medium text-blue-700">
+                <span>Total Hours</span>
+                <Clock className="h-5 w-5 text-blue-600" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-blue-600 mb-1">
+                {Math.round(summary.totalHoursWorked)}h
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Absent Days</p>
-                <p className="text-2xl font-bold">{summary.absentDays}</p>
+              <p className="text-sm text-blue-600/70">
+                Avg: {Math.round(summary.averageHoursPerDay * 10) / 10}h per day
+              </p>
+              <div className="mt-2 flex items-center space-x-1 text-xs text-blue-600">
+                <TrendingUp className="h-3 w-3" />
+                <span>This month</span>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200 hover:shadow-lg transition-all duration-300">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center justify-between text-sm font-medium text-orange-700">
+                <span>Absent Days</span>
+                <XCircle className="h-5 w-5 text-orange-600" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-orange-600 mb-1">
+                {summary.absentDays}
+              </div>
+              <p className="text-sm text-orange-600/70">
+                {summary.lateDays} late days
+              </p>
+              <div className="mt-2 flex items-center space-x-1 text-xs text-orange-600">
+                <AlertTriangle className="h-3 w-3" />
+                <span>Monitor attendance</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200 hover:shadow-lg transition-all duration-300">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center justify-between text-sm font-medium text-purple-700">
+                <span>Leave Days</span>
+                <Home className="h-5 w-5 text-purple-600" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-purple-600 mb-1">
+                {summary.leaveDays}
+              </div>
+              <p className="text-sm text-purple-600/70">
+                {summary.halfDays} half days
+              </p>
+              <div className="mt-2 flex items-center space-x-1 text-xs text-purple-600">
+                <Coffee className="h-3 w-3" />
+                <span>Work-life balance</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -214,43 +288,108 @@ export default function MyAttendance() {
           loading={loading}
         />
 
-        {/* Recent Records */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Attendance</CardTitle>
-            <p className="text-sm text-muted-foreground">Last 10 records</p>
+        {/* Enhanced Recent Records */}
+        <Card className="hover:shadow-lg transition-all duration-300">
+          <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 rounded-t-lg">
+            <CardTitle className="flex items-center space-x-2">
+              <Calendar className="h-5 w-5 text-blue-600" />
+              <span>Recent Attendance</span>
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">Last 10 records with detailed information</p>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             {loading ? (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">Loading records...</p>
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Loading attendance records...</p>
               </div>
             ) : attendanceRecords.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">No attendance records found</p>
+              <div className="text-center py-12">
+                <CalendarDays className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground text-lg font-medium">No attendance records found</p>
+                <p className="text-sm text-muted-foreground mt-1">Records will appear here once attendance is tracked</p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {attendanceRecords.slice(0, 10).map((record) => (
-                  <div key={record.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <p className="font-medium">{new Date(record.date).toLocaleDateString()}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {record.checkInTime && record.checkOutTime ? (
-                          `${record.checkInTime} - ${record.checkOutTime}`
-                        ) : record.checkInTime ? (
-                          `In: ${record.checkInTime}`
-                        ) : (
-                          'No time recorded'
+              <div className="divide-y divide-gray-100">
+                {attendanceRecords.slice(0, 10).map((record, index) => (
+                  <div key={record.id} className="p-4 hover:bg-gray-50 transition-colors duration-200">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3 mb-2">
+                          <div className="text-lg font-semibold text-gray-900">
+                            {new Date(record.date).toLocaleDateString('en-US', {
+                              weekday: 'short',
+                              month: 'short',
+                              day: 'numeric'
+                            })}
+                          </div>
+                          <Badge
+                            variant={getStatusBadgeVariant(record.status)}
+                            className="font-medium"
+                          >
+                            {formatStatus(record.status)}
+                          </Badge>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div className="flex items-center space-x-2">
+                            <Clock className="h-4 w-4 text-green-600" />
+                            <span className="text-muted-foreground">Check In:</span>
+                            <span className="font-medium text-green-600">
+                              {record.checkInTime || '--:--'}
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Clock className="h-4 w-4 text-red-600" />
+                            <span className="text-muted-foreground">Check Out:</span>
+                            <span className="font-medium text-red-600">
+                              {record.checkOutTime || '--:--'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {record.hoursWorked && (
+                          <div className="mt-2 flex items-center space-x-2 text-sm">
+                            <TrendingUp className="h-4 w-4 text-blue-600" />
+                            <span className="text-muted-foreground">Hours Worked:</span>
+                            <span className="font-medium text-blue-600">{record.hoursWorked}h</span>
+                          </div>
                         )}
-                        {record.hoursWorked && ` (${record.hoursWorked}h)`}
-                      </p>
+
+                        {record.remarks && (
+                          <div className="mt-2 p-2 bg-blue-50 rounded-md">
+                            <p className="text-xs text-blue-700 italic">
+                              Note: {record.remarks}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex flex-col items-end space-y-2">
+                        <div className="text-xs text-muted-foreground">
+                          #{index + 1}
+                        </div>
+                        {record.status === 'PRESENT' && (
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        )}
+                        {record.status === 'ABSENT' && (
+                          <XCircle className="h-5 w-5 text-red-500" />
+                        )}
+                        {record.status === 'LATE' && (
+                          <AlertTriangle className="h-5 w-5 text-orange-500" />
+                        )}
+                      </div>
                     </div>
-                    <Badge variant={getStatusBadgeVariant(record.status)}>
-                      {formatStatus(record.status)}
-                    </Badge>
                   </div>
                 ))}
+
+                {attendanceRecords.length > 10 && (
+                  <div className="p-4 bg-gray-50 text-center">
+                    <Button variant="outline" size="sm" className="text-blue-600 border-blue-200 hover:bg-blue-50">
+                      View All {attendanceRecords.length} Records
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
