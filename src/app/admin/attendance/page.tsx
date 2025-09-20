@@ -29,7 +29,7 @@ export default function AdminAttendancePage() {
   } = useAttendanceManagement();
 
   // Local states
-  const [activeTab, setActiveTab] = useState<'records' | 'history'>('records');
+  const [activeTab, setActiveTab] = useState<'calendar' | 'summary' | 'history'>('calendar');
   const [selectedUpload, setSelectedUpload] = useState<UploadHistory | null>(null);
   const [showUploadDetails, setShowUploadDetails] = useState(false);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
@@ -75,9 +75,9 @@ export default function AdminAttendancePage() {
 
   // Load data on component mount
   useEffect(() => {
-    if (activeTab === 'records') {
+    if (activeTab === 'calendar' || activeTab === 'summary') {
       loadAttendanceRecords();
-    } else {
+    } else if (activeTab === 'history') {
       loadUploadHistory();
     }
   }, [activeTab, loadAttendanceRecords, loadUploadHistory]);
@@ -253,12 +253,20 @@ export default function AdminAttendancePage() {
       {/* Tab Navigation */}
       <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit mb-6">
         <Button
-          variant={activeTab === 'records' ? 'default' : 'ghost'}
-          onClick={() => setActiveTab('records')}
+          variant={activeTab === 'calendar' ? 'default' : 'ghost'}
+          onClick={() => setActiveTab('calendar')}
+          className="flex items-center space-x-2"
+        >
+          <Calendar className="h-4 w-4" />
+          <span>Calendar View</span>
+        </Button>
+        <Button
+          variant={activeTab === 'summary' ? 'default' : 'ghost'}
+          onClick={() => setActiveTab('summary')}
           className="flex items-center space-x-2"
         >
           <Users className="h-4 w-4" />
-          <span>View Records</span>
+          <span>Summary</span>
         </Button>
         <Button
           variant={activeTab === 'history' ? 'default' : 'ghost'}
@@ -270,8 +278,8 @@ export default function AdminAttendancePage() {
         </Button>
       </div>
 
-      {/* Records Tab */}
-      {activeTab === 'records' && (
+      {/* Calendar Tab */}
+      {activeTab === 'calendar' && (
         <div className="space-y-6">
           {/* Filter Bar */}
           <Card>
@@ -462,6 +470,129 @@ export default function AdminAttendancePage() {
               deleting={deleting}
             />
           )}
+        </div>
+      )}
+
+      {/* Summary Tab */}
+      {activeTab === 'summary' && (
+        <div className="space-y-6">
+          {/* Summary Statistics */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center">
+                  <Users className="h-8 w-8 text-blue-500" />
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-muted-foreground">Total Records</p>
+                    <p className="text-2xl font-bold">{totalRecords}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center">
+                  <FileText className="h-8 w-8 text-green-500" />
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-muted-foreground">Present</p>
+                    <p className="text-2xl font-bold">{filteredRecords.filter(r => r.status === 'PRESENT').length}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center">
+                  <Calendar className="h-8 w-8 text-red-500" />
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-muted-foreground">Absent</p>
+                    <p className="text-2xl font-bold">{filteredRecords.filter(r => r.status === 'ABSENT').length}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center">
+                  <Eye className="h-8 w-8 text-yellow-500" />
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-muted-foreground">Late</p>
+                    <p className="text-2xl font-bold">{filteredRecords.filter(r => r.status === 'LATE').length}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Department-wise Summary */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Department-wise Attendance</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {(() => {
+                const deptStats = filteredRecords.reduce((acc, record) => {
+                  const dept = record.department || 'Unknown';
+                  if (!acc[dept]) {
+                    acc[dept] = { total: 0, present: 0, absent: 0, late: 0 };
+                  }
+                  acc[dept].total++;
+                  if (record.status === 'PRESENT') acc[dept].present++;
+                  if (record.status === 'ABSENT') acc[dept].absent++;
+                  if (record.status === 'LATE') acc[dept].late++;
+                  return acc;
+                }, {} as Record<string, { total: number; present: number; absent: number; late: number }>);
+
+                return Object.keys(deptStats).length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-2 px-4">Department</th>
+                          <th className="text-center py-2 px-4">Total</th>
+                          <th className="text-center py-2 px-4">Present</th>
+                          <th className="text-center py-2 px-4">Absent</th>
+                          <th className="text-center py-2 px-4">Late</th>
+                          <th className="text-center py-2 px-4">Attendance Rate</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Object.entries(deptStats).map(([dept, stats]) => (
+                          <tr key={dept} className="border-b hover:bg-gray-50">
+                            <td className="py-2 px-4 font-medium">{dept}</td>
+                            <td className="py-2 px-4 text-center">{stats.total}</td>
+                            <td className="py-2 px-4 text-center text-green-600">{stats.present}</td>
+                            <td className="py-2 px-4 text-center text-red-600">{stats.absent}</td>
+                            <td className="py-2 px-4 text-center text-yellow-600">{stats.late}</td>
+                            <td className="py-2 px-4 text-center">
+                              <Badge className={
+                                (stats.present / stats.total) >= 0.9 ? 'bg-green-100 text-green-800' :
+                                (stats.present / stats.total) >= 0.7 ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-red-100 text-red-800'
+                              }>
+                                {Math.round((stats.present / stats.total) * 100)}%
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Users className="mx-auto h-12 w-12 text-muted-foreground" />
+                    <h3 className="mt-4 text-lg font-medium">No attendance data available</h3>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Upload attendance data to see department-wise summary
+                    </p>
+                  </div>
+                );
+              })()}
+            </CardContent>
+          </Card>
         </div>
       )}
 

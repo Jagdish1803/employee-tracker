@@ -18,24 +18,74 @@ import {
   Laptop,
   Activity
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 interface EmployeeSidebarProps {
   isCollapsed: boolean;
 }
 
 const navigation = [
-  { name: 'Dashboard', href: '/employee', icon: Home },
-  { name: 'Work Log', href: '/employee/work-log', icon: Calendar },
-  { name: 'My Assignments', href: '/employee/assignments', icon: ClipboardList },
-  { name: 'Attendance', href: '/employee/attendance', icon: CalendarDays },
-  { name: 'Flowace Activity', href: '/employee/flowace', icon: Activity },
-  { name: 'Break Tracker', href: '/employee/breaks', icon: Coffee },
-  { name: 'My Issues', href: '/employee/issues', icon: FileText },
-  { name: 'Warnings', href: '/employee/warnings', icon: AlertTriangle },
-  { name: 'Performance', href: '/employee/performance', icon: BarChart3 },
-  { name: 'My Assets', href: '/employee/assets', icon: Laptop },
+  {
+    name: 'Dashboard',
+    href: '/employee',
+    icon: Home,
+    badge: null
+  },
+  {
+    name: 'Work Log',
+    href: '/employee/work-log',
+    icon: Calendar,
+    badge: null
+  },
+  {
+    name: 'My Assignments',
+    href: '/employee/assignments',
+    icon: ClipboardList,
+    badge: null
+  },
+  {
+    name: 'Attendance',
+    href: '/employee/attendance',
+    icon: CalendarDays,
+    badge: null
+  },
+  {
+    name: 'Flowace Activity',
+    href: '/employee/flowace',
+    icon: Activity,
+    badge: null
+  },
+  {
+    name: 'Break Tracker',
+    href: '/employee/breaks',
+    icon: Coffee,
+    badge: null
+  },
+  {
+    name: 'My Issues',
+    href: '/employee/issues',
+    icon: FileText,
+    badge: null
+  },
+  {
+    name: 'Warnings',
+    href: '/employee/warnings',
+    icon: AlertTriangle,
+    badge: null
+  },
+  {
+    name: 'Performance',
+    href: '/employee/performance',
+    icon: BarChart3,
+    badge: null
+  },
+  {
+    name: 'My Assets',
+    href: '/employee/assets',
+    icon: Laptop,
+    badge: null
+  },
 ];
 
 export default function EmployeeSidebar({ isCollapsed }: EmployeeSidebarProps) {
@@ -47,100 +97,97 @@ export default function EmployeeSidebar({ isCollapsed }: EmployeeSidebarProps) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-sidebar text-sidebar-foreground">
-      {/* Header */}
-      <div className={cn(
-        "flex items-center border-b border-border bg-sidebar",
-        isCollapsed ? "px-2 h-16" : "px-4 h-16"
-      )}>
-        <div className="flex items-center space-x-2">
-          <User className={cn("text-sidebar-foreground", isCollapsed ? "h-5 w-5" : "h-6 w-6")} />
+    <div className="flex flex-col h-full bg-sidebar text-sidebar-foreground max-h-screen">
+      {/* Header - Fixed */}
+      <div className="border-b border-sidebar-border/50 p-4 flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <User className="size-4" />
+          </div>
           {!isCollapsed && (
-            <div>
-              <h1 className="text-lg font-semibold text-sidebar-foreground">Employee Portal</h1>
-              <p className="text-xs text-muted-foreground">Track your work</p>
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <span className="truncate font-semibold text-sidebar-foreground">Employee Tracker</span>
+              <span className="truncate text-xs text-sidebar-foreground/70">Employee Portal</span>
             </div>
           )}
         </div>
       </div>
 
-      {/* Navigation */}
-      <div className="flex-1 overflow-y-auto py-4">
-        <nav className={cn("space-y-1", isCollapsed ? "px-2" : "px-4")}>
-          {navigation.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={cn(
-                  'flex items-center text-sm font-medium rounded-lg transition-all duration-200 group',
-                  isCollapsed ? 'p-2 justify-center' : 'px-3 py-2.5',
-                  isActive
-                    ? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-sm'
-                    : 'text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground'
-                )}
-                title={isCollapsed ? item.name : undefined}
-              >
-                <item.icon className={cn("flex-shrink-0", isCollapsed ? "h-4 w-4" : "h-4 w-4 mr-3")} />
-                {!isCollapsed && item.name}
-              </Link>
-            );
-          })}
-        </nav>
+      {/* Content - Scrollable */}
+      <div className="flex-1 px-2 py-2 overflow-y-auto sidebar-scrollbar min-h-0">
+        <div className="mb-2">
+          {!isCollapsed && (
+            <div className="text-sidebar-foreground/70 text-xs font-medium px-2 py-2">
+              Navigation
+            </div>
+          )}
+          <div className="space-y-1">
+            {navigation.map((item) => (
+              <div key={item.name}>
+                <Link
+                  href={item.href}
+                  className={`
+                    relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm
+                    transition-all duration-200 ease-in-out
+                    hover:bg-sidebar-accent hover:text-sidebar-accent-foreground
+                    ${pathname === item.href
+                      ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+                      : ''
+                    }
+                    ${isCollapsed ? 'justify-center px-2' : ''}
+                  `}
+                  title={isCollapsed ? item.name : undefined}
+                >
+                  <item.icon className="size-4 shrink-0" />
+                  {!isCollapsed && (
+                    <>
+                      <span className="truncate">
+                        {item.name}
+                      </span>
+                      {item.badge && (
+                        <Badge
+                          variant="secondary"
+                          className="ml-auto h-5 px-1.5 text-xs"
+                        >
+                          {item.badge}
+                        </Badge>
+                      )}
+                    </>
+                  )}
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* User Profile Section */}
+      {/* Footer - Fixed */}
       {employee && (
-        <div className={cn(
-          "border-t border-border bg-sidebar",
-          isCollapsed ? "p-2" : "p-4"
-        )}>
-          <div className={cn(
-            "flex items-center",
-            isCollapsed ? "flex-col space-y-2" : "justify-between"
-          )}>
-            <div className={cn(
-              "flex items-center",
-              isCollapsed ? "flex-col space-y-1" : "space-x-3"
-            )}>
-              <div className="flex-shrink-0">
-                <div className={cn(
-                  "rounded-full bg-sidebar-accent flex items-center justify-center",
-                  isCollapsed ? "h-6 w-6" : "h-8 w-8"
-                )}>
-                  <span className={cn(
-                    "font-medium text-sidebar-accent-foreground",
-                    isCollapsed ? "text-xs" : "text-sm"
-                  )}>
-                    {employee.name?.charAt(0)?.toUpperCase() || 'E'}
-                  </span>
+        <div className="border-t border-sidebar-border/50 p-2 flex-shrink-0">
+          <div
+            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          >
+            <Avatar className="h-8 w-8 rounded-lg">
+              <AvatarImage src="/placeholder-avatar.jpg" alt={employee.name || 'Employee'} />
+              <AvatarFallback className="rounded-lg bg-primary text-primary-foreground font-medium">
+                {employee.name?.charAt(0)?.toUpperCase() || 'E'}
+              </AvatarFallback>
+            </Avatar>
+            {!isCollapsed && (
+              <>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-semibold text-sidebar-foreground">{employee.name}</span>
+                  <span className="truncate text-xs text-sidebar-foreground/70">{employee.employeeCode}</span>
                 </div>
-              </div>
-              {!isCollapsed && (
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-sidebar-foreground truncate">
-                    {employee.name}
-                  </p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {employee.employeeCode}
-                  </p>
-                </div>
-              )}
-            </div>
-            <Button
-              variant="ghost"
-              size={isCollapsed ? "sm" : "sm"}
-              onClick={handleSignOut}
-              className={cn(
-                "text-muted-foreground hover:text-sidebar-foreground",
-                isCollapsed ? "p-1" : "p-1"
-              )}
-              title={isCollapsed ? "Sign Out" : undefined}
-            >
-              <LogOut className="h-4 w-4" />
-              {!isCollapsed && <span className="sr-only">Sign Out</span>}
-            </Button>
+                <button
+                  onClick={handleSignOut}
+                  className="p-1 rounded hover:bg-sidebar-accent/50 transition-colors"
+                  title="Logout"
+                >
+                  <LogOut className="size-4" />
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}

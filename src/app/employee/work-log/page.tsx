@@ -7,9 +7,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, Save, Eye } from 'lucide-react';
+import { Calendar, Clock, Save, Eye, AlertTriangle, CheckCircle } from 'lucide-react';
 import { assignmentService, logService } from '@/api';
 import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface Tag {
   id: number;
@@ -38,8 +45,34 @@ export default function WorkLog() {
     submissionTime: string;
     statusMessage: string;
   } | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   const employeeId = employee?.id || 1;
+
+  // Date validation functions
+  const getMaxAllowedDate = () => {
+    return new Date().toISOString().split('T')[0]; // Today
+  };
+
+  const getMinAllowedDate = () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    return yesterday.toISOString().split('T')[0]; // Yesterday
+  };
+
+  const isDateAllowed = (date: string) => {
+    const maxDate = getMaxAllowedDate();
+    const minDate = getMinAllowedDate();
+    return date >= minDate && date <= maxDate;
+  };
+
+  const handleDateChange = (newDate: string) => {
+    if (!isDateAllowed(newDate)) {
+      toast.error('You can only submit work logs for today or yesterday');
+      return;
+    }
+    setSelectedDate(newDate);
+  };
 
   const fetchExistingLogs = useCallback(async () => {
     try {
@@ -165,6 +198,8 @@ export default function WorkLog() {
 
       if (response.data) {
         toast.success('Work log submitted successfully!');
+        // Refresh the submission status and logs
+        await fetchExistingLogs();
       } else {
         toast.error('Failed to submit work log');
       }
@@ -194,9 +229,17 @@ export default function WorkLog() {
           <Input
             type="date"
             value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
+            onChange={(e) => handleDateChange(e.target.value)}
+            min={getMinAllowedDate()}
+            max={getMaxAllowedDate()}
             className="w-auto"
           />
+          {!isDateAllowed(selectedDate) && (
+            <div className="flex items-center text-red-600 text-sm">
+              <AlertTriangle className="h-4 w-4 mr-1" />
+              Invalid date
+            </div>
+          )}
         </div>
       </div>
 
@@ -308,7 +351,7 @@ export default function WorkLog() {
 
       {/* Submit Button */}
       <div className="flex justify-end space-x-2">
-        <Button variant="outline" disabled={loading}>
+        <Button variant="outline" disabled={loading} onClick={() => setShowPreview(true)}>
           <Eye className="h-4 w-4 mr-2" />
           Preview
         </Button>
@@ -334,6 +377,111 @@ export default function WorkLog() {
           )}
         </Button>
       </div>
+
+      {/* Preview Dialog */}
+      <Dialog open={showPreview} onOpenChange={setShowPreview}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <Eye className="h-5 w-5 mr-2" />
+              Work Log Preview
+            </DialogTitle>
+            <DialogDescription>
+              Review your work log entries for {new Date(selectedDate).toLocaleDateString()}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Preview Summary */}
+            <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground">Date</p>
+                <p className="font-medium">{new Date(selectedDate).toLocaleDateString()}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground">Total Time</p>
+                <p className="font-medium">{formatMinutes(getTotalDayMinutes())}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground">Active Tasks</p>
+                <p className="font-medium">{Object.values(logs).filter(count => count > 0).length}</p>
+              </div>
+            </div>
+
+            {/* Preview Entries */}
+            <div className="space-y-2">
+              <h4 className="font-medium">Work Log Entries:</h4>
+              {assignments
+                .filter(assignment => logs[assignment.tagId] > 0)
+                .map((assignment) => (
+                  <div key={assignment.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-medium">{assignment.tag?.tagName}</span>
+                        {assignment.isMandatory && (
+                          <Badge variant="secondary" className="text-xs">Required</Badge>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-medium">
+                        {logs[assignment.tagId]} × {assignment.tag?.timeMinutes}min = {formatMinutes(calculateTotalMinutes(assignment.tagId, logs[assignment.tagId]))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+              {Object.values(logs).filter(count => count > 0).length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  <AlertTriangle className="h-8 w-8 mx-auto mb-2" />
+                  <p>No work log entries to preview</p>
+                  <p className="text-sm">Add some counts to your assigned tasks first</p>
+                </div>
+              )}
+            </div>
+
+            {/* Validation Messages */}
+            <div className="space-y-2">
+              {!isDateAllowed(selectedDate) && (
+                <div className="flex items-center text-red-600 text-sm p-2 bg-red-50 rounded">
+                  <AlertTriangle className="h-4 w-4 mr-2" />
+                  You can only submit work logs for today or yesterday
+                </div>
+              )}
+
+              {submissionStatus?.isLocked && (
+                <div className="flex items-center text-green-600 text-sm p-2 bg-green-50 rounded">
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Work log already submitted for this date
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={() => setShowPreview(false)}>
+                Close
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowPreview(false);
+                  handleSubmit();
+                }}
+                disabled={
+                  submitLoading ||
+                  assignments.length === 0 ||
+                  submissionStatus?.isLocked ||
+                  !isDateAllowed(selectedDate) ||
+                  Object.values(logs).filter(count => count > 0).length === 0
+                }
+              >
+                <Save className="h-4 w-4 mr-2" />
+                Submit Work Log
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
