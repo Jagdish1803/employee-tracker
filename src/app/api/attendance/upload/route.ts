@@ -311,10 +311,15 @@ export async function POST(request: NextRequest) {
     if (file.name.endsWith('.srp')) {
       parseResult = parseSrpFile(fileContent, selectedDate);
     } else {
-      // Parse CSV
+      // Parse CSV - Keep all values as strings to preserve formatting
       parseResult = Papa.parse(fileContent, {
         header: true,
         skipEmptyLines: true,
+        dynamicTyping: false, // Keep all values as strings
+        transform: (value: string) => {
+          // Preserve original string values without automatic type conversion
+          return value;
+        }
       });
     }
 
@@ -670,11 +675,11 @@ export async function POST(request: NextRequest) {
               }
 
               try {
-                await tx.attendance.upsert({
+                await tx.attendanceRecord.upsert({
                   where: {
                     employee_date_attendance: {
                       employeeId: employee.id,
-                      attendanceDate: record.attendanceDate,
+                      date: record.attendanceDate,
                     }
                   },
                   update: {
@@ -683,26 +688,27 @@ export async function POST(request: NextRequest) {
                     checkOutTime: record.checkOutTime,
                     lunchOutTime: record.lunchOutTime,
                     lunchInTime: record.lunchInTime,
-                    hoursWorked: record.hoursWorked,
+                    totalHours: record.hoursWorked,
                     shift: record.shift ? String(record.shift) : null,
                     shiftStart: record.shiftStart ? String(record.shiftStart) : null,
-                    remarks: record.remarks ? String(record.remarks) : null,
-                    source: record.source as 'SRP_FILE',
-                    updatedAt: new Date()
+                    exceptionNotes: record.remarks ? String(record.remarks) : null,
+                    importSource: 'SRP_FILE',
+                    importBatch: batchId
                   },
                   create: {
                     employeeId: employee.id,
-                    attendanceDate: record.attendanceDate,
+                    date: record.attendanceDate,
                     status: record.status as 'PRESENT' | 'ABSENT' | 'LEAVE_APPROVED' | 'WFH_APPROVED' | 'LATE' | 'HALF_DAY',
                     checkInTime: record.checkInTime,
                     checkOutTime: record.checkOutTime,
                     lunchOutTime: record.lunchOutTime,
                     lunchInTime: record.lunchInTime,
-                    hoursWorked: record.hoursWorked,
+                    totalHours: record.hoursWorked,
                     shift: record.shift ? String(record.shift) : null,
                     shiftStart: record.shiftStart ? String(record.shiftStart) : null,
-                    remarks: record.remarks ? String(record.remarks) : null,
-                    source: record.source as 'SRP_FILE'
+                    exceptionNotes: record.remarks ? String(record.remarks) : null,
+                    importSource: 'SRP_FILE',
+                    importBatch: batchId
                   }
                 });
 

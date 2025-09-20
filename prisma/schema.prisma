@@ -152,7 +152,11 @@ model AttendanceRecord {
   status            AttendanceStatus       @default(ABSENT)
   checkInTime       DateTime?              @map("check_in_time")
   checkOutTime      DateTime?              @map("check_out_time")
+  lunchOutTime      DateTime?              @map("lunch_out_time")
+  lunchInTime       DateTime?              @map("lunch_in_time")
   totalHours        Float?                 @map("total_hours")
+  shift             String?                @map("shift")
+  shiftStart        String?                @map("shift_start")
   leaveRequestId    Int?                   @map("leave_request_id")
   
   // Work Evidence

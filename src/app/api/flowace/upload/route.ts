@@ -214,24 +214,24 @@ export async function POST(request: NextRequest) {
           workStartTime: values[getColumnIndex('Work Start Time')] || null,
           workEndTime: values[getColumnIndex('Work End Time')] || null,
 
-          // Time tracking data
-          loggedHours: parseFloat(values[getColumnIndex('Logged Hours')] || '0') || 0,
-          activeHours: parseFloat(values[getColumnIndex('Active Hours')] || '0') || 0,
-          idleHours: parseFloat(values[getColumnIndex('Idle Hours')] || '0') || 0,
-          classifiedHours: parseFloat(values[getColumnIndex('Classified Hours')] || '0') || 0,
-          unclassifiedHours: parseFloat(values[getColumnIndex('Unclassified Hours')] || '0') || 0,
+          // Time tracking data - preserve decimal precision by using Number() instead of parseFloat()
+          loggedHours: Number(values[getColumnIndex('Logged Hours')] || '0') || 0,
+          activeHours: Number(values[getColumnIndex('Active Hours')] || '0') || 0,
+          idleHours: Number(values[getColumnIndex('Idle Hours')] || '0') || 0,
+          classifiedHours: Number(values[getColumnIndex('Classified Hours')] || '0') || 0,
+          unclassifiedHours: Number(values[getColumnIndex('Unclassified Hours')] || '0') || 0,
 
-          // Productivity metrics
-          productiveHours: parseFloat(values[getColumnIndex('Productive Hours')] || '0') || 0,
-          unproductiveHours: parseFloat(values[getColumnIndex('Unproductive Hours')] || '0') || 0,
-          neutralHours: parseFloat(values[getColumnIndex('Neutral Hours')] || '0') || 0,
-          availableHours: parseFloat(values[getColumnIndex('Available Hours')] || '0') || 0,
-          missingHours: parseFloat(values[getColumnIndex('Missing Hours')] || '0') || 0,
+          // Productivity metrics - preserve decimal precision
+          productiveHours: Number(values[getColumnIndex('Productive Hours')] || '0') || 0,
+          unproductiveHours: Number(values[getColumnIndex('Unproductive Hours')] || '0') || 0,
+          neutralHours: Number(values[getColumnIndex('Neutral Hours')] || '0') || 0,
+          availableHours: Number(values[getColumnIndex('Available Hours')] || '0') || 0,
+          missingHours: Number(values[getColumnIndex('Missing Hours')] || '0') || 0,
 
-          // Percentages (remove % symbol and convert to float)
-          activityPercentage: parseFloat((values[getColumnIndex('Activity %')] || '0').replace('%', '')) || null,
-          classifiedPercentage: parseFloat((values[getColumnIndex('Classified %')] || '0').replace('%', '')) || null,
-          productivityPercentage: parseFloat((values[getColumnIndex('Productivity %')] || '0').replace('%', '')) || null,
+          // Percentages (remove % symbol and preserve precision)
+          activityPercentage: Number((values[getColumnIndex('Activity %')] || '0').replace('%', '')) || null,
+          classifiedPercentage: Number((values[getColumnIndex('Classified %')] || '0').replace('%', '')) || null,
+          productivityPercentage: Number((values[getColumnIndex('Productivity %')] || '0').replace('%', '')) || null,
 
           // Billable duration (convert to minutes)
           classifiedBillableDuration: parseInt(values[getColumnIndex('Classified Billable Duration')] || '0') || 0,

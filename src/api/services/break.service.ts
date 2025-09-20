@@ -119,12 +119,21 @@ export class BreakService {
   }
 
   // Get break history for employee
-  async getHistory(employeeId: number): Promise<BreakRecord[]> {
+  async getHistory(employeeId: number, date?: string): Promise<BreakRecord[]> {
     try {
-      const response = await apiClient.get(`${this.basePath}/history/${employeeId}`);
+      const currentDate = date || new Date().toISOString().split('T')[0];
+      const response = await apiClient.get(`${this.basePath}/history/${employeeId}?date=${currentDate}`);
 
       if (response.data && response.data.success !== undefined) {
-        return response.data.data || [];
+        const breaks = response.data.data || [];
+        // Convert database format to BreakRecord format
+        return breaks.map((breakItem: Record<string, unknown>) => ({
+          id: breakItem.id,
+          employeeId: breakItem.employeeId,
+          type: breakItem.breakOutTime ? 'out' : 'in',
+          timestamp: breakItem.breakOutTime || breakItem.breakInTime,
+          created_at: breakItem.createdAt
+        }));
       }
 
       return response.data || [];

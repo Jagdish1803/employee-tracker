@@ -60,14 +60,16 @@ export async function GET(request: NextRequest) {
         record.checkInTime.toTimeString().slice(0, 5) : null,
       checkOutTime: record.checkOutTime ?
         record.checkOutTime.toTimeString().slice(0, 5) : null,
-      lunchOutTime: null, // AttendanceRecord doesn't have lunch times
-      lunchInTime: null,  // AttendanceRecord doesn't have lunch times
+      lunchOutTime: record.lunchOutTime ?
+        record.lunchOutTime.toTimeString().slice(0, 5) : null,
+      lunchInTime: record.lunchInTime ?
+        record.lunchInTime.toTimeString().slice(0, 5) : null,
       hoursWorked: record.totalHours,
       remarks: record.exceptionNotes,
       source: record.importSource,
       uploadedAt: record.createdAt.toISOString(),
-      shift: null, // AttendanceRecord doesn't have shift info
-      shiftStart: null, // AttendanceRecord doesn't have shift info
+      shift: record.shift,
+      shiftStart: record.shiftStart,
       employee: record.employee
     }));
 

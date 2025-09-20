@@ -59,14 +59,19 @@ export function FlowaceRecordsTable({
   const formatHoursMinutesSeconds = (hours: number) => {
     if (hours === 0) return '00:00:00';
 
-    const totalMilliseconds = Math.round(hours * 3600 * 1000);
-    const totalSeconds = Math.floor(totalMilliseconds / 1000);
+    // Preserve decimal precision - don't round until final display
+    const totalSeconds = Math.floor(hours * 3600);
     const h = Math.floor(totalSeconds / 3600);
     const remainingSeconds = totalSeconds % 3600;
     const m = Math.floor(remainingSeconds / 60);
     const s = remainingSeconds % 60;
 
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const formatDecimal = (value: number, decimals: number = 3) => {
+    // Preserve decimal places for display
+    return Number(value).toFixed(decimals);
   };
 
   const getStatusInfo = (record: FlowaceRecord) => {
@@ -290,6 +295,13 @@ export function FlowaceRecordsTable({
                                   : (record.activeHours || record.totalHours || 0)
                               )}
                             </div>
+                            <div className="text-xs text-gray-400" title="Decimal hours from CSV">
+                              {formatDecimal(
+                                record.loggedHours !== undefined && record.loggedHours !== null
+                                  ? record.loggedHours
+                                  : (record.activeHours || record.totalHours || 0)
+                              )}h
+                            </div>
                             {record.activeHours !== undefined && record.activeHours !== null && (
                               <div className="text-xs text-gray-500">
                                 {formatHoursMinutesSeconds(record.activeHours)} active
@@ -463,30 +475,45 @@ export function FlowaceRecordsTable({
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between mt-4">
-                <div className="text-sm text-gray-600">
-                  Showing {startIndex + 1} to {Math.min(endIndex, totalRecords)} of {totalRecords} records
-                </div>
-                <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    Previous
-                  </Button>
-                  <span className="px-3 py-1 text-sm">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-                    disabled={currentPage === totalPages}
-                  >
-                    Next
-                  </Button>
+              <div className="px-3 py-3 border-t border-gray-200 bg-gray-50">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-700">
+                    Showing {Math.min((currentPage - 1) * 50 + 1, totalRecords)} to {Math.min(currentPage * 50, totalRecords)} of {totalRecords} results
+                  </div>
+                  <div className="flex space-x-1">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onPageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="text-gray-500 border-gray-300 hover:bg-gray-50"
+                    >
+                      Previous
+                    </Button>
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      const page = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                      return (
+                        <Button
+                          key={page}
+                          size="sm"
+                          variant={currentPage === page ? 'default' : 'outline'}
+                          onClick={() => onPageChange(page)}
+                          className={currentPage === page ? 'bg-blue-600 text-white' : 'text-gray-500 border-gray-300 hover:bg-gray-50'}
+                        >
+                          {page}
+                        </Button>
+                      );
+                    })}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onPageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="text-gray-500 border-gray-300 hover:bg-gray-50"
+                    >
+                      Next
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
