@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
 import { format, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import {
   Activity,
@@ -25,8 +24,6 @@ import { toast } from 'sonner';
 
 export default function FlowaceActivity() {
   const { employee } = useEmployeeAuth();
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [currentMonth, setCurrentMonth] = useState(new Date());
   const [flowaceRecords, setFlowaceRecords] = useState<FlowaceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState({
@@ -70,19 +67,16 @@ export default function FlowaceActivity() {
   useEffect(() => {
     // Update date range when month changes
     setDateRange({
-      from: format(startOfMonth(currentMonth), 'yyyy-MM-dd'),
-      to: format(endOfMonth(currentMonth), 'yyyy-MM-dd')
+      from: format(startOfMonth(new Date()), 'yyyy-MM-dd'),
+      to: format(endOfMonth(new Date()), 'yyyy-MM-dd')
     });
-  }, [currentMonth]);
+  }, []);
 
-  const getRecordForDate = (date: Date) => {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    return flowaceRecords.find(record => record.date === dateStr);
-  };
 
   const getSelectedDateRecord = () => {
-    if (!selectedDate) return null;
-    return getRecordForDate(selectedDate);
+    // Return the most recent record if available
+    if (flowaceRecords.length === 0) return null;
+    return flowaceRecords[0];
   };
 
   const calculateSummary = () => {
@@ -239,34 +233,65 @@ export default function FlowaceActivity() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Calendar View */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Activity Calendar</CardTitle>
+        {/* Productivity Analytics */}
+        <Card className="hover:shadow-lg transition-all duration-300">
+          <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-t-lg">
+            <CardTitle className="flex items-center space-x-2">
+              <BarChart3 className="h-5 w-5 text-purple-600" />
+              <span>Productivity Analytics</span>
+            </CardTitle>
             <p className="text-sm text-muted-foreground">
-              Click on a date to view detailed activity
+              Your performance metrics overview
             </p>
           </CardHeader>
-          <CardContent>
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
-              month={currentMonth}
-              onMonthChange={setCurrentMonth}
-              className="rounded-md border"
-              modifiers={{
-                hasActivity: (date) => !!getRecordForDate(date)
-              }}
-              modifiersStyles={{
-                hasActivity: { fontWeight: 'bold', textDecoration: 'underline' }
-              }}
-            />
-            <div className="mt-4">
-              <p className="text-xs text-muted-foreground">
-                Dates with recorded activity are shown in bold and underlined
-              </p>
-            </div>
+          <CardContent className="p-6">
+            {flowaceRecords.length > 0 ? (
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center p-4 bg-green-50 rounded-lg">
+                    <div className="text-3xl font-bold text-green-600 mb-1">
+                      {(flowaceRecords.reduce((sum, record) => sum + (record.productivityPercentage || 0), 0) / flowaceRecords.length).toFixed(1)}%
+                    </div>
+                    <p className="text-sm text-green-600/70">Avg Productivity</p>
+                  </div>
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <div className="text-3xl font-bold text-blue-600 mb-1">
+                      {flowaceRecords.reduce((sum, record) => sum + (record.totalHours || 0), 0).toFixed(1)}h
+                    </div>
+                    <p className="text-sm text-blue-600/70">Total Hours</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-medium mb-3 text-gray-700">Recent Activity Trend</h4>
+                  <div className="space-y-2">
+                    {flowaceRecords.slice(0, 5).map((record, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center space-x-2">
+                          <div className={`w-3 h-3 rounded-full ${
+                            (record.productivityPercentage ?? 0) >= 80 ? 'bg-green-500' :
+                            (record.productivityPercentage ?? 0) >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                          }`}></div>
+                          <span className="text-sm font-medium">{format(new Date(record.date), 'MMM d')}</span>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-medium">{record.productivityPercentage ?? 0}%</div>
+                          <div className="text-xs text-gray-500">{record.totalHours ?? 0}h</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground mb-2">No activity data available</p>
+                <p className="text-sm text-muted-foreground">
+                  Activity tracking data will appear here once available
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -276,7 +301,7 @@ export default function FlowaceActivity() {
             <CardTitle className="flex items-center space-x-2">
               <Activity className="h-5 w-5 text-indigo-600" />
               <span>
-                {selectedDate ? format(selectedDate, 'EEEE, MMMM d, yyyy') : 'Select a Date'}
+                {selectedRecord ? format(new Date(selectedRecord.date), 'EEEE, MMMM d, yyyy') : 'Latest Activity'}
               </span>
             </CardTitle>
             {selectedRecord && (
@@ -377,20 +402,12 @@ export default function FlowaceActivity() {
                   </p>
                 </div>
               </div>
-            ) : selectedDate ? (
-              <div className="text-center py-12">
-                <CalendarIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground text-lg font-medium">No activity recorded</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  No productivity data available for {format(selectedDate, 'MMMM d, yyyy')}
-                </p>
-              </div>
             ) : (
               <div className="text-center py-12">
-                <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground text-lg font-medium">Select a date</p>
+                <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground text-lg font-medium">No activity recorded</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Click on the calendar to view detailed activity information
+                  No productivity data available
                 </p>
               </div>
             )}

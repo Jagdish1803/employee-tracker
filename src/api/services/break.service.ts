@@ -58,15 +58,15 @@ export class BreakService {
     try {
       const response = await apiClient.post(`${this.basePath}/in`, { employeeId });
 
-      if (response.data && response.data.success !== undefined) {
+      if (response.data && response.data.success) {
         // Convert database break record to BreakRecord format
         const breakData = response.data.data;
         return {
           id: breakData.id,
           employeeId: breakData.employeeId,
           type: 'in' as const,
-          timestamp: breakData.breakInTime,
-          created_at: breakData.created_at
+          timestamp: breakData.breakInTime || breakData.createdAt,
+          created_at: breakData.createdAt
         };
       }
 
@@ -82,15 +82,15 @@ export class BreakService {
     try {
       const response = await apiClient.post(`${this.basePath}/out`, { employeeId });
 
-      if (response.data && response.data.success !== undefined) {
+      if (response.data && response.data.success) {
         // Convert database break record to BreakRecord format
         const breakData = response.data.data;
         return {
           id: breakData.id,
           employeeId: breakData.employeeId,
           type: 'out' as const,
-          timestamp: breakData.breakOutTime,
-          created_at: breakData.created_at
+          timestamp: breakData.breakOutTime || breakData.updatedAt,
+          created_at: breakData.createdAt
         };
       }
 

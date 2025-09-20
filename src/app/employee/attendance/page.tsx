@@ -19,7 +19,6 @@ import {
 import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
 import { attendanceService } from '@/api';
 import { toast } from 'sonner';
-import { AttendanceCalendar } from '@/components/attendance/AttendanceCalendar';
 
 interface AttendanceRecord {
   id: number;
@@ -51,8 +50,6 @@ interface AttendanceSummary {
 
 export default function MyAttendance() {
   const { employee } = useEmployeeAuth();
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [currentMonth, setCurrentMonth] = useState(new Date());
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [summary, setSummary] = useState<AttendanceSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,8 +60,8 @@ export default function MyAttendance() {
     try {
       setLoading(true);
 
-      const month = currentMonth.getMonth() + 1;
-      const year = currentMonth.getFullYear();
+      const month = new Date().getMonth() + 1;
+      const year = new Date().getFullYear();
 
       // Fetch real attendance data from API
       const [attendanceResponse, summaryResponse] = await Promise.all([
@@ -120,7 +117,7 @@ export default function MyAttendance() {
     } finally {
       setLoading(false);
     }
-  }, [currentMonth, employeeId]);
+  }, [employeeId]);
 
   useEffect(() => {
     fetchAttendanceData();
@@ -278,15 +275,57 @@ export default function MyAttendance() {
       )}
 
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Enhanced Calendar View */}
-        <AttendanceCalendar
-          selectedDate={selectedDate}
-          onSelect={setSelectedDate}
-          currentMonth={currentMonth}
-          onMonthChange={setCurrentMonth}
-          attendanceRecords={attendanceRecords}
-          loading={loading}
-        />
+        {/* Enhanced Attendance Summary */}
+        <Card className="hover:shadow-lg transition-all duration-300">
+          <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
+            <CardTitle className="flex items-center space-x-2">
+              <TrendingUp className="h-5 w-5 text-blue-600" />
+              <span>Monthly Overview</span>
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">Your attendance summary for this month</p>
+          </CardHeader>
+          <CardContent className="p-6">
+            {summary ? (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-4 bg-green-50 rounded-lg">
+                  <div className="text-3xl font-bold text-green-600 mb-1">
+                    {summary.presentDays}
+                  </div>
+                  <p className="text-sm text-green-600/70">Present Days</p>
+                </div>
+                <div className="text-center p-4 bg-red-50 rounded-lg">
+                  <div className="text-3xl font-bold text-red-600 mb-1">
+                    {summary.absentDays}
+                  </div>
+                  <p className="text-sm text-red-600/70">Absent Days</p>
+                </div>
+                <div className="text-center p-4 bg-yellow-50 rounded-lg">
+                  <div className="text-3xl font-bold text-yellow-600 mb-1">
+                    {summary.lateDays}
+                  </div>
+                  <p className="text-sm text-yellow-600/70">Late Days</p>
+                </div>
+                <div className="text-center p-4 bg-purple-50 rounded-lg">
+                  <div className="text-3xl font-bold text-purple-600 mb-1">
+                    {summary.attendancePercentage.toFixed(1)}%
+                  </div>
+                  <p className="text-sm text-purple-600/70">Attendance Rate</p>
+                </div>
+                <div className="col-span-2 text-center p-4 bg-blue-50 rounded-lg">
+                  <div className="text-2xl font-bold text-blue-600 mb-1">
+                    {summary.totalHoursWorked.toFixed(1)}h
+                  </div>
+                  <p className="text-sm text-blue-600/70">Total Hours Worked</p>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Loading summary...</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Enhanced Recent Records */}
         <Card className="hover:shadow-lg transition-all duration-300">
