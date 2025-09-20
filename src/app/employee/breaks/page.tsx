@@ -134,7 +134,7 @@ export default function BreakTracker() {
     } finally {
       setLoading(false);
     }
-  }, [employeeId, selectedDate]);
+  }, [employeeId]);
 
   const fetchBreakHistory = useCallback(async () => {
     try {

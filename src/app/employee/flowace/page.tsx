@@ -282,16 +282,16 @@ export default function FlowaceActivity() {
             {selectedRecord && (
               <div className="flex items-center space-x-2 mt-2">
                 <div className="flex items-center space-x-1">
-                  {selectedRecord.productivityPercentage >= 80 ? (
+                  {(selectedRecord.productivityPercentage ?? 0) >= 80 ? (
                     <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  ) : selectedRecord.productivityPercentage >= 60 ? (
+                  ) : (selectedRecord.productivityPercentage ?? 0) >= 60 ? (
                     <AlertCircle className="h-4 w-4 text-yellow-500" />
                   ) : (
                     <AlertCircle className="h-4 w-4 text-red-500" />
                   )}
                   <span className="text-sm font-medium">
-                    {selectedRecord.productivityPercentage >= 80 ? 'High Performance' :
-                     selectedRecord.productivityPercentage >= 60 ? 'Good Performance' : 'Needs Improvement'}
+                    {(selectedRecord.productivityPercentage ?? 0) >= 80 ? 'High Performance' :
+                     (selectedRecord.productivityPercentage ?? 0) >= 60 ? 'Good Performance' : 'Needs Improvement'}
                   </span>
                 </div>
               </div>
@@ -308,13 +308,13 @@ export default function FlowaceActivity() {
                 {/* Productivity Score */}
                 <div className="text-center p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
                   <div className="text-3xl font-bold text-green-600 mb-1">
-                    {selectedRecord.productivityPercentage}%
+                    {selectedRecord.productivityPercentage ?? 0}%
                   </div>
                   <p className="text-sm text-green-600/70">Productivity Score</p>
                   <div className="mt-2 w-full bg-green-100 rounded-full h-2">
                     <div
                       className="bg-green-500 h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${selectedRecord.productivityPercentage}%` }}
+                      style={{ width: `${selectedRecord.productivityPercentage ?? 0}%` }}
                     ></div>
                   </div>
                 </div>
@@ -369,9 +369,9 @@ export default function FlowaceActivity() {
                     <span className="font-medium text-indigo-800">Performance Insight</span>
                   </div>
                   <p className="text-sm text-indigo-700">
-                    {selectedRecord.productivityPercentage >= 80
+                    {(selectedRecord.productivityPercentage ?? 0) >= 80
                       ? "Excellent work! You're maintaining high productivity levels."
-                      : selectedRecord.productivityPercentage >= 60
+                      : (selectedRecord.productivityPercentage ?? 0) >= 60
                       ? "Good performance! Consider optimizing your workflow for better results."
                       : "Room for improvement. Try to minimize distractions and focus on core tasks."}
                   </p>
@@ -430,9 +430,9 @@ export default function FlowaceActivity() {
                           {format(new Date(record.date), 'EEE, MMM d')}
                         </div>
                         <div className="flex items-center space-x-1">
-                          {record.productivityPercentage >= 80 ? (
+                          {(record.productivityPercentage ?? 0) >= 80 ? (
                             <CheckCircle2 className="h-4 w-4 text-green-500" />
-                          ) : record.productivityPercentage >= 60 ? (
+                          ) : (record.productivityPercentage ?? 0) >= 60 ? (
                             <AlertCircle className="h-4 w-4 text-yellow-500" />
                           ) : (
                             <AlertCircle className="h-4 w-4 text-red-500" />
@@ -471,18 +471,18 @@ export default function FlowaceActivity() {
                       <div className="mt-3">
                         <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
                           <span>Productivity Score</span>
-                          <span>{record.productivityPercentage}%</span>
+                          <span>{record.productivityPercentage ?? 0}%</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div
                             className={`h-2 rounded-full transition-all duration-300 ${
-                              record.productivityPercentage >= 80
+                              (record.productivityPercentage ?? 0) >= 80
                                 ? 'bg-green-500'
-                                : record.productivityPercentage >= 60
+                                : (record.productivityPercentage ?? 0) >= 60
                                 ? 'bg-yellow-500'
                                 : 'bg-red-500'
                             }`}
-                            style={{ width: `${record.productivityPercentage}%` }}
+                            style={{ width: `${record.productivityPercentage ?? 0}%` }}
                           ></div>
                         </div>
                       </div>
@@ -493,14 +493,14 @@ export default function FlowaceActivity() {
                         #{index + 1}
                       </div>
                       <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        record.productivityPercentage >= 80
+                        (record.productivityPercentage ?? 0) >= 80
                           ? 'bg-green-100 text-green-700'
-                          : record.productivityPercentage >= 60
+                          : (record.productivityPercentage ?? 0) >= 60
                           ? 'bg-yellow-100 text-yellow-700'
                           : 'bg-red-100 text-red-700'
                       }`}>
-                        {record.productivityPercentage >= 80 ? 'High' :
-                         record.productivityPercentage >= 60 ? 'Good' : 'Low'}
+                        {(record.productivityPercentage ?? 0) >= 80 ? 'High' :
+                         (record.productivityPercentage ?? 0) >= 60 ? 'Good' : 'Low'}
                       </div>
                     </div>
                   </div>

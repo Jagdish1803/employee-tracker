@@ -4,6 +4,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
 import {
   Clock,
   FileText,
@@ -11,10 +13,11 @@ import {
   TrendingUp,
   Activity,
   Coffee,
-  CheckCircle,
   Target,
   BarChart3,
-  ArrowRight
+  ArrowRight,
+  Users,
+  AlertCircle
 } from 'lucide-react';
 import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
 import { attendanceService, issueService, logService, flowaceService } from '@/api';
@@ -174,247 +177,317 @@ export default function EmployeeDashboard() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Welcome, {employee?.name || 'Employee'}!</h1>
-          <p className="text-muted-foreground">Employee Code: {employee?.employeeCode}</p>
-        </div>
-        <div className="text-right">
-          <p className="text-sm text-muted-foreground">Today is</p>
-          <p className="text-lg font-semibold">{new Date().toLocaleDateString()}</p>
-        </div>
-      </div>
-
-      {/* Performance Overview */}
-      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <BarChart3 className="h-5 w-5 mr-2 text-blue-600" />
-            Performance Overview
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{stats?.performance.productivity || 0}%</div>
-              <p className="text-sm text-muted-foreground">Avg Productivity</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Hero Section */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {employee?.name || 'Employee'}!
+              </h1>
+              <p className="text-gray-600 mt-1">
+                Employee ID: <span className="font-medium">{employee?.employeeCode}</span> • 
+                {employee?.department && <span className="ml-1">{employee.department}</span>}
+              </p>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{stats?.performance.activeHours || 0}h</div>
-              <p className="text-sm text-muted-foreground">Active Hours (30d)</p>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">{stats?.performance.avgDailyActive || 0}h</div>
-              <p className="text-sm text-muted-foreground">Daily Avg</p>
-            </div>
-            <div className="text-center">
-              <Badge
-                className={`text-sm px-3 py-1 ${
-                  (stats?.performance.productivity || 0) >= 75
-                    ? 'bg-green-100 text-green-800'
-                    : (stats?.performance.productivity || 0) >= 50
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : 'bg-red-100 text-red-800'
-                }`}
-              >
-                {(stats?.performance.productivity || 0) >= 75 ? 'Excellent' :
-                 (stats?.performance.productivity || 0) >= 50 ? 'Good' : 'Needs Improvement'}
-              </Badge>
+            <div className="text-right">
+              <div className="text-sm text-gray-500">Today</div>
+              <div className="text-lg font-semibold text-gray-900">
+                {new Date().toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Stats Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Attendance Rate</CardTitle>
-            <Calendar className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {Math.round(stats?.attendance.thisMonth.attendanceRate || 0)}%
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {stats?.attendance.thisMonth.presentDays || 0}/{stats?.attendance.thisMonth.totalDays || 22} days present
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Work Hours</CardTitle>
-            <Clock className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {Math.round(stats?.attendance.thisMonth.totalHours || 0)}h
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Total hours this month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Work Logs</CardTitle>
-            <Target className="h-4 w-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
-              {stats?.workLogs.thisWeek.totalEntries || 0}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Entries this week ({stats?.workLogs.thisWeek.totalHours || 0}h total)
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Issues</CardTitle>
-            <FileText className="h-4 w-4 text-orange-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
-              {stats?.issues.pending || 0}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Pending ({stats?.issues.total || 0} total, {stats?.issues.resolved || 0} resolved)
-            </p>
-          </CardContent>
-        </Card>
+        </div>
       </div>
 
-      {/* Quick Actions Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="hover:shadow-lg transition-all hover:scale-105">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span className="flex items-center">
-                <Target className="h-5 w-5 mr-2 text-purple-600" />
-                Submit Work Log
-              </span>
-              <ArrowRight className="h-4 w-4 text-muted-foreground" />
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-3">
-              Track your daily work activities and tasks
-            </p>
-            <Link href="/employee/work-log">
-              <Button className="w-full">
-                Go to Work Log
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-all hover:scale-105">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span className="flex items-center">
-                <Activity className="h-5 w-5 mr-2 text-blue-600" />
-                Activity Tracking
-              </span>
-              <ArrowRight className="h-4 w-4 text-muted-foreground" />
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-3">
-              View your productivity and activity metrics
-            </p>
-            <Link href="/employee/flowace">
-              <Button variant="outline" className="w-full">
-                View Activity
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-all hover:scale-105">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span className="flex items-center">
-                <Coffee className="h-5 w-5 mr-2 text-orange-600" />
-                Break Tracker
-              </span>
-              <ArrowRight className="h-4 w-4 text-muted-foreground" />
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-3">
-              Manage your break times throughout the day
-            </p>
-            <Link href="/employee/breaks">
-              <Button variant="outline" className="w-full">
-                Track Breaks
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Activity */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <TrendingUp className="h-5 w-5 mr-2" />
-              This Week Summary
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Avg Daily Work Log</span>
-              <span className="font-medium">{stats?.workLogs.thisWeek.avgDailyHours || 0}h</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Total Entries</span>
-              <span className="font-medium">{stats?.workLogs.thisWeek.totalEntries || 0}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Total Hours Logged</span>
-              <span className="font-medium">{stats?.workLogs.thisWeek.totalHours || 0}h</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <CheckCircle className="h-5 w-5 mr-2" />
-              Quick Links
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Link href="/employee/attendance" className="flex items-center justify-between p-2 rounded hover:bg-gray-50 transition-colors">
-              <div className="flex items-center">
-                <Calendar className="h-4 w-4 mr-2 text-green-600" />
-                <span className="text-sm">My Attendance</span>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* Quick Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 hover:shadow-lg transition-all">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-green-600 mb-1">Attendance Rate</p>
+                  <p className="text-3xl font-bold text-green-700">
+                    {Math.round(stats?.attendance.thisMonth.attendanceRate || 0)}%
+                  </p>
+                  <p className="text-xs text-green-600 mt-1">
+                    {stats?.attendance.thisMonth.presentDays || 0} of {stats?.attendance.thisMonth.totalDays || 22} days
+                  </p>
+                </div>
+                <div className="p-3 bg-green-100 rounded-full">
+                  <Calendar className="h-6 w-6 text-green-600" />
+                </div>
               </div>
-              <ArrowRight className="h-4 w-4 text-muted-foreground" />
-            </Link>
-            <Link href="/employee/issues" className="flex items-center justify-between p-2 rounded hover:bg-gray-50 transition-colors">
-              <div className="flex items-center">
-                <FileText className="h-4 w-4 mr-2 text-orange-600" />
-                <span className="text-sm">My Issues</span>
+              <div className="mt-4">
+                <Progress 
+                  value={stats?.attendance.thisMonth.attendanceRate || 0} 
+                  className="h-2"
+                />
               </div>
-              <ArrowRight className="h-4 w-4 text-muted-foreground" />
-            </Link>
-            <Link href="/employee/assignments" className="flex items-center justify-between p-2 rounded hover:bg-gray-50 transition-colors">
-              <div className="flex items-center">
-                <Target className="h-4 w-4 mr-2 text-purple-600" />
-                <span className="text-sm">My Assignments</span>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-blue-50 to-sky-50 border-blue-200 hover:shadow-lg transition-all">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-blue-600 mb-1">Work Hours</p>
+                  <p className="text-3xl font-bold text-blue-700">
+                    {Math.round(stats?.attendance.thisMonth.totalHours || 0)}h
+                  </p>
+                  <p className="text-xs text-blue-600 mt-1">This month</p>
+                </div>
+                <div className="p-3 bg-blue-100 rounded-full">
+                  <Clock className="h-6 w-6 text-blue-600" />
+                </div>
               </div>
-              <ArrowRight className="h-4 w-4 text-muted-foreground" />
-            </Link>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200 hover:shadow-lg transition-all">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-purple-600 mb-1">Productivity</p>
+                  <p className="text-3xl font-bold text-purple-700">
+                    {Math.round(stats?.performance.productivity || 0)}%
+                  </p>
+                  <p className="text-xs text-purple-600 mt-1">Average this month</p>
+                </div>
+                <div className="p-3 bg-purple-100 rounded-full">
+                  <TrendingUp className="h-6 w-6 text-purple-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200 hover:shadow-lg transition-all">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-orange-600 mb-1">Pending Issues</p>
+                  <p className="text-3xl font-bold text-orange-700">
+                    {stats?.issues.pending || 0}
+                  </p>
+                  <p className="text-xs text-orange-600 mt-1">
+                    {stats?.issues.resolved || 0} resolved
+                  </p>
+                </div>
+                <div className="p-3 bg-orange-100 rounded-full">
+                  <AlertCircle className="h-6 w-6 text-orange-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Attendance & Activity */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Attendance Section */}
+            <Card className="bg-white shadow-sm hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center text-lg">
+                  <Calendar className="h-5 w-5 mr-3 text-green-600" />
+                  My Attendance
+                </CardTitle>
+                <p className="text-sm text-gray-600">Track your attendance and work hours</p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="text-center p-4 bg-green-50 rounded-lg">
+                    <div className="text-2xl font-bold text-green-700">
+                      {stats?.attendance.thisMonth.presentDays || 0}
+                    </div>
+                    <div className="text-sm text-green-600">Present Days</div>
+                  </div>
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-700">
+                      {Math.round(stats?.attendance.thisMonth.totalHours || 0)}
+                    </div>
+                    <div className="text-sm text-blue-600">Total Hours</div>
+                  </div>
+                  <div className="text-center p-4 bg-purple-50 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-700">
+                      {Math.round((stats?.attendance.thisMonth.totalHours || 0) / (stats?.attendance.thisMonth.presentDays || 1))}
+                    </div>
+                    <div className="text-sm text-purple-600">Avg Hours/Day</div>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex justify-center">
+                  <Link href="/employee/attendance">
+                    <Button className="bg-green-600 hover:bg-green-700 text-white px-6">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      View Full Attendance
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Activity Section */}
+            <Card className="bg-white shadow-sm hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center text-lg">
+                  <Activity className="h-5 w-5 mr-3 text-blue-600" />
+                  Activity Tracking
+                </CardTitle>
+                <p className="text-sm text-gray-600">Monitor your daily productivity and activity levels</p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-700">
+                      {Math.round(stats?.performance.activeHours || 0)}h
+                    </div>
+                    <div className="text-sm text-blue-600">Active Hours</div>
+                  </div>
+                  <div className="text-center p-4 bg-purple-50 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-700">
+                      {Math.round(stats?.performance.productivity || 0)}%
+                    </div>
+                    <div className="text-sm text-purple-600">Productivity</div>
+                  </div>
+                  <div className="text-center p-4 bg-green-50 rounded-lg">
+                    <div className="text-2xl font-bold text-green-700">
+                      {Math.round(stats?.performance.avgDailyActive || 0)}h
+                    </div>
+                    <div className="text-sm text-green-600">Daily Average</div>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex justify-center">
+                  <Link href="/employee/flowace">
+                    <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6">
+                      <Activity className="h-4 w-4 mr-2" />
+                      View Activity Details
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column - Quick Actions & Links */}
+          <div className="space-y-6">
+            {/* Quick Actions */}
+            <Card className="bg-white shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center text-lg">
+                  <Target className="h-5 w-5 mr-3 text-purple-600" />
+                  Quick Actions
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Link href="/employee/work-log" className="block">
+                  <div className="flex items-center p-3 rounded-lg border hover:bg-gray-50 transition-colors group">
+                    <div className="p-2 bg-purple-100 rounded-lg mr-3 group-hover:bg-purple-200 transition-colors">
+                      <FileText className="h-4 w-4 text-purple-600" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium">Submit Work Log</div>
+                      <div className="text-sm text-gray-600">Track daily tasks</div>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
+                  </div>
+                </Link>
+
+                <Link href="/employee/issues" className="block">
+                  <div className="flex items-center p-3 rounded-lg border hover:bg-gray-50 transition-colors group">
+                    <div className="p-2 bg-orange-100 rounded-lg mr-3 group-hover:bg-orange-200 transition-colors">
+                      <AlertCircle className="h-4 w-4 text-orange-600" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium">Report Issue</div>
+                      <div className="text-sm text-gray-600">Get help quickly</div>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
+                  </div>
+                </Link>
+
+                <Link href="/employee/breaks" className="block">
+                  <div className="flex items-center p-3 rounded-lg border hover:bg-gray-50 transition-colors group">
+                    <div className="p-2 bg-green-100 rounded-lg mr-3 group-hover:bg-green-200 transition-colors">
+                      <Coffee className="h-4 w-4 text-green-600" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium">Track Breaks</div>
+                      <div className="text-sm text-gray-600">Manage break times</div>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
+                  </div>
+                </Link>
+
+                <Link href="/employee/assignments" className="block">
+                  <div className="flex items-center p-3 rounded-lg border hover:bg-gray-50 transition-colors group">
+                    <div className="p-2 bg-blue-100 rounded-lg mr-3 group-hover:bg-blue-200 transition-colors">
+                      <Users className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium">My Assignments</div>
+                      <div className="text-sm text-gray-600">View tasks</div>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
+                  </div>
+                </Link>
+              </CardContent>
+            </Card>
+
+            {/* This Week Summary */}
+            <Card className="bg-white shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center text-lg">
+                  <BarChart3 className="h-5 w-5 mr-3 text-green-600" />
+                  This Week
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Work Log Entries</span>
+                    <span className="font-semibold">{stats?.workLogs.thisWeek.totalEntries || 0}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Total Hours Logged</span>
+                    <span className="font-semibold">{stats?.workLogs.thisWeek.totalHours || 0}h</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Daily Average</span>
+                    <span className="font-semibold">{stats?.workLogs.thisWeek.avgDailyHours || 0}h</span>
+                  </div>
+                </div>
+                <Separator />
+                <div className="text-center">
+                  <Badge 
+                    variant={
+                      (stats?.workLogs.thisWeek.avgDailyHours || 0) >= 8 
+                        ? "default" 
+                        : (stats?.workLogs.thisWeek.avgDailyHours || 0) >= 6 
+                        ? "secondary" 
+                        : "destructive"
+                    }
+                    className="px-3 py-1"
+                  >
+                    {(stats?.workLogs.thisWeek.avgDailyHours || 0) >= 8 
+                      ? "On Track" 
+                      : (stats?.workLogs.thisWeek.avgDailyHours || 0) >= 6 
+                      ? "Good Progress" 
+                      : "Needs Attention"}
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
