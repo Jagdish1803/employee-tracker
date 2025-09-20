@@ -4,6 +4,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { format, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import {
   Activity,
@@ -29,8 +31,20 @@ export default function FlowaceActivity() {
     from: format(startOfMonth(new Date()), 'yyyy-MM-dd'),
     to: format(endOfMonth(new Date()), 'yyyy-MM-dd')
   });
+  const [productivityFilter, setProductivityFilter] = useState<string>('all');
+  const [dateFilter, setDateFilter] = useState<string>('');
 
   const employeeId = employee?.id || 1;
+
+  const filteredRecords = flowaceRecords.filter(record => {
+    const productivityMatch = productivityFilter === 'all' ||
+      (productivityFilter === 'high' && (record.productivityPercentage || 0) >= 80) ||
+      (productivityFilter === 'medium' && (record.productivityPercentage || 0) >= 60 && (record.productivityPercentage || 0) < 80) ||
+      (productivityFilter === 'low' && (record.productivityPercentage || 0) < 60);
+
+    const dateMatch = !dateFilter || record.date.includes(dateFilter);
+    return productivityMatch && dateMatch;
+  });
 
   const fetchFlowaceData = useCallback(async () => {
     try {
@@ -303,6 +317,39 @@ export default function FlowaceActivity() {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            {/* Filter Controls */}
+            <div className="flex flex-wrap gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center space-x-2">
+                <label htmlFor="productivity-filter" className="text-sm font-medium text-gray-700">
+                  Productivity:
+                </label>
+                <Select value={productivityFilter} onValueChange={setProductivityFilter}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder="All" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="high">High (≥80%)</SelectItem>
+                    <SelectItem value="medium">Medium (60-79%)</SelectItem>
+                    <SelectItem value="low">Low (&lt;60%)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <label htmlFor="date-filter" className="text-sm font-medium text-gray-700">
+                  Date:
+                </label>
+                <Input
+                  id="date-filter"
+                  type="date"
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  className="w-40"
+                />
+              </div>
+            </div>
+
             <Tabs defaultValue="details" className="w-full">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="details">Details</TabsTrigger>
@@ -403,7 +450,7 @@ export default function FlowaceActivity() {
 
               <TabsContent value="timeline" className="mt-6">
                 <div className="space-y-3">
-                  {flowaceRecords.slice(0, 5).map((record, index) => (
+                  {filteredRecords.slice(0, 5).map((record, index) => (
                     <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="flex items-center space-x-3">
                         <div className={`w-3 h-3 rounded-full ${
@@ -429,25 +476,25 @@ export default function FlowaceActivity() {
                   <div className="p-4 border rounded-lg">
                     <h4 className="font-medium text-gray-900 mb-2">Weekly Average</h4>
                     <div className="text-2xl font-bold text-gray-900">
-                      {flowaceRecords.length > 0 ? (flowaceRecords.reduce((sum, record) => sum + (record.productivityPercentage || 0), 0) / flowaceRecords.length).toFixed(1) : '0'}%
+                      {filteredRecords.length > 0 ? (filteredRecords.reduce((sum, record) => sum + (record.productivityPercentage || 0), 0) / filteredRecords.length).toFixed(1) : '0'}%
                     </div>
                   </div>
                   <div className="p-4 border rounded-lg">
                     <h4 className="font-medium text-gray-900 mb-2">Total Sessions</h4>
                     <div className="text-2xl font-bold text-gray-900">
-                      {flowaceRecords.length}
+                      {filteredRecords.length}
                     </div>
                   </div>
                   <div className="p-4 border rounded-lg">
                     <h4 className="font-medium text-gray-900 mb-2">Peak Performance</h4>
                     <div className="text-2xl font-bold text-gray-900">
-                      {flowaceRecords.length > 0 ? Math.max(...flowaceRecords.map(r => r.productivityPercentage || 0)) : 0}%
+                      {filteredRecords.length > 0 ? Math.max(...filteredRecords.map(r => r.productivityPercentage || 0)) : 0}%
                     </div>
                   </div>
                   <div className="p-4 border rounded-lg">
                     <h4 className="font-medium text-gray-900 mb-2">Hours Tracked</h4>
                     <div className="text-2xl font-bold text-gray-900">
-                      {flowaceRecords.reduce((sum, record) => sum + (record.totalHours || 0), 0).toFixed(1)}h
+                      {filteredRecords.reduce((sum, record) => sum + (record.totalHours || 0), 0).toFixed(1)}h
                     </div>
                   </div>
                 </div>

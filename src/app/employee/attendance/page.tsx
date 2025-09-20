@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import {
   CalendarDays,
   Download,
@@ -54,8 +56,16 @@ export default function MyAttendance() {
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [summary, setSummary] = useState<AttendanceSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [dateFilter, setDateFilter] = useState<string>('');
 
   const employeeId = employee?.id || 1;
+
+  const filteredRecords = attendanceRecords.filter(record => {
+    const statusMatch = statusFilter === 'all' || record.status === statusFilter;
+    const dateMatch = !dateFilter || record.date.includes(dateFilter);
+    return statusMatch && dateMatch;
+  });
 
   const fetchAttendanceData = useCallback(async () => {
     try {
@@ -125,21 +135,22 @@ export default function MyAttendance() {
   }, [fetchAttendanceData]);
 
 
-  const getStatusBadgeVariant = (status: AttendanceRecord['status']) => {
+  const getStatusIcon = (status: AttendanceRecord['status']) => {
     switch (status) {
       case 'PRESENT':
-        return 'default';
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'LATE':
-        return 'secondary';
+        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
       case 'ABSENT':
-        return 'destructive';
+        return <XCircle className="h-4 w-4 text-red-500" />;
       case 'HALF_DAY':
-        return 'outline';
+        return <Clock className="h-4 w-4 text-blue-500" />;
       case 'LEAVE_APPROVED':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'WFH_APPROVED':
-        return 'secondary';
+        return <Home className="h-4 w-4 text-purple-500" />;
       default:
-        return 'outline';
+        return <Clock className="h-4 w-4 text-gray-500" />;
     }
   };
 
@@ -168,7 +179,7 @@ export default function MyAttendance() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-gray-900">
             My Attendance
           </h1>
           <p className="text-muted-foreground mt-1">Track your attendance and work hours</p>
@@ -187,86 +198,86 @@ export default function MyAttendance() {
       {/* Enhanced Summary Cards */}
       {summary && (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 hover:shadow-lg transition-all duration-300">
+          <Card className="border-gray-200 hover:shadow-lg transition-all duration-300">
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center justify-between text-sm font-medium text-green-700">
+              <CardTitle className="flex items-center justify-between text-sm font-medium text-gray-700">
                 <span>Attendance Rate</span>
                 <CheckCircle className="h-5 w-5 text-gray-700" />
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-gray-700 mb-1">
+              <div className="text-3xl font-bold text-gray-600 mb-1">
                 {Math.round(summary.attendancePercentage)}%
               </div>
-              <p className="text-sm text-gray-700/70">
+              <p className="text-sm text-gray-600/70">
                 {summary.presentDays} of {summary.totalWorkingDays} days
               </p>
-              <div className="mt-2 w-full bg-green-100 rounded-full h-2">
+              <div className="mt-2 w-full bg-gray-100 rounded-full h-2">
                 <div
-                  className="bg-gray-500 h-2 rounded-full transition-all duration-500"
+                  className="bg-gray-800 h-2 rounded-full transition-all duration-500"
                   style={{ width: `${Math.round(summary.attendancePercentage)}%` }}
                 ></div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200 hover:shadow-lg transition-all duration-300">
+          <Card className="border-gray-200 hover:shadow-lg transition-all duration-300">
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center justify-between text-sm font-medium text-blue-700">
+              <CardTitle className="flex items-center justify-between text-sm font-medium text-gray-700">
                 <span>Total Hours</span>
                 <Clock className="h-5 w-5 text-gray-700" />
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-gray-700 mb-1">
+              <div className="text-3xl font-bold text-gray-600 mb-1">
                 {Math.round(summary.totalHoursWorked)}h
               </div>
-              <p className="text-sm text-gray-700/70">
+              <p className="text-sm text-gray-600/70">
                 Avg: {Math.round(summary.averageHoursPerDay * 10) / 10}h per day
               </p>
-              <div className="mt-2 flex items-center space-x-1 text-xs text-gray-700">
+              <div className="mt-2 flex items-center space-x-1 text-xs text-gray-600">
                 <TrendingUp className="h-3 w-3" />
                 <span>This month</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200 hover:shadow-lg transition-all duration-300">
+          <Card className="border-gray-200 hover:shadow-lg transition-all duration-300">
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center justify-between text-sm font-medium text-orange-700">
+              <CardTitle className="flex items-center justify-between text-sm font-medium text-gray-700">
                 <span>Absent Days</span>
-                <XCircle className="h-5 w-5 text-orange-600" />
+                <XCircle className="h-5 w-5 text-red-500" />
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-orange-600 mb-1">
+              <div className="text-3xl font-bold text-gray-600 mb-1">
                 {summary.absentDays}
               </div>
-              <p className="text-sm text-orange-600/70">
+              <p className="text-sm text-gray-600/70">
                 {summary.lateDays} late days
               </p>
-              <div className="mt-2 flex items-center space-x-1 text-xs text-orange-600">
+              <div className="mt-2 flex items-center space-x-1 text-xs text-gray-600">
                 <AlertTriangle className="h-3 w-3" />
                 <span>Monitor attendance</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200 hover:shadow-lg transition-all duration-300">
+          <Card className="border-gray-200 hover:shadow-lg transition-all duration-300">
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center justify-between text-sm font-medium text-purple-700">
+              <CardTitle className="flex items-center justify-between text-sm font-medium text-gray-700">
                 <span>Leave Days</span>
                 <Home className="h-5 w-5 text-gray-700" />
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-gray-700 mb-1">
+              <div className="text-3xl font-bold text-gray-600 mb-1">
                 {summary.leaveDays}
               </div>
-              <p className="text-sm text-gray-700/70">
+              <p className="text-sm text-gray-600/70">
                 {summary.halfDays} half days
               </p>
-              <div className="mt-2 flex items-center space-x-1 text-xs text-gray-700">
+              <div className="mt-2 flex items-center space-x-1 text-xs text-gray-600">
                 <Coffee className="h-3 w-3" />
                 <span>Work-life balance</span>
               </div>
@@ -337,6 +348,47 @@ export default function MyAttendance() {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            {/* Filters */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+              <div className="flex-1">
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Filter by Status</label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="All statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="PRESENT">Present</SelectItem>
+                    <SelectItem value="ABSENT">Absent</SelectItem>
+                    <SelectItem value="LATE">Late</SelectItem>
+                    <SelectItem value="HALF_DAY">Half Day</SelectItem>
+                    <SelectItem value="LEAVE_APPROVED">Leave Approved</SelectItem>
+                    <SelectItem value="WFH_APPROVED">Work From Home</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex-1">
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Filter by Date</label>
+                <Input
+                  type="date"
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+              {(statusFilter !== 'all' || dateFilter) && (
+                <div className="flex items-end">
+                  <Button
+                    variant="outline"
+                    onClick={() => { setStatusFilter('all'); setDateFilter(''); }}
+                    className="whitespace-nowrap"
+                  >
+                    Clear Filters
+                  </Button>
+                </div>
+              )}
+            </div>
+
             <Tabs defaultValue="recent" className="w-full">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="recent">Recent Records</TabsTrigger>
@@ -358,7 +410,7 @@ export default function MyAttendance() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {attendanceRecords.slice(0, 8).map((record, index) => (
+                    {filteredRecords.slice(0, 8).map((record, index) => (
                   <div key={record.id} className="p-4 hover:bg-gray-50 transition-colors duration-200">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
@@ -370,12 +422,12 @@ export default function MyAttendance() {
                               day: 'numeric'
                             })}
                           </div>
-                          <Badge
-                            variant={getStatusBadgeVariant(record.status)}
-                            className="font-medium"
-                          >
-                            {formatStatus(record.status)}
-                          </Badge>
+                          <div className="flex items-center space-x-2 px-3 py-1 bg-gray-100 rounded-full">
+                            {getStatusIcon(record.status)}
+                            <span className="text-sm font-medium text-gray-900">
+                              {formatStatus(record.status)}
+                            </span>
+                          </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4 text-sm">
@@ -413,18 +465,9 @@ export default function MyAttendance() {
                       </div>
 
                       <div className="flex flex-col items-end space-y-2">
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-sm font-medium text-gray-900 bg-gray-100 px-2 py-1 rounded">
                           #{index + 1}
                         </div>
-                        {record.status === 'PRESENT' && (
-                          <CheckCircle className="h-5 w-5 text-green-500" />
-                        )}
-                        {record.status === 'ABSENT' && (
-                          <XCircle className="h-5 w-5 text-red-500" />
-                        )}
-                        {record.status === 'LATE' && (
-                          <AlertTriangle className="h-5 w-5 text-orange-500" />
-                        )}
                       </div>
                     </div>
                   </div>
@@ -438,25 +481,25 @@ export default function MyAttendance() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center p-4 border rounded-lg">
                     <div className="text-2xl font-bold text-gray-900">
-                      {attendanceRecords.filter(r => r.status === 'PRESENT').length}
+                      {filteredRecords.filter(r => r.status === 'PRESENT').length}
                     </div>
                     <p className="text-sm text-gray-600">Present</p>
                   </div>
                   <div className="text-center p-4 border rounded-lg">
                     <div className="text-2xl font-bold text-gray-900">
-                      {attendanceRecords.filter(r => r.status === 'ABSENT').length}
+                      {filteredRecords.filter(r => r.status === 'ABSENT').length}
                     </div>
                     <p className="text-sm text-gray-600">Absent</p>
                   </div>
                   <div className="text-center p-4 border rounded-lg">
                     <div className="text-2xl font-bold text-gray-900">
-                      {attendanceRecords.filter(r => r.status === 'LATE').length}
+                      {filteredRecords.filter(r => r.status === 'LATE').length}
                     </div>
                     <p className="text-sm text-gray-600">Late</p>
                   </div>
                   <div className="text-center p-4 border rounded-lg">
                     <div className="text-2xl font-bold text-gray-900">
-                      {attendanceRecords.filter(r => r.status === 'HALF_DAY').length}
+                      {filteredRecords.filter(r => r.status === 'HALF_DAY').length}
                     </div>
                     <p className="text-sm text-gray-600">Half Day</p>
                   </div>
