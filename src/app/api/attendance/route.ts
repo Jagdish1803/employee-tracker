@@ -52,83 +52,43 @@ export async function GET(request: NextRequest) {
     // Build employee filter
     const employeeFilter = employeeId ? { employeeId: parseInt(employeeId) } : {};
 
-    // Query both tables and combine results with proper error handling
-    const [attendanceRecords, attendanceData] = await Promise.all([
-      // Query AttendanceRecord table
-      prisma.attendanceRecord.findMany({
-        where: {
-          ...employeeFilter,
-          ...(Object.keys(dateFilter).length > 0 && { date: dateFilter }),
-          ...(status && status !== 'ALL' && { status: status as AttendanceStatus }),
-          // Add search filter at database level for better performance
-          ...(search && search.trim() && {
-            employee: {
-              OR: [
-                { name: { contains: search.trim(), mode: 'insensitive' } },
-                { employeeCode: { contains: search.trim(), mode: 'insensitive' } },
-                { department: { contains: search.trim(), mode: 'insensitive' } }
-              ]
-            }
-          })
-        },
-        include: {
+    // Query AttendanceRecord table only
+    const attendanceRecords = await prisma.attendanceRecord.findMany({
+      where: {
+        ...employeeFilter,
+        ...(Object.keys(dateFilter).length > 0 && { date: dateFilter }),
+        ...(status && status !== 'ALL' && { status: status as AttendanceStatus }),
+        // Add search filter at database level for better performance
+        ...(search && search.trim() && {
           employee: {
-            select: {
-              id: true,
-              name: true,
-              employeeCode: true,
-              department: true,
-            }
+            OR: [
+              { name: { contains: search.trim(), mode: 'insensitive' } },
+              { employeeCode: { contains: search.trim(), mode: 'insensitive' } },
+              { department: { contains: search.trim(), mode: 'insensitive' } }
+            ]
           }
-        },
-        orderBy: [
-          { date: 'desc' },
-          { employee: { name: 'asc' } }
-        ]
-      }).catch(error => {
-        console.error('Error querying AttendanceRecord table:', error);
-        return [];
-      }),
-
-      // Query Attendance table
-      prisma.attendance.findMany({
-        where: {
-          ...employeeFilter,
-          ...(Object.keys(dateFilter).length > 0 && { attendanceDate: dateFilter }),
-          ...(status && status !== 'ALL' && { status: status as AttendanceStatus }),
-          // Add search filter at database level for better performance
-          ...(search && search.trim() && {
-            employee: {
-              OR: [
-                { name: { contains: search.trim(), mode: 'insensitive' } },
-                { employeeCode: { contains: search.trim(), mode: 'insensitive' } },
-                { department: { contains: search.trim(), mode: 'insensitive' } }
-              ]
-            }
-          })
-        },
-        include: {
-          employee: {
-            select: {
-              id: true,
-              name: true,
-              employeeCode: true,
-              department: true,
-            }
+        })
+      },
+      include: {
+        employee: {
+          select: {
+            id: true,
+            name: true,
+            employeeCode: true,
+            department: true,
           }
-        },
-        orderBy: [
-          { attendanceDate: 'desc' },
-          { employee: { name: 'asc' } }
-        ]
-      }).catch(error => {
-        console.error('Error querying Attendance table:', error);
-        return [];
-      })
-    ]);
+        }
+      },
+      orderBy: [
+        { date: 'desc' },
+        { employee: { name: 'asc' } }
+      ]
+    }).catch(error => {
+      console.error('Error querying AttendanceRecord table:', error);
+      return [];
+    });
 
     console.log(`Found ${attendanceRecords.length} records from AttendanceRecord table`);
-    console.log(`Found ${attendanceData.length} records from Attendance table`);
 
     // Helper function for safe time formatting with IST timezone
     const formatTime = (dateTime: Date | null | undefined): string | null => {
@@ -154,8 +114,8 @@ export async function GET(request: NextRequest) {
       }
     };
 
-    // Transform AttendanceRecord to common format with better error handling
-    const transformedAttendanceRecords = attendanceRecords.map(record => {
+    // Transform AttendanceRecord to response format
+    const transformedRecords = attendanceRecords.map(record => {
       try {
         return {
           id: record.id,
@@ -175,10 +135,9 @@ export async function GET(request: NextRequest) {
           remarks: record.exceptionNotes || '',
           source: record.importSource || 'csv',
           uploadedAt: record.createdAt.toISOString(),
-          shift: null,
-          shiftStart: null,
-          employee: record.employee,
-          tableSource: 'AttendanceRecord'
+          shift: record.shift || null,
+          shiftStart: record.shiftStart || null,
+          employee: record.employee
         };
       } catch (error) {
         console.error('Error transforming AttendanceRecord:', error, record);
@@ -186,59 +145,10 @@ export async function GET(request: NextRequest) {
       }
     }).filter(Boolean);
 
-    // Transform Attendance to common format with better error handling
-    const transformedAttendance = attendanceData.map(record => {
-      try {
-        return {
-          id: `att_${record.id}`, // Prefix to avoid ID conflicts
-          employeeId: record.employeeId,
-          employeeName: record.employee?.name || 'Unknown',
-          employeeCode: record.employee?.employeeCode || 'N/A',
-          department: record.employee?.department || 'General',
-          date: formatDate(record.attendanceDate),
-          status: record.status,
-          checkInTime: formatTime(record.checkInTime),
-          checkOutTime: formatTime(record.checkOutTime),
-          lunchOutTime: formatTime(record.lunchOutTime),
-          lunchInTime: formatTime(record.lunchInTime),
-          breakOutTime: null,
-          breakInTime: null,
-          hoursWorked: record.hoursWorked || 0,
-          remarks: record.remarks || '',
-          source: record.source || 'srp',
-          uploadedAt: record.createdAt.toISOString(),
-          shift: record.shift || '',
-          shiftStart: record.shiftStart || '',
-          employee: record.employee,
-          tableSource: 'Attendance'
-        };
-      } catch (error) {
-        console.error('Error transforming Attendance record:', error, record);
-        return null;
-      }
-    }).filter(Boolean);
-
-    // Combine both results and remove duplicates based on employee + date
-    const recordMap = new Map();
-    const allRecords = [...transformedAttendanceRecords, ...transformedAttendance];
-
-    // Prioritize AttendanceRecord over Attendance for duplicates
-    allRecords.forEach(record => {
-      if (!record) return;
-
-      const key = `${record.employeeId}-${record.date}`;
-      const existing = recordMap.get(key);
-
-      if (!existing || (existing.tableSource === 'Attendance' && record.tableSource === 'AttendanceRecord')) {
-        recordMap.set(key, record);
-      }
-    });
-
-    const uniqueRecords = Array.from(recordMap.values());
-
     // Sort by date (newest first) and then by employee name
-    uniqueRecords.sort((a, b) => {
+    transformedRecords.sort((a, b) => {
       try {
+        if (!a || !b) return 0;
         const dateCompare = new Date(b.date).getTime() - new Date(a.date).getTime();
         if (dateCompare !== 0) return dateCompare;
         return (a.employeeName || '').localeCompare(b.employeeName || '');
@@ -248,15 +158,13 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    console.log(`Returning ${uniqueRecords.length} total unique records after filtering and combining`);
+    console.log(`Returning ${transformedRecords.length} total records after processing`);
 
     return NextResponse.json({
       success: true,
-      data: uniqueRecords,
+      data: transformedRecords,
       meta: {
-        totalRecords: uniqueRecords.length,
-        attendanceRecords: transformedAttendanceRecords.length,
-        attendanceTableRecords: transformedAttendance.length,
+        totalRecords: transformedRecords.length,
         filters: { month, year, status, search, employeeId }
       }
     });
