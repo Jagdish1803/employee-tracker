@@ -270,12 +270,13 @@ function validateDate(dateString: string): Date | null {
 function validateTime(timeString: string, dateString: string): Date | null {
   if (!timeString) return null;
   
-  const date = new Date(dateString);
   const [hours, minutes] = timeString.split(':').map(Number);
   
   if (isNaN(hours) || isNaN(minutes)) return null;
   
-  date.setHours(hours, minutes, 0, 0);
+  // Create date in UTC to avoid timezone issues
+  const date = new Date(dateString + 'T00:00:00.000Z');
+  date.setUTCHours(hours, minutes, 0, 0);
   return date;
 }
 

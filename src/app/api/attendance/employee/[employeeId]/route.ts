@@ -113,11 +113,18 @@ export async function GET(
     console.log(`Found ${attendanceRecords.length} records from AttendanceRecord table`);
     console.log(`Found ${attendanceData.length} records from Attendance table`);
 
-    // Helper functions for safe formatting
+    // Helper functions for safe formatting (timezone-agnostic)
     const formatTime = (dateTime: Date | null | undefined): string | null => {
       if (!dateTime) return null;
       try {
-        return dateTime.toTimeString().slice(0, 5);
+        // Ensure we're working with a Date object
+        const date = new Date(dateTime);
+        
+        // Format as HH:MM using UTC to avoid timezone issues
+        const hours = String(date.getUTCHours()).padStart(2, '0');
+        const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+        
+        return `${hours}:${minutes}`;
       } catch (error) {
         console.error('Error formatting time:', error);
         return null;

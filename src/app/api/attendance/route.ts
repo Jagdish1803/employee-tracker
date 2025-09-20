@@ -90,13 +90,18 @@ export async function GET(request: NextRequest) {
 
     console.log(`Found ${attendanceRecords.length} records from AttendanceRecord table`);
 
-    // Helper function for safe time formatting with IST timezone
+    // Helper function for safe time formatting (timezone-agnostic)
     const formatTime = (dateTime: Date | null | undefined): string | null => {
       if (!dateTime) return null;
       try {
-        // Convert to IST timezone before formatting
-        const istTime = new Date(dateTime.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
-        return istTime.toTimeString().slice(0, 5);
+        // Ensure we're working with a Date object
+        const date = new Date(dateTime);
+        
+        // Format as HH:MM using UTC to avoid timezone issues
+        const hours = String(date.getUTCHours()).padStart(2, '0');
+        const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+        
+        return `${hours}:${minutes}`;
       } catch (error) {
         console.error('Error formatting time:', error);
         return null;
