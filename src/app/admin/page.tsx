@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
-  Users, Tag, FileText, AlertTriangle, BarChart3, Clock, Coffee,
+  Users, Tag, FileText, AlertTriangle, Clock, Coffee,
   Settings, Calendar, TrendingUp, Activity, CheckCircle2, Eye,
   ArrowUpRight, Timer
 } from 'lucide-react';
@@ -187,25 +187,6 @@ export default function AdminDashboard() {
       <div>
         <h2 className="text-xl font-semibold mb-4 text-gray-900">Quick Actions</h2>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Link href="/admin/daily-chart">
-            <Card className="relative overflow-hidden group hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer border-2 border-transparent hover:border-blue-200 bg-gradient-to-br from-blue-50 via-white to-blue-50">
-              <CardContent className="p-6">
-                <div className="flex items-center space-x-4">
-                  <div className="relative">
-                    <div className="p-4 bg-blue-500 rounded-xl shadow-lg group-hover:shadow-xl transition-shadow">
-                      <BarChart3 className="h-6 w-6 text-white" />
-                    </div>
-                    <div className="absolute -top-1 -right-1 h-3 w-3 bg-green-400 rounded-full border-2 border-white"></div>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">Daily Chart</h3>
-                    <p className="text-sm text-muted-foreground">View today&apos;s work submissions</p>
-                  </div>
-                  <ArrowUpRight className="h-4 w-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
 
           <Link href="/admin/employees">
             <Card className="relative overflow-hidden group hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer border-2 border-transparent hover:border-green-200 bg-gradient-to-br from-green-50 via-white to-green-50">

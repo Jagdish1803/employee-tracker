@@ -4,8 +4,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { AlertTriangle, Calendar, Users, Download, FileX, Search } from 'lucide-react';
-import { employeeService, logService } from '@/api';
+import { employeeService, logService, assignmentService } from '@/api';
 import { Employee, Log } from '@/types';
+import { AssignmentWithRelations } from '@/api/services/assignment.service';
 import { getCurrentISTDate, getWorkingDaysBetween, formatDate } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +23,7 @@ interface MissingDataRecord {
 
 export default function MissingDataPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [assignments, setAssignments] = useState<AssignmentWithRelations[]>([]);
   const [missingData, setMissingData] = useState<MissingDataRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [dateFrom, setDateFrom] = useState(() => {
@@ -56,8 +58,13 @@ export default function MissingDataPage() {
       const logs = Array.isArray(logsResponse) ? logsResponse as Log[] : [];
       const workingDays = getWorkingDaysBetween(dateFrom, dateTo);
 
-      // Analyze missing data for each employee
-      const missingDataAnalysis: MissingDataRecord[] = employees.map(employee => {
+      // Filter employees to only include those with assignments
+      const employeesWithAssignments = employees.filter(employee =>
+        assignments.some(assignment => assignment.employeeId === employee.id)
+      );
+
+      // Analyze missing data for each employee with assignments
+      const missingDataAnalysis: MissingDataRecord[] = employeesWithAssignments.map(employee => {
         // Get all dates this employee submitted data
         const employeeLogs = logs.filter(log => log.employeeId === employee.id);
         const submittedDates = [...new Set(employeeLogs.map(log =>
@@ -90,7 +97,7 @@ export default function MissingDataPage() {
     } finally {
       setAnalyzing(false);
     }
-  }, [dateFrom, dateTo, employees]);
+  }, [dateFrom, dateTo, employees, assignments]);
 
   // Filter missing data based on search term
   useEffect(() => {
@@ -108,10 +115,15 @@ export default function MissingDataPage() {
 
   const loadEmployees = async () => {
     try {
-      const response = await employeeService.getAll();
-      if (response.data.success) {
-        setEmployees(response.data.data || []);
+      const [employeesResponse, assignmentsData] = await Promise.all([
+        employeeService.getAll(),
+        assignmentService.getAll()
+      ]);
+
+      if (employeesResponse.data.success) {
+        setEmployees(employeesResponse.data.data || []);
       }
+      setAssignments(assignmentsData || []);
     } catch (error) {
       console.error('Error loading employees:', error);
       toast.error('Failed to load employees');
@@ -174,7 +186,10 @@ export default function MissingDataPage() {
   };
 
   const workingDays = getWorkingDaysBetween(dateFrom, dateTo);
-  const totalPossibleSubmissions = employees.length * workingDays.length;
+  const employeesWithAssignments = employees.filter(employee =>
+    assignments.some(assignment => assignment.employeeId === employee.id)
+  );
+  const totalPossibleSubmissions = employeesWithAssignments.length * workingDays.length;
   const totalMissingSubmissions = missingData.reduce((sum, record) => sum + record.totalMissing, 0);
   const overallCompletionRate = totalPossibleSubmissions > 0
     ? Math.round(((totalPossibleSubmissions - totalMissingSubmissions) / totalPossibleSubmissions) * 100)
@@ -286,8 +301,8 @@ export default function MissingDataPage() {
             <div className="flex items-center">
               <Users className="h-8 w-8 text-blue-500" />
               <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">Total Employees</p>
-                <p className="text-2xl font-bold">{employees.length}</p>
+                <p className="text-sm font-medium text-muted-foreground">Employees with Assignments</p>
+                <p className="text-2xl font-bold">{employeesWithAssignments.length}</p>
               </div>
             </div>
           </CardContent>

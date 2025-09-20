@@ -1,6 +1,5 @@
 import {
   Home,
-  BarChart3,
   Users,
   Tag,
   ClipboardList,
@@ -26,12 +25,6 @@ const navigation = [
     name: "Dashboard", 
     href: "/admin", 
     icon: Home,
-    badge: null
-  },
-  { 
-    name: "Daily Chart", 
-    href: "/admin/daily-chart", 
-    icon: BarChart3,
     badge: null
   },
   { 
