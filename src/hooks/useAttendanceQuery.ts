@@ -1,7 +1,7 @@
 // src/hooks/useAttendanceQuery.ts
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { attendanceApi } from '@/lib/api/attendanceApi';
 import type { AttendanceRecord, UploadHistory } from '@/types';
 
@@ -167,13 +167,49 @@ export function useDeleteUploadHistory() {
 
   return useMutation({
     mutationFn: (id: number) => attendanceApi.deleteUploadHistory(id),
+    onMutate: async (deletedId) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: attendanceKeys.uploadHistory() });
+
+      // Snapshot the previous value
+      const previousUploadHistory = queryClient.getQueryData(attendanceKeys.uploadHistory());
+
+      // Optimistically remove the upload history entry
+      queryClient.setQueryData(
+        attendanceKeys.uploadHistory(),
+        (old: UploadHistory[]) => {
+          if (!old) return [];
+          return old.filter((upload: UploadHistory) => upload.id !== deletedId);
+        }
+      );
+
+      return { previousUploadHistory };
+    },
     onSuccess: () => {
       toast.success('Upload history deleted successfully');
+
+      // Force refresh both upload history and attendance records
       queryClient.invalidateQueries({ queryKey: attendanceKeys.uploadHistory() });
+      queryClient.invalidateQueries({ queryKey: attendanceKeys.records() });
+      queryClient.invalidateQueries({ queryKey: attendanceKeys.all });
+
+      // Remove all cached data to force fresh fetch
+      queryClient.removeQueries({ queryKey: attendanceKeys.uploadHistory() });
+      queryClient.removeQueries({ queryKey: attendanceKeys.records() });
     },
-    onError: (error) => {
+    onError: (error, deletedId, context) => {
+      // Rollback optimistic update
+      if (context?.previousUploadHistory) {
+        queryClient.setQueryData(attendanceKeys.uploadHistory(), context.previousUploadHistory);
+      }
+
       console.error('Delete upload history error:', error);
       toast.error('Failed to delete upload history');
+    },
+    onSettled: () => {
+      // Always refetch to ensure consistency
+      queryClient.invalidateQueries({ queryKey: attendanceKeys.uploadHistory() });
+      queryClient.invalidateQueries({ queryKey: attendanceKeys.records() });
     },
   });
 }

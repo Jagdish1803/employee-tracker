@@ -2,7 +2,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import { Toaster } from 'react-hot-toast';
+import { Toaster } from 'sonner';
 import QueryProvider from '@/providers/QueryProvider';
 import { PerformanceMonitor } from '@/components/PerformanceMonitor';
 
@@ -31,15 +31,11 @@ export default function RootLayout({
           <PerformanceMonitor />
           {children}
         </QueryProvider>
-        <Toaster 
+        <Toaster
           position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: '#363636',
-              color: '#fff',
-            },
-          }}
+          duration={4000}
+          richColors
+          theme="dark"
         />
       </body>
     </html>

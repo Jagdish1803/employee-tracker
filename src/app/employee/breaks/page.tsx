@@ -14,7 +14,7 @@ import {
   Calendar,
   Clock
 } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
 import { breakService, BreakSummary } from '@/api';
 

@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useAssignAsset, useReturnAsset } from '@/hooks/use-assets';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 interface AssetAssignmentDialogProps {
   open: boolean;

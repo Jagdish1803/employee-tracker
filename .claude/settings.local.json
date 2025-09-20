@@ -19,7 +19,9 @@
       "Bash(dir:*)",
       "Bash(findstr:*)",
       "Bash(find:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(xargs sed:*)",
+      "Bash(npm uninstall:*)"
     ],
     "deny": [],
     "ask": []

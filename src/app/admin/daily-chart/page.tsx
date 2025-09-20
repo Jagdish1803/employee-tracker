@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Calendar, BarChart3, Users, Clock } from 'lucide-react';
-import { logService, employeeService, tagService } from '@/api';
+import { logService, employeeService, tagService, assignmentService } from '@/api';
 import { Employee, Tag, Log } from '@/types';
+import { AssignmentWithRelations } from '@/api/services/assignment.service';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,6 +21,7 @@ export default function DailyChartPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [, setTags] = useState<Tag[]>([]);
   const [logs, setLogs] = useState<Log[]>([]);
+  const [assignments, setAssignments] = useState<AssignmentWithRelations[]>([]);
   const [loading, setLoading] = useState(true);
 
   const totalPages = Math.ceil(filteredEmployees.length / pageSize);
@@ -46,18 +48,26 @@ export default function DailyChartPage() {
   const loadInitialData = async () => {
     try {
       try {
-        const [employeesResponse, tagsResponse] = await Promise.all([
+        const [employeesResponse, tagsResponse, assignmentsData] = await Promise.all([
           employeeService.getAll(),
-          tagService.getAll()
+          tagService.getAll(),
+          assignmentService.getAll()
         ]);
 
         if (employeesResponse.data.success) {
-          setEmployees(employeesResponse.data.data || []);
-          setFilteredEmployees(employeesResponse.data.data || []);
+          const allEmployees = employeesResponse.data.data || [];
+          setEmployees(allEmployees);
+
+          // Filter employees to only show those with assignments
+          const employeesWithAssignments = allEmployees.filter(employee =>
+            assignmentsData.some(assignment => assignment.employeeId === employee.id)
+          );
+          setFilteredEmployees(employeesWithAssignments);
         }
         if (tagsResponse.data.success) {
           setTags(tagsResponse.data.data || []);
         }
+        setAssignments(assignmentsData || []);
       } catch (error) {
         console.error('API error in loadInitialData:', error);
         // Optionally, show a user-friendly message
@@ -79,19 +89,24 @@ export default function DailyChartPage() {
     }
   }, [selectedDate, loadDailyLogs]);
 
-  // Filter employees based on search term
+  // Filter employees based on search term (only show employees with assignments)
   useEffect(() => {
+    // First, get employees with assignments
+    const employeesWithAssignments = employees.filter(employee =>
+      assignments.some(assignment => assignment.employeeId === employee.id)
+    );
+
     if (!searchTerm.trim()) {
-      setFilteredEmployees(employees);
+      setFilteredEmployees(employeesWithAssignments);
     } else {
-      const filtered = employees.filter(employee => 
+      const filtered = employeesWithAssignments.filter(employee =>
         employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         employee.employeeCode.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredEmployees(filtered);
     }
     setCurrentPage(1); // Reset to first page when filtering
-  }, [searchTerm, employees]);
+  }, [searchTerm, employees, assignments]);
 
   const getEmployeeLogData = (employeeId: number) => {
     const employeeLogs = logs.filter(log => log.employeeId === employeeId);

@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Shield, Lock, KeyRound, AlertTriangle } from 'lucide-react'
-import { toast } from 'react-hot-toast'
+import { toast } from 'sonner'
 
 export function AdminAuth() {
   const { signIn, resetPassword, loading } = useAdminAuth()

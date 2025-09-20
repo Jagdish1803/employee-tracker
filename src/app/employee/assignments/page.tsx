@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { assignmentService } from '@/api';
 import type { AssignmentWithRelations } from '@/api/services/assignment.service';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 
 

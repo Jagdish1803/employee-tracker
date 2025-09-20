@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { attendanceService } from '@/api';
 
 interface AttendanceRecord {

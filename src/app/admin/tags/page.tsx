@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { tagService } from '@/api';
 import { Tag as TagType } from '@/types';

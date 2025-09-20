@@ -7,7 +7,7 @@ import { BarChart3, TrendingUp, Clock, Target, Award, Calendar } from 'lucide-re
 import { Progress } from '@/components/ui/progress';
 import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
 import { flowaceService } from '@/api';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 interface PerformanceData {
   totalMinutes: number;

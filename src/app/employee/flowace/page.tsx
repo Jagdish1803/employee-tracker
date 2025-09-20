@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
 import { flowaceService, FlowaceRecord } from '@/api';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export default function FlowaceActivity() {
   const { employee } = useEmployeeAuth();

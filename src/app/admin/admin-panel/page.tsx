@@ -34,7 +34,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 // Removed pagination imports - using custom buttons instead
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 
 export default function AdminPanelPage() {

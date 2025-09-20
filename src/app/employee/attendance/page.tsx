@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
 import { attendanceService } from '@/api';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { AttendanceCalendar } from '@/components/attendance/AttendanceCalendar';
 
 interface AttendanceRecord {

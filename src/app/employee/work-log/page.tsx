@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Clock, Save, Eye } from 'lucide-react';
 import { assignmentService, logService } from '@/api';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 interface Tag {
   id: number;

@@ -5,7 +5,7 @@ import { User, Session } from '@supabase/supabase-js'
 import { supabase, employeeCodeToEmail, emailToEmployeeCode } from '@/lib/supabase'
 import { employeeService } from '@/api'
 import { Employee } from '@/types'
-import { toast } from 'react-hot-toast'
+import { toast } from 'sonner'
 
 interface SupabaseAuthContextType {
   user: User | null

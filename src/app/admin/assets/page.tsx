@@ -32,7 +32,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import {
   useAssets,
   useCreateAsset,

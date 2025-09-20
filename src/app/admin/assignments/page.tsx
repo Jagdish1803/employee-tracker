@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { toast } from 'react-hot-toast';
-import { Plus, Trash2, ClipboardList, AlertTriangle, CheckCircle, Settings } from 'lucide-react';
+import { toast } from 'sonner';
+import { Plus, Trash2, ClipboardList, AlertTriangle, CheckCircle, Settings, Edit3, Save, X } from 'lucide-react';
 import { assignmentService, employeeService, tagService } from '@/api';
 import { Employee, Tag as TagType } from '@/types';
 import { AssignmentWithRelations } from '@/api/services/assignment.service';
@@ -29,6 +29,8 @@ export default function AssignmentsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [assignmentToDelete, setAssignmentToDelete] = useState<AssignmentWithRelations | null>(null);
+  const [editingEmployee, setEditingEmployee] = useState<number | null>(null);
+  const [editingTags, setEditingTags] = useState<number[]>([]);
 
   // Search and pagination state
   const [searchTerm, setSearchTerm] = useState('');
@@ -129,6 +131,64 @@ export default function AssignmentsPage() {
 
   const closeDialog = () => {
     setIsDialogOpen(false);
+  };
+
+  const handleEditEmployee = (employeeId: number) => {
+    setEditingEmployee(employeeId);
+    const employeeAssignments = assignmentsByEmployee[employeeId] || [];
+    const currentTagIds = employeeAssignments.map(assignment => assignment.tagId);
+    setEditingTags(currentTagIds);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingEmployee(null);
+    setEditingTags([]);
+  };
+
+  const handleToggleEditTag = (tagId: number) => {
+    setEditingTags(prev =>
+      prev.includes(tagId) ? prev.filter(id => id !== tagId) : [...prev, tagId]
+    );
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingEmployee) return;
+
+    try {
+      const currentAssignments = assignmentsByEmployee[editingEmployee] || [];
+      const currentTagIds = currentAssignments.map(assignment => assignment.tagId);
+
+      // Find tags to add and remove
+      const tagsToAdd = editingTags.filter(tagId => !currentTagIds.includes(tagId));
+      const tagsToRemove = currentTagIds.filter(tagId => !editingTags.includes(tagId));
+
+      // Delete assignments for removed tags
+      for (const tagId of tagsToRemove) {
+        const assignmentToRemove = currentAssignments.find(a => a.tagId === tagId);
+        if (assignmentToRemove) {
+          await assignmentService.delete(assignmentToRemove.id);
+        }
+      }
+
+      // Add new assignments for added tags
+      if (tagsToAdd.length > 0) {
+        const bulkData = {
+          employeeIds: [editingEmployee],
+          tagIds: tagsToAdd,
+          isMandatory: false
+        };
+        await assignmentService.createBulk(bulkData);
+      }
+
+      toast.success('Assignments updated successfully');
+      await loadData();
+      setEditingEmployee(null);
+      setEditingTags([]);
+    } catch (error: unknown) {
+      const errorMessage = (error as { response?: { data?: { error?: string } } }).response?.data?.error || 'Failed to update assignments';
+      toast.error(errorMessage);
+      console.error('Error updating assignments:', error);
+    }
   };
 
   // Group assignments by employee
@@ -288,74 +348,150 @@ export default function AssignmentsPage() {
               return (
                 <Card key={employee.id}>
                   <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <div className="h-10 w-10 bg-blue-500 rounded-full flex items-center justify-center mr-3">
-                        <span className="text-sm font-bold text-white">
-                          {employee.name.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                      <div>
-                        <div>{employee.name}</div>
-                        <div className="text-sm text-muted-foreground font-normal">
-                          {employee.employeeCode} • {employeeAssignments.length} assignments
+                    <CardTitle className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <div className="h-10 w-10 bg-blue-500 rounded-full flex items-center justify-center mr-3">
+                          <span className="text-sm font-bold text-white">
+                            {employee.name.charAt(0).toUpperCase()}
+                          </span>
                         </div>
+                        <div>
+                          <div>{employee.name}</div>
+                          <div className="text-sm text-muted-foreground font-normal">
+                            {employee.employeeCode} • {employeeAssignments.length} assignments
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {editingEmployee === employee.id ? (
+                          <>
+                            <Button
+                              onClick={handleSaveEdit}
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              <Save className="h-4 w-4 mr-1" />
+                              Save
+                            </Button>
+                            <Button
+                              onClick={handleCancelEdit}
+                              variant="outline"
+                              size="sm"
+                            >
+                              <X className="h-4 w-4 mr-1" />
+                              Cancel
+                            </Button>
+                          </>
+                        ) : (
+                          <Button
+                            onClick={() => handleEditEmployee(employee.id)}
+                            variant="outline"
+                            size="sm"
+                          >
+                            <Edit3 className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
+                        )}
                       </div>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {employeeAssignments.map((assignment) => (
-                        <div
-                          key={assignment.id}
-                          className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-white"
-                        >
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center space-x-3">
-                              <div className="flex-shrink-0">
-                                <button
-                                  onClick={() => handleToggleMandatory(assignment)}
-                                  className="transition-all duration-200"
-                                >
-                                  {assignment.isMandatory ? (
-                                    <div className="h-8 w-8 bg-red-100 rounded-full flex items-center justify-center">
-                                      <AlertTriangle className="h-4 w-4 text-red-600" />
-                                    </div>
-                                  ) : (
-                                    <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
-                                      <CheckCircle className="h-4 w-4 text-green-600" />
-                                    </div>
-                                  )}
-                                </button>
-                              </div>
-                              <div>
-                                <div className="font-medium">{assignment.tag?.tagName}</div>
-                                <div className="text-sm text-muted-foreground">
-                                  {assignment.tag?.timeMinutes} min/unit • {assignment.isMandatory ? 'Mandatory' : 'Optional'}
+                    {editingEmployee === employee.id ? (
+                      // Edit Mode - Show all available tags for selection
+                      <div className="space-y-4">
+                        <div className="text-sm font-medium text-gray-700 mb-3">
+                          Select tags to assign to {employee.name}:
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {tags.map((tag) => (
+                            <div
+                              key={tag.id}
+                              className={`border rounded-lg p-3 cursor-pointer transition-all hover:shadow-md ${
+                                editingTags.includes(tag.id)
+                                  ? 'border-blue-500 bg-blue-50'
+                                  : 'border-gray-200 bg-white hover:border-gray-300'
+                              }`}
+                              onClick={() => handleToggleEditTag(tag.id)}
+                            >
+                              <div className="flex items-center space-x-3">
+                                <div className="flex-shrink-0">
+                                  <div className={`h-6 w-6 rounded-full flex items-center justify-center ${
+                                    editingTags.includes(tag.id)
+                                      ? 'bg-blue-500'
+                                      : 'bg-gray-200'
+                                  }`}>
+                                    {editingTags.includes(tag.id) && (
+                                      <CheckCircle className="h-4 w-4 text-white" />
+                                    )}
+                                  </div>
+                                </div>
+                                <div>
+                                  <div className="font-medium text-sm">{tag.tagName}</div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {tag.timeMinutes} min/unit
+                                  </div>
                                 </div>
                               </div>
                             </div>
-                            <div className="flex items-center space-x-2">
-                              <Button
-                                onClick={() => handleToggleMandatory(assignment)}
-                                variant="outline"
-                                size="sm"
-                                title={`Mark as ${assignment.isMandatory ? 'optional' : 'mandatory'}`}
-                              >
-                                <Settings className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                onClick={() => handleDelete(assignment)}
-                                variant="outline"
-                                size="sm"
-                                title="Delete assignment"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      // View Mode - Show current assignments
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {employeeAssignments.map((assignment) => (
+                          <div
+                            key={assignment.id}
+                            className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-white"
+                          >
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center space-x-3">
+                                <div className="flex-shrink-0">
+                                  <button
+                                    onClick={() => handleToggleMandatory(assignment)}
+                                    className="transition-all duration-200"
+                                  >
+                                    {assignment.isMandatory ? (
+                                      <div className="h-8 w-8 bg-red-100 rounded-full flex items-center justify-center">
+                                        <AlertTriangle className="h-4 w-4 text-red-600" />
+                                      </div>
+                                    ) : (
+                                      <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
+                                        <CheckCircle className="h-4 w-4 text-green-600" />
+                                      </div>
+                                    )}
+                                  </button>
+                                </div>
+                                <div>
+                                  <div className="font-medium">{assignment.tag?.tagName}</div>
+                                  <div className="text-sm text-muted-foreground">
+                                    {assignment.tag?.timeMinutes} min/unit • {assignment.isMandatory ? 'Mandatory' : 'Optional'}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Button
+                                  onClick={() => handleToggleMandatory(assignment)}
+                                  variant="outline"
+                                  size="sm"
+                                  title={`Mark as ${assignment.isMandatory ? 'optional' : 'mandatory'}`}
+                                >
+                                  <Settings className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  onClick={() => handleDelete(assignment)}
+                                  variant="outline"
+                                  size="sm"
+                                  title="Delete assignment"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               );

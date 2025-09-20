@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { Save, AlertTriangle, CheckCircle } from 'lucide-react';
 import { logService } from '@/api';
 import { Assignment } from '@/types';
