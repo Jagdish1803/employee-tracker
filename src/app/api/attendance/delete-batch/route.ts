@@ -18,45 +18,31 @@ export async function DELETE(request: NextRequest) {
 
     // Start a transaction to ensure data consistency
     await prisma.$transaction(async (tx) => {
-      // First, get the upload history to check if we need to delete attendance records
-      const uploadHistory = await tx.uploadHistory.findMany({
+      // First, check if the batch exists in upload history
+      const uploadHistory = await tx.uploadHistory.findFirst({
         where: { batchId }
       });
 
-      if (uploadHistory.length === 0) {
+      if (!uploadHistory) {
         throw new Error('Batch not found');
       }
 
-      // Delete attendance records that were imported from this batch
-      // Only delete records with source 'SRP_FILE' that match the upload dates
-      for (const upload of uploadHistory) {
-        if (upload.uploadedAt) {
-          const startOfDay = new Date(upload.uploadedAt);
-          startOfDay.setHours(0, 0, 0, 0);
-          
-          const endOfDay = new Date(upload.uploadedAt);
-          endOfDay.setHours(23, 59, 59, 999);
-          
-          await tx.attendance.deleteMany({
-            where: {
-              AND: [
-                { source: 'SRP_FILE' },
-                { createdAt: { gte: startOfDay, lte: endOfDay } }
-              ]
-            }
-          });
-        }
-      }
-      
-      // Delete import logs for this batch
-      await tx.importLog.deleteMany({ 
-        where: { batchId } 
+      console.log(`Deleting all attendance records for batch: ${batchId}`);
+
+      // Delete ALL attendance records that belong to this batch
+      // Use the importBatch field in attendanceRecord table
+      const deletedRecords = await tx.attendanceRecord.deleteMany({
+        where: { importBatch: batchId }
       });
-      
+
+      console.log(`Deleted ${deletedRecords.count} attendance records for batch ${batchId}`);
+
       // Delete upload history for this batch
-      await tx.uploadHistory.deleteMany({ 
-        where: { batchId } 
+      await tx.uploadHistory.deleteMany({
+        where: { batchId }
       });
+
+      console.log(`Deleted upload history for batch ${batchId}`);
     });
 
     console.log('Batch deleted successfully:', batchId);

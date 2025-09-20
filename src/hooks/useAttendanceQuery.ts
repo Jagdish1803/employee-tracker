@@ -125,18 +125,25 @@ export function useDeleteAttendanceRecord() {
       const previousRecords = queryClient.getQueryData(attendanceKeys.records());
       
       // Optimistically remove the record
-      queryClient.setQueriesData(
-        { queryKey: attendanceKeys.records() },
-        (old: AttendanceRecord[]) => old?.filter((record: AttendanceRecord) => record.id !== deletedId) || []
+      queryClient.setQueryData(
+        attendanceKeys.records(),
+        (old: AttendanceRecord[]) => {
+          if (!old) return [];
+          // Convert both IDs to strings for comparison to handle mixed types
+          return old.filter((record: AttendanceRecord) => String(record.id) !== String(deletedId));
+        }
       );
       
       return { previousRecords };
     },
     onSuccess: (_, deletedId) => {
       toast.success('Attendance record deleted successfully');
-      
-      // Remove specific record from cache
+
+      // Remove specific record from cache and ensure fresh data
       queryClient.removeQueries({ queryKey: attendanceKeys.record(deletedId) });
+
+      // Invalidate and refetch the records list to ensure UI is up to date
+      queryClient.invalidateQueries({ queryKey: attendanceKeys.records() });
     },
     onError: (error, deletedId, context) => {
       // Rollback optimistic update
@@ -195,7 +202,11 @@ export function useDeleteBatch() {
       return { previousUploadHistory, previousRecords };
     },
     onSuccess: () => {
-      toast.success('File deleted successfully');
+      toast.success('File and all related records deleted successfully');
+
+      // Ensure both upload history and records are refreshed
+      queryClient.invalidateQueries({ queryKey: attendanceKeys.uploadHistory() });
+      queryClient.invalidateQueries({ queryKey: attendanceKeys.records() });
     },
     onError: (error, batchId, context) => {
       // Rollback optimistic updates

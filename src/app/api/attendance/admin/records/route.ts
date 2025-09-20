@@ -47,35 +47,49 @@ export async function GET(request: NextRequest) {
 
     console.log(`Found ${records.length} attendance records`);
 
+    // Debug: Log a sample record to check break times
+    if (records.length > 0) {
+      console.log('Sample attendance record break times:', {
+        id: records[0].id,
+        employeeName: records[0].employee?.name,
+        breakOutTime: records[0].breakOutTime,
+        breakInTime: records[0].breakInTime,
+        lunchOutTime: records[0].lunchOutTime,
+        lunchInTime: records[0].lunchInTime,
+        checkInTime: records[0].checkInTime,
+        checkOutTime: records[0].checkOutTime
+      });
+    }
+
     // Transform records for frontend
     const transformedRecords = records.map(record => ({
-      id: record.id,
-      employeeId: record.employeeId,
-      employeeName: record.employee?.name || 'Unknown',
-      employeeCode: record.employee?.employeeCode || 'N/A',
-      department: record.employee?.department || 'General',
-      date: record.date.toISOString().split('T')[0],
-      status: record.status,
-      checkInTime: record.checkInTime ?
-        record.checkInTime.toTimeString().slice(0, 5) : null,
-      checkOutTime: record.checkOutTime ?
-        record.checkOutTime.toTimeString().slice(0, 5) : null,
-      lunchOutTime: record.lunchOutTime ?
-        record.lunchOutTime.toTimeString().slice(0, 5) : null,
-      lunchInTime: record.lunchInTime ?
-        record.lunchInTime.toTimeString().slice(0, 5) : null,
-      breakOutTime: record.breakOutTime ?
-        record.breakOutTime.toTimeString().slice(0, 5) : null,
-      breakInTime: record.breakInTime ?
-        record.breakInTime.toTimeString().slice(0, 5) : null,
-      hoursWorked: record.totalHours,
-      remarks: record.exceptionNotes,
-      source: record.importSource,
-      uploadedAt: record.createdAt.toISOString(),
-      shift: record.shift,
-      shiftStart: record.shiftStart,
-      employee: record.employee
-    }));
+        id: record.id,
+        employeeId: record.employeeId,
+        employeeName: record.employee?.name || 'Unknown',
+        employeeCode: record.employee?.employeeCode || 'N/A',
+        department: record.employee?.department || 'General',
+        date: record.date.toISOString().split('T')[0],
+        status: record.status,
+        checkInTime: record.checkInTime ?
+          record.checkInTime.toTimeString().slice(0, 5) : null,
+        checkOutTime: record.checkOutTime ?
+          record.checkOutTime.toTimeString().slice(0, 5) : null,
+        lunchOutTime: record.lunchOutTime ?
+          record.lunchOutTime.toTimeString().slice(0, 5) : null,
+        lunchInTime: record.lunchInTime ?
+          record.lunchInTime.toTimeString().slice(0, 5) : null,
+        breakOutTime: record.breakOutTime ?
+          record.breakOutTime.toTimeString().slice(0, 5) : null,
+        breakInTime: record.breakInTime ?
+          record.breakInTime.toTimeString().slice(0, 5) : null,
+        hoursWorked: record.totalHours,
+        remarks: record.exceptionNotes,
+        source: record.importSource,
+        uploadedAt: record.createdAt.toISOString(),
+        shift: record.shift,
+        shiftStart: record.shiftStart,
+        employee: record.employee
+      }));
 
     return NextResponse.json(transformedRecords);
 

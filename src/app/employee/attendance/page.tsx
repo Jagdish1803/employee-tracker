@@ -6,9 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   CalendarDays,
-  CheckCircle2,
-  AlertCircle,
-  XCircle,
   Download
 } from 'lucide-react';
 import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';

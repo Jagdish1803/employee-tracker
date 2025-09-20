@@ -174,6 +174,25 @@ export async function POST(request: NextRequest) {
           parsedDate = new Date();
         }
 
+        // Helper function to convert HH:MM:SS to decimal hours
+        const timeToDecimalHours = (timeStr: string): number => {
+          if (!timeStr || timeStr.trim() === '' || timeStr === '00:00:00') {
+            return 0;
+          }
+
+          const parts = timeStr.split(':');
+          if (parts.length !== 3) {
+            return 0;
+          }
+
+          const hours = parseInt(parts[0], 10) || 0;
+          const minutes = parseInt(parts[1], 10) || 0;
+          const seconds = parseInt(parts[2], 10) || 0;
+
+          // Convert to decimal hours with high precision
+          return hours + (minutes / 60) + (seconds / 3600);
+        };
+
         // Map CSV columns to database record structure using exact column names
         const rawEmployeeCode = values[getColumnIndex('Member Id')] || '';
         const employeeName = values[getColumnIndex('Member Name')] || '';
@@ -190,15 +209,24 @@ export async function POST(request: NextRequest) {
           memberEmail: values[getColumnIndex('Member Email')]
         });
 
+        // Get raw time values
+        const rawLoggedHours = values[getColumnIndex('Logged Hours')] || '0';
+        const rawActiveHours = values[getColumnIndex('Active Hours')] || '0';
+        const rawIdleHours = values[getColumnIndex('Idle Hours')] || '0';
+        const rawProductiveHours = values[getColumnIndex('Productive Hours')] || '0';
+        const rawUnproductiveHours = values[getColumnIndex('Unproductive Hours')] || '0';
+        const rawMissingHours = values[getColumnIndex('Missing Hours')] || '0';
+        const rawAvailableHours = values[getColumnIndex('Available Hours')] || '0';
+
         // Log time data for validation
         console.log('Time data validation for', employeeName, ':', {
-          loggedHours: values[getColumnIndex('Logged Hours')],
-          activeHours: values[getColumnIndex('Active Hours')],
-          idleHours: values[getColumnIndex('Idle Hours')],
-          missingHours: values[getColumnIndex('Missing Hours')],
-          productiveHours: values[getColumnIndex('Productive Hours')],
-          unproductiveHours: values[getColumnIndex('Unproductive Hours')],
-          availableHours: values[getColumnIndex('Available Hours')],
+          loggedHours: rawLoggedHours,
+          activeHours: rawActiveHours,
+          idleHours: rawIdleHours,
+          missingHours: rawMissingHours,
+          productiveHours: rawProductiveHours,
+          unproductiveHours: rawUnproductiveHours,
+          availableHours: rawAvailableHours,
           workStartTime: values[getColumnIndex('Work Start Time')],
           workEndTime: values[getColumnIndex('Work End Time')],
           activityPercentage: values[getColumnIndex('Activity %')],
@@ -214,19 +242,19 @@ export async function POST(request: NextRequest) {
           workStartTime: values[getColumnIndex('Work Start Time')] || null,
           workEndTime: values[getColumnIndex('Work End Time')] || null,
 
-          // Time tracking data - preserve decimal precision by using Number() instead of parseFloat()
-          loggedHours: Number(values[getColumnIndex('Logged Hours')] || '0') || 0,
-          activeHours: Number(values[getColumnIndex('Active Hours')] || '0') || 0,
-          idleHours: Number(values[getColumnIndex('Idle Hours')] || '0') || 0,
-          classifiedHours: Number(values[getColumnIndex('Classified Hours')] || '0') || 0,
-          unclassifiedHours: Number(values[getColumnIndex('Unclassified Hours')] || '0') || 0,
+          // Time tracking data - convert HH:MM:SS format to decimal hours
+          loggedHours: timeToDecimalHours(rawLoggedHours),
+          activeHours: timeToDecimalHours(rawActiveHours),
+          idleHours: timeToDecimalHours(rawIdleHours),
+          classifiedHours: timeToDecimalHours(values[getColumnIndex('Classified Hours')] || '0'),
+          unclassifiedHours: timeToDecimalHours(values[getColumnIndex('Unclassified Hours')] || '0'),
 
-          // Productivity metrics - preserve decimal precision
-          productiveHours: Number(values[getColumnIndex('Productive Hours')] || '0') || 0,
-          unproductiveHours: Number(values[getColumnIndex('Unproductive Hours')] || '0') || 0,
-          neutralHours: Number(values[getColumnIndex('Neutral Hours')] || '0') || 0,
-          availableHours: Number(values[getColumnIndex('Available Hours')] || '0') || 0,
-          missingHours: Number(values[getColumnIndex('Missing Hours')] || '0') || 0,
+          // Productivity metrics - convert HH:MM:SS format to decimal hours
+          productiveHours: timeToDecimalHours(rawProductiveHours),
+          unproductiveHours: timeToDecimalHours(rawUnproductiveHours),
+          neutralHours: timeToDecimalHours(values[getColumnIndex('Neutral Hours')] || '0'),
+          availableHours: timeToDecimalHours(rawAvailableHours),
+          missingHours: timeToDecimalHours(rawMissingHours),
 
           // Percentages (remove % symbol and preserve precision)
           activityPercentage: Number((values[getColumnIndex('Activity %')] || '0').replace('%', '')) || null,
@@ -293,12 +321,12 @@ export async function POST(request: NextRequest) {
 
         // Save to database - use create instead of upsert for now to avoid constraint issues
         console.log('Saving record to database for:', record.employeeName);
-        console.log('Record data being saved:', {
+        console.log('Record data being saved (converted to decimal hours):', {
           employeeName: record.employeeName,
           employeeCode: record.employeeCode,
-          loggedHours: record.loggedHours,
-          activeHours: record.activeHours,
-          productiveHours: record.productiveHours,
+          loggedHours: `${rawLoggedHours} → ${record.loggedHours}`,
+          activeHours: `${rawActiveHours} → ${record.activeHours}`,
+          productiveHours: `${rawProductiveHours} → ${record.productiveHours}`,
           productivityPercentage: record.productivityPercentage
         });
 

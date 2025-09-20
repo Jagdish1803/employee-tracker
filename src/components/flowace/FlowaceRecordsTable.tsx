@@ -15,8 +15,6 @@ interface FlowaceRecordsTableProps {
   totalRecords: number;
   currentPage: number;
   totalPages: number;
-  startIndex: number;
-  endIndex: number;
   editingRecord: string | null;
   editForm: Partial<FlowaceRecord>;
   saving: boolean;
@@ -37,8 +35,6 @@ export function FlowaceRecordsTable({
   totalRecords,
   currentPage,
   totalPages,
-  startIndex,
-  endIndex,
   editingRecord,
   editForm,
   saving,
@@ -57,7 +53,9 @@ export function FlowaceRecordsTable({
   };
 
   const formatHoursMinutesSeconds = (hours: number) => {
-    if (hours === 0) return '00:00:00';
+    if (hours === undefined || hours === null || hours === 0) {
+      return '00:00:00';
+    }
 
     // Preserve decimal precision - don't round until final display
     const totalSeconds = Math.floor(hours * 3600);
@@ -272,7 +270,7 @@ export function FlowaceRecordsTable({
                               step="0.01"
                               min="0"
                               value={editForm.loggedHours || ''}
-                              onChange={(e) => onFieldChange('loggedHours', parseFloat(e.target.value) || 0)}
+                              onChange={(e) => onFieldChange('loggedHours', Number(e.target.value) || 0)}
                               className="h-8 text-xs"
                               placeholder="Logged hours"
                             />
@@ -281,7 +279,7 @@ export function FlowaceRecordsTable({
                               step="0.01"
                               min="0"
                               value={editForm.activeHours || ''}
-                              onChange={(e) => onFieldChange('activeHours', parseFloat(e.target.value) || 0)}
+                              onChange={(e) => onFieldChange('activeHours', Number(e.target.value) || 0)}
                               className="h-7 text-xs"
                               placeholder="Active hours"
                             />
@@ -335,7 +333,7 @@ export function FlowaceRecordsTable({
                               min="0"
                               max="100"
                               value={editForm.productivityPercentage || ''}
-                              onChange={(e) => onFieldChange('productivityPercentage', parseFloat(e.target.value) || 0)}
+                              onChange={(e) => onFieldChange('productivityPercentage', Number(e.target.value) || 0)}
                               className="h-8 text-xs w-20"
                               placeholder="0.00"
                             />

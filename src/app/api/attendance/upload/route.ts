@@ -177,8 +177,6 @@ function parseSrpFile(content: string, selectedDate?: string) {
       
       // Assign times based on how many we found
       const checkIn = times[0] || '';
-      let lunchOut = '';
-      let lunchIn = '';
       let breakOut = '';
       let breakIn = '';
       let checkOut = '';
@@ -187,33 +185,28 @@ function parseSrpFile(content: string, selectedDate?: string) {
         // Simple case: check-in and check-out only
         checkOut = times[1];
       } else if (times.length === 4) {
-        // Most common case: check-in, break/lunch out, break/lunch in, check-out
-        // Determine if this is lunch or break based on duration
-        const outTime = new Date(`2000-01-01T${times[1]}:00`);
-        const inTime = new Date(`2000-01-01T${times[2]}:00`);
-        const durationMinutes = (inTime.getTime() - outTime.getTime()) / (1000 * 60);
-
-        if (durationMinutes > 45) {
-          // Long break (>45 min) - likely lunch
-          lunchOut = times[1];
-          lunchIn = times[2];
-        } else {
-          // Short break (<=45 min) - likely coffee/tea break
-          breakOut = times[1];
-          breakIn = times[2];
-        }
+        // Most common case: check-in, break-out, break-in, check-out
+        // ALWAYS treat as break (no lunch classification)
+        breakOut = times[1];
+        breakIn = times[2];
         checkOut = times[3];
       } else if (times.length === 3) {
-        // Three times: could be check-in, break-out, check-out (no break-in recorded)
+        // Three times: check-in, break-out, check-out (no break-in recorded)
         breakOut = times[1];
         checkOut = times[2];
       } else if (times.length === 6) {
-        // Six times: check-in, break-out, break-in, lunch-out, lunch-in, check-out
+        // Six times: treat first break as break, second break as additional break
+        // Store both in break fields (combine them or use the longer one)
         breakOut = times[1];
         breakIn = times[2];
-        lunchOut = times[3];
-        lunchIn = times[4];
+        // For 6 times, we'll ignore the "lunch" times and only use break times
         checkOut = times[5];
+      } else if (times.length === 5) {
+        // Five times: check-in, break-out, break-in, another-break-out, check-out
+        // Use the first break times
+        breakOut = times[1];
+        breakIn = times[2];
+        checkOut = times[4];
       }
       
       // Smart status detection if not explicitly found
@@ -231,6 +224,7 @@ function parseSrpFile(content: string, selectedDate?: string) {
       const employeeName = employeeNameParts.join(' ');
       
       console.log(`Processing line ${i + 1}: ${employeeName} - Shift: ${shift} - Hours: ${hoursWorkedValue} - Times: ${times.join(', ')} - Status: ${status}`);
+      console.log(`Break times for ${employeeName}: breakOut=${breakOut}, breakIn=${breakIn}`);
       
       // Map all fields with proper status handling
       const record = {
@@ -241,8 +235,8 @@ function parseSrpFile(content: string, selectedDate?: string) {
         date: attendanceDate,
         status: status === 'PRESENT' ? 'PRESENT' : status === 'ABSENT' ? 'ABSENT' : status === 'P' ? 'PRESENT' : status === 'A' ? 'ABSENT' : status === 'MIS' ? 'PRESENT' : 'ABSENT',
         checkInTime: checkIn.trim() || '',
-        lunchOutTime: lunchOut.trim() || '',
-        lunchInTime: lunchIn.trim() || '',
+        lunchOutTime: '', // Always empty - no lunch times
+        lunchInTime: '', // Always empty - no lunch times
         breakOutTime: breakOut.trim() || '',
         breakInTime: breakIn.trim() || '',
         checkOutTime: checkOut.trim() || '',
@@ -499,10 +493,8 @@ export async function POST(request: NextRequest) {
             status: attendanceStatus,
             checkInTime,
             checkOutTime,
-            lunchOutTime: row.lunchOutTime ?
-              validateTime(String(row.lunchOutTime), String(row.date)) : null,
-            lunchInTime: row.lunchInTime ?
-              validateTime(String(row.lunchInTime), String(row.date)) : null,
+            lunchOutTime: null, // Always null - no lunch times
+            lunchInTime: null, // Always null - no lunch times
             breakOutTime: row.breakOutTime ?
               validateTime(String(row.breakOutTime), String(row.date)) : null,
             breakInTime: row.breakInTime ?
@@ -716,8 +708,8 @@ export async function POST(request: NextRequest) {
                     status: record.status as 'PRESENT' | 'ABSENT' | 'LEAVE_APPROVED' | 'WFH_APPROVED' | 'LATE' | 'HALF_DAY',
                     checkInTime: record.checkInTime,
                     checkOutTime: record.checkOutTime,
-                    lunchOutTime: record.lunchOutTime,
-                    lunchInTime: record.lunchInTime,
+                    lunchOutTime: null, // Always null - no lunch times
+                    lunchInTime: null, // Always null - no lunch times
                     breakOutTime: record.breakOutTime,
                     breakInTime: record.breakInTime,
                     totalHours: record.hoursWorked,
@@ -733,8 +725,8 @@ export async function POST(request: NextRequest) {
                     status: record.status as 'PRESENT' | 'ABSENT' | 'LEAVE_APPROVED' | 'WFH_APPROVED' | 'LATE' | 'HALF_DAY',
                     checkInTime: record.checkInTime,
                     checkOutTime: record.checkOutTime,
-                    lunchOutTime: record.lunchOutTime,
-                    lunchInTime: record.lunchInTime,
+                    lunchOutTime: null, // Always null - no lunch times
+                    lunchInTime: null, // Always null - no lunch times
                     breakOutTime: record.breakOutTime,
                     breakInTime: record.breakInTime,
                     totalHours: record.hoursWorked,

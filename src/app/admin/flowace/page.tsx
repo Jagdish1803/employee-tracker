@@ -344,8 +344,6 @@ export default function AdminFlowacePage() {
             totalRecords={totalRecords}
             currentPage={currentPage}
             totalPages={totalPages}
-            startIndex={startIndex}
-            endIndex={endIndex}
             editingRecord={editingRecord}
             editForm={editForm}
             saving={saving}
