@@ -49,9 +49,12 @@ export default function FlowaceActivity() {
   const fetchFlowaceData = useCallback(async () => {
     try {
       setLoading(true);
+      console.log('Fetching flowace data for employee ID:', employeeId);
       const response = await flowaceService.getByEmployee(employeeId);
+      console.log('Flowace API response:', response);
 
       if (response.success && Array.isArray(response.records)) {
+        console.log('Total flowace records found:', response.records.length);
         // Filter records by current month
         const filteredRecords = response.records.filter(record => {
           const recordDate = new Date(record.date);
@@ -60,8 +63,10 @@ export default function FlowaceActivity() {
             end: new Date(dateRange.to)
           });
         });
+        console.log('Filtered records for date range:', filteredRecords.length);
         setFlowaceRecords(filteredRecords);
       } else {
+        console.log('No valid flowace records found');
         setFlowaceRecords([]);
       }
     } catch (error) {

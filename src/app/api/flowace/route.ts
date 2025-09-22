@@ -38,24 +38,57 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    // Build employee filter
-    const employeeFilter = employeeId ? { employeeId: parseInt(employeeId) } : {};
+    // Build employee filter - if employeeId is provided, also get employee info for name matching
+    let employeeFilter = {};
+    let employeeInfo = null;
+
+    if (employeeId) {
+      const empId = parseInt(employeeId);
+      employeeFilter = { employeeId: empId };
+
+      // Get employee info for fallback name matching
+      try {
+        employeeInfo = await prisma.employee.findUnique({
+          where: { id: empId },
+          select: { name: true, employeeCode: true }
+        });
+        console.log('Employee info for ID', empId, ':', employeeInfo);
+      } catch (error) {
+        console.error('Error fetching employee info:', error);
+      }
+    }
+
+    console.log('Employee filter will be:', employeeFilter);
 
     // Get records from database with filters
+    let whereClause: Record<string, unknown> = {
+      ...(Object.keys(dateFilter).length > 0 && { date: dateFilter }),
+      // Add search filter
+      ...(search && search.trim() && {
+        OR: [
+          { employeeName: { contains: search.trim(), mode: 'insensitive' } },
+          { employeeCode: { contains: search.trim(), mode: 'insensitive' } },
+          { memberEmail: { contains: search.trim(), mode: 'insensitive' } },
+          { teams: { contains: search.trim(), mode: 'insensitive' } }
+        ]
+      })
+    };
+
+    // Add employee filter - try both employeeId and name matching
+    if (employeeId && employeeInfo) {
+      whereClause.OR = [
+        { employeeId: parseInt(employeeId) },
+        { employeeName: { equals: employeeInfo.name, mode: 'insensitive' } },
+        ...(employeeInfo.employeeCode ? [{ employeeCode: employeeInfo.employeeCode }] : [])
+      ];
+    } else if (employeeId) {
+      whereClause = { ...whereClause, ...employeeFilter };
+    }
+
+    console.log('Final where clause:', JSON.stringify(whereClause, null, 2));
+
     const dbRecords = await prisma.flowaceRecord.findMany({
-      where: {
-        ...employeeFilter,
-        ...(Object.keys(dateFilter).length > 0 && { date: dateFilter }),
-        // Add search filter
-        ...(search && search.trim() && {
-          OR: [
-            { employeeName: { contains: search.trim(), mode: 'insensitive' } },
-            { employeeCode: { contains: search.trim(), mode: 'insensitive' } },
-            { memberEmail: { contains: search.trim(), mode: 'insensitive' } },
-            { teams: { contains: search.trim(), mode: 'insensitive' } }
-          ]
-        })
-      },
+      where: whereClause,
       orderBy: [
         { date: 'desc' },
         { employeeName: 'asc' }
@@ -104,7 +137,12 @@ export async function GET(request: NextRequest) {
       employee: record.employee
     }));
 
-    console.log('Flowace GET: Returning', records.length, 'records');
+    console.log('Flowace GET: Found', dbRecords.length, 'raw records from database');
+    console.log('Flowace GET: Returning', records.length, 'processed records');
+    if (employeeId) {
+      console.log('Records with matching employeeId:', dbRecords.filter(r => r.employeeId === parseInt(employeeId)).length);
+      console.log('Records with null employeeId:', dbRecords.filter(r => r.employeeId === null).length);
+    }
 
     return NextResponse.json({
       success: true,
