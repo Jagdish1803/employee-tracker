@@ -15,7 +15,7 @@ import {
   Clock
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
+import { useUser } from '@clerk/nextjs';
 import { breakService, BreakSummary } from '@/api';
 
 interface BreakStatus {
@@ -51,7 +51,7 @@ interface EnhancedBreakSummary {
 }
 
 export default function BreakTracker() {
-  const { employee } = useEmployeeAuth();
+  const { user } = useUser();
   const [currentBreak, setCurrentBreak] = useState<BreakStatus | null>(null);
   const [breakHistory, setBreakHistory] = useState<BreakRecord[]>([]);
   const [summary, setSummary] = useState<EnhancedBreakSummary | null>(null);
@@ -59,7 +59,7 @@ export default function BreakTracker() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
-  const employeeId = employee?.id || 1;
+  const employeeId = 1; // Use default employee ID for now
 
   // Update current time every second for real-time UI updates
   useEffect(() => {

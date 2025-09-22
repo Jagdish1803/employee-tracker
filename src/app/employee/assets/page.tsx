@@ -6,18 +6,18 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Laptop, Search, Calendar, Package, CheckCircle2, AlertCircle } from 'lucide-react';
-import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
+import { useUser } from '@clerk/nextjs';
 import { assetService, AssetAssignment } from '@/api';
 
 export default function MyAssets() {
-  const { employee } = useEmployeeAuth();
+  const { user } = useUser();
   const [assignments, setAssignments] = useState<AssetAssignment[]>([]);
   const [filteredAssignments, setFilteredAssignments] = useState<AssetAssignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'returned'>('all');
 
-  const employeeId = employee?.id || 1;
+  const employeeId = 1; // Use default employee ID for now
 
 
   const filterAssignments = useCallback(() => {

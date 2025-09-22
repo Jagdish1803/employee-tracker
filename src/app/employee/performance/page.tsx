@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BarChart3, TrendingUp, Clock, Target, Award, Calendar } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
-import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
+import { useUser } from '@clerk/nextjs';
 import { flowaceService } from '@/api';
 import { toast } from 'sonner';
 
@@ -28,14 +28,14 @@ interface WeeklyStats {
 }
 
 export default function MyPerformance() {
-  const { employee } = useEmployeeAuth();
+  const { user } = useUser();
   const [performanceData, setPerformanceData] = useState<PerformanceData | null>(null);
   const [weeklyStats, setWeeklyStats] = useState<WeeklyStats | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'quarter'>('month');
   // Removed unused flowaceRecords state
   const [loading, setLoading] = useState(true);
 
-  const employeeId = employee?.id || 1;
+  const employeeId = 1; // Use default employee ID for now
 
   const fetchPerformanceData = useCallback(async () => {
     try {

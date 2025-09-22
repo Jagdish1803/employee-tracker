@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
+import { useUser } from '@clerk/nextjs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,7 +34,7 @@ interface Assignment {
 
 
 export default function WorkLog() {
-  const { employee } = useEmployeeAuth();
+  const { user } = useUser();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [logs, setLogs] = useState<Record<number, number>>({});
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -47,7 +47,7 @@ export default function WorkLog() {
   } | null>(null);
   const [showPreview, setShowPreview] = useState(false);
 
-  const employeeId = employee?.id || 1;
+  const employeeId = 1; // Use default employee ID for now
 
   // Date validation functions
   const getMaxAllowedDate = () => {

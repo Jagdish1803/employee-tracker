@@ -15,7 +15,7 @@ import {
   Activity,
   Timer
 } from 'lucide-react';
-import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
+import { useUser } from '@clerk/nextjs';
 import { attendanceService } from '@/api';
 import { toast } from 'sonner';
 import { AttendanceRecord as APIAttendanceRecord } from '@/types';
@@ -46,7 +46,7 @@ interface AttendanceSummary {
 }
 
 export default function MyAttendance() {
-  const { employee } = useEmployeeAuth();
+  const { user } = useUser();
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [summary, setSummary] = useState<AttendanceSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,7 +55,7 @@ export default function MyAttendance() {
   const [monthFilter, setMonthFilter] = useState<string>(new Date().getMonth().toString());
   const [yearFilter, setYearFilter] = useState<string>(new Date().getFullYear().toString());
 
-  const employeeId = employee?.id || 1;
+  const employeeId = 1; // Use default employee ID for now
 
   const filteredRecords = attendanceRecords.filter(record => {
     const statusMatch = statusFilter === 'all' || record.status === statusFilter;

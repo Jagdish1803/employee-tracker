@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
+import { useUser } from '@clerk/nextjs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,7 +47,7 @@ interface Assignment {
 }
 
 export default function WorkAssignments() {
-  const { employee } = useEmployeeAuth();
+  const { user } = useUser();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [logs, setLogs] = useState<Record<number, number>>({});
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -62,7 +62,7 @@ export default function WorkAssignments() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'mandatory' | 'optional'>('all');
 
-  const employeeId = employee?.id || 1;
+  const employeeId = 1; // Use default employee ID for now
 
   // Filter assignments based on search and type
   const filteredAssignments = assignments.filter(assignment => {

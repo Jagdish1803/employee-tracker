@@ -19,7 +19,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
+import { useUser } from '@clerk/nextjs';
 import { issueService } from '@/api';
 
 interface Issue {
@@ -57,7 +57,7 @@ const issueCategories = [
 ];
 
 export default function RaiseQuery() {
-  const { employee } = useEmployeeAuth();
+  const { user } = useUser();
   const [issues, setIssues] = useState<Issue[]>([]);
   const [filteredIssues, setFilteredIssues] = useState<Issue[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,7 +72,7 @@ export default function RaiseQuery() {
     issueDescription: ''
   });
 
-  const employeeId = employee?.id || 1;
+  const employeeId = 1; // Use default employee ID for now
 
   const fetchIssues = useCallback(async () => {
     try {

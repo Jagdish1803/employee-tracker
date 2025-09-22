@@ -18,7 +18,7 @@ import {
   ArrowRight,
   AlertCircle
 } from 'lucide-react';
-import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
+import { useUser } from '@clerk/nextjs';
 import { attendanceService, issueService, logService, flowaceService } from '@/api';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -52,11 +52,11 @@ interface DashboardStats {
 }
 
 export default function EmployeeDashboard() {
-  const { employee } = useEmployeeAuth();
+  const { user } = useUser();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const employeeId = employee?.id || 1;
+  const employeeId = 1; // Use default employee ID for now
 
   const loadDashboardData = useCallback(async () => {
     try {
@@ -183,11 +183,11 @@ export default function EmployeeDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {employee?.name || 'Employee'}!
+                Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {user?.fullName || 'Employee'}!
               </h1>
               <p className="text-gray-600 mt-1">
-                Employee: <span className="font-medium">{employee?.name}</span> •
-                {employee?.department && <span className="ml-1">{employee.department}</span>}
+                Employee: <span className="font-medium">{user?.fullName}</span> •
+                <span className="ml-1">General Department</span>
               </p>
             </div>
             <div className="text-right">

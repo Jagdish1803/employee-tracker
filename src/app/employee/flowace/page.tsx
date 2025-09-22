@@ -15,7 +15,7 @@ import {
   Timer,
   Filter
 } from 'lucide-react';
-import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
+import { useUser } from '@clerk/nextjs';
 import { flowaceService } from '@/api';
 import { toast } from 'sonner';
 
@@ -56,7 +56,7 @@ interface FlowaceRecord {
 }
 
 export default function FlowaceActivity() {
-  const { employee } = useEmployeeAuth();
+  const { user } = useUser();
   const [flowaceRecords, setFlowaceRecords] = useState<FlowaceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [productivityFilter, setProductivityFilter] = useState<string>('all');
@@ -65,7 +65,7 @@ export default function FlowaceActivity() {
   const [yearFilter, setYearFilter] = useState<string>(new Date().getFullYear().toString());
   const [hoursFilter, setHoursFilter] = useState<string>('all');
 
-  const employeeId = employee?.id || 1;
+  const employeeId = 1; // Use default employee ID for now
 
   const filteredRecords = flowaceRecords.filter(record => {
     const productivityMatch = productivityFilter === 'all' ||
@@ -120,7 +120,7 @@ export default function FlowaceActivity() {
             const allRecordsResponse = await flowaceService.getAll();
 
             if (allRecordsResponse.success && allRecordsResponse.records.length > 0) {
-              toast.info(`No activity data found for ${employee?.name || 'your account'}. There are ${allRecordsResponse.records.length} records for other employees in the system.`, {
+              toast.info(`No activity data found for ${user?.fullName || 'your account'}. There are ${allRecordsResponse.records.length} records for other employees in the system.`, {
                 description: "Your activity data might not have been uploaded yet or may be associated with a different name.",
                 duration: 6000
               });
@@ -146,7 +146,7 @@ export default function FlowaceActivity() {
     } finally {
       setLoading(false);
     }
-  }, [employeeId, employee?.name]);
+  }, [employeeId, user?.fullName]);
 
   useEffect(() => {
     fetchFlowaceData();

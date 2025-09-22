@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, CheckCircle2, XCircle, Calendar } from 'lucide-react';
-import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
+import { useUser } from '@clerk/nextjs';
 import { warningService } from '@/api';
 
 interface Warning {
@@ -21,11 +21,11 @@ interface Warning {
 }
 
 export default function MyWarnings() {
-  const { employee } = useEmployeeAuth();
+  const { user } = useUser();
   const [warnings, setWarnings] = useState<Warning[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const employeeId = employee?.id || 1;
+  const employeeId = 1; // Use default employee ID for now
 
   const fetchWarnings = useCallback(async () => {
     try {
