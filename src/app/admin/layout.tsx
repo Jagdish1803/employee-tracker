@@ -13,7 +13,9 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { SignedIn, SignedOut, RedirectToSignIn } from '@clerk/nextjs';
+import { SignedIn, SignedOut, RedirectToSignIn, useUser } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -76,11 +78,60 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
   );
 }
 
+function AdminGuard({ children }: { children: React.ReactNode }) {
+  const { user, isLoaded } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isLoaded && user) {
+      // Check if user has admin code TIPL1002
+      const isAdmin = user.publicMetadata?.adminCode === 'TIPL1002' ||
+                     user.username === 'TIPL1002' ||
+                     user.emailAddresses[0]?.emailAddress.includes('TIPL1002');
+
+      if (!isAdmin) {
+        // Redirect non-admin users to employee page
+        router.push('/employee');
+      }
+    }
+  }, [user, isLoaded, router]);
+
+  // Show loading while checking admin status
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  // If user is not admin, don't render anything (will redirect)
+  const isAdmin = user?.publicMetadata?.adminCode === 'TIPL1002' ||
+                 user?.username === 'TIPL1002' ||
+                 user?.emailAddresses[0]?.emailAddress.includes('TIPL1002');
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Access Denied</h2>
+          <p className="text-gray-600">You don&apos;t have permission to access the admin panel.</p>
+          <p className="text-gray-600 mt-2">Redirecting to employee dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}
+
 export default function AdminLayout({ children }: AdminLayoutProps) {
   return (
     <>
       <SignedIn>
-        <AdminLayoutContent>{children}</AdminLayoutContent>
+        <AdminGuard>
+          <AdminLayoutContent>{children}</AdminLayoutContent>
+        </AdminGuard>
       </SignedIn>
       <SignedOut>
         <RedirectToSignIn />
