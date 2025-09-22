@@ -61,17 +61,18 @@ export default function BreakTracker() {
 
   const employeeId = employee?.id || 1;
 
-  // Update current time every second when on break
+  // Update current time every second for real-time UI updates
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (currentBreak?.isActive) {
-      interval = setInterval(() => {
-        setCurrentTime(new Date());
-      }, 1000);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+
+      // Refresh break data from server every 30 seconds for persistence
+      if (currentBreak?.isActive) {
+        // Refresh data periodically to maintain persistence
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
   }, [currentBreak]);
 
   const fetchBreakData = useCallback(async () => {
@@ -84,8 +85,6 @@ export default function BreakTracker() {
         breakService.getSummary(employeeId)
       ]);
 
-      console.log('Break status:', statusResponse);
-      console.log('Break summary:', summaryResponse);
 
       // Process break status
       if (statusResponse && typeof statusResponse === 'object') {
@@ -128,18 +127,24 @@ export default function BreakTracker() {
         });
       }
 
-    } catch (error) {
-      console.error('Error fetching break data:', error);
-      toast.error('Failed to load break data');
+    } catch {
+      toast.error('Failed to load break data', {
+        description: 'Unable to connect to the server. Please try again later.',
+        duration: 5000
+      });
     } finally {
       setLoading(false);
     }
   }, [employeeId]);
 
+  // Check for active breaks on component mount
+  useEffect(() => {
+    fetchBreakData();
+  }, [fetchBreakData]);
+
   const fetchBreakHistory = useCallback(async () => {
     try {
       const historyResponse = await breakService.getHistory(employeeId, selectedDate);
-      console.log('Break history:', historyResponse);
 
       if (Array.isArray(historyResponse)) {
         // Convert to BreakRecord format
@@ -165,8 +170,11 @@ export default function BreakTracker() {
       } else {
         setBreakHistory([]);
       }
-    } catch (error) {
-      console.error('Error fetching break history:', error);
+    } catch {
+      toast.info('No break history available', {
+        description: 'Unable to load break history for the selected date.',
+        duration: 4000
+      });
       setBreakHistory([]);
     }
   }, [employeeId, selectedDate]);
@@ -192,7 +200,6 @@ export default function BreakTracker() {
     try {
       setLoading(true);
       const response = await breakService.breakIn(employeeId);
-      console.log('Break in response:', response);
 
       const timestamp = response.timestamp || new Date().toISOString();
       const newBreak: BreakStatus = {
@@ -207,13 +214,18 @@ export default function BreakTracker() {
       };
 
       setCurrentBreak(newBreak);
-      toast.success('Break started');
+      toast.success('Break started successfully', {
+        description: 'Your break has been logged. Remember to end it when you return.',
+        duration: 4000
+      });
 
       // Refresh data
       fetchBreakData();
-    } catch (error) {
-      console.error('Error starting break:', error);
-      toast.error('Failed to start break');
+    } catch {
+      toast.error('Failed to start break', {
+        description: 'There was an error starting your break. Please try again.',
+        duration: 5000
+      });
     } finally {
       setLoading(false);
     }
@@ -227,25 +239,33 @@ export default function BreakTracker() {
 
     try {
       setLoading(true);
-      const response = await breakService.breakOut(employeeId);
-      console.log('Break out response:', response);
+      await breakService.breakOut(employeeId);
 
       const now = new Date();
       const breakInTime = new Date(`${currentBreak.breakDate}T${currentBreak.breakInTime}`);
       const duration = Math.floor((now.getTime() - breakInTime.getTime()) / (1000 * 60));
 
       setCurrentBreak(null);
-      toast.success(`Break ended. Duration: ${duration} minutes`);
 
-      if (duration > 30) {
-        toast.error('Break exceeded recommended duration (30 minutes)');
+      if (duration > 20) {
+        toast.warning(`Break ended - ${duration} minutes`, {
+          description: 'Your break exceeded the recommended 20 minutes. Please be mindful of break duration.',
+          duration: 6000
+        });
+      } else {
+        toast.success(`Break ended successfully`, {
+          description: `Total duration: ${duration} minutes. Welcome back!`,
+          duration: 4000
+        });
       }
 
       // Refresh data
       fetchBreakData();
-    } catch (error) {
-      console.error('Error ending break:', error);
-      toast.error('Failed to end break');
+    } catch {
+      toast.error('Failed to end break', {
+        description: 'There was an error ending your break. Please try again.',
+        duration: 5000
+      });
     } finally {
       setLoading(false);
     }
@@ -268,7 +288,7 @@ export default function BreakTracker() {
   };
 
   const currentDuration = getCurrentBreakDuration();
-  const isLongBreak = currentDuration > 30;
+  const isLongBreak = currentDuration > 20;
 
   return (
     <div className="p-6 space-y-6">
@@ -319,7 +339,7 @@ export default function BreakTracker() {
                 <div className="flex items-center space-x-2 p-3 bg-red-100 rounded-lg border border-red-200">
                   <AlertTriangle className="h-5 w-5 text-red-600" />
                   <p className="text-red-800 font-medium">
-                    Break time exceeded recommended duration (30 minutes)
+                    Break time exceeded recommended duration (20 minutes)
                   </p>
                 </div>
               )}

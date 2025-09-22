@@ -32,7 +32,6 @@ export class BreakService {
 
       return response.data || [];
     } catch (error) {
-      console.error('BreakService.getAll error:', error);
       throw error;
     }
   }
@@ -48,7 +47,6 @@ export class BreakService {
 
       return response.data;
     } catch (error) {
-      console.error('BreakService.create error:', error);
       throw error;
     }
   }
@@ -57,7 +55,6 @@ export class BreakService {
   async breakIn(employeeId: number): Promise<BreakRecord> {
     try {
       const response = await apiClient.post(`${this.basePath}/in`, { employeeId });
-      console.log('Break in API response:', response.data);
 
       if (response.data && response.data.success) {
         // Convert database break record to BreakRecord format
@@ -73,7 +70,6 @@ export class BreakService {
 
       throw new Error('Break in failed: ' + (response.data?.error || 'Unknown error'));
     } catch (error) {
-      console.error('BreakService.breakIn error:', error);
       throw error;
     }
   }
@@ -82,7 +78,6 @@ export class BreakService {
   async breakOut(employeeId: number): Promise<BreakRecord> {
     try {
       const response = await apiClient.post(`${this.basePath}/out`, { employeeId });
-      console.log('Break out API response:', response.data);
 
       if (response.data && response.data.success) {
         // Convert database break record to BreakRecord format
@@ -98,7 +93,6 @@ export class BreakService {
 
       throw new Error('Break out failed: ' + (response.data?.error || 'Unknown error'));
     } catch (error) {
-      console.error('BreakService.breakOut error:', error);
       throw error;
     }
   }
@@ -115,7 +109,6 @@ export class BreakService {
 
       return response.data;
     } catch (error) {
-      console.error('BreakService.getStatus error:', error);
       throw error;
     }
   }
@@ -140,7 +133,6 @@ export class BreakService {
 
       return response.data || [];
     } catch (error) {
-      console.error('BreakService.getHistory error:', error);
       throw error;
     }
   }
@@ -156,7 +148,6 @@ export class BreakService {
 
       return response.data;
     } catch (error) {
-      console.error('BreakService.getSummary error:', error);
       throw error;
     }
   }
@@ -172,7 +163,6 @@ export class BreakService {
 
       return response.data;
     } catch (error) {
-      console.error('BreakService.getWarning error:', error);
       throw error;
     }
   }

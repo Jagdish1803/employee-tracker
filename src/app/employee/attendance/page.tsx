@@ -17,7 +17,8 @@ import {
   Home,
   Coffee,
   TrendingUp,
-  Calendar
+  Calendar,
+  Filter
 } from 'lucide-react';
 import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
 import { attendanceService } from '@/api';
@@ -58,6 +59,8 @@ export default function MyAttendance() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<string>('');
+  const [monthFilter, setMonthFilter] = useState<string>(new Date().getMonth().toString());
+  const [yearFilter, setYearFilter] = useState<string>(new Date().getFullYear().toString());
 
   const employeeId = employee?.id || 1;
 
@@ -83,8 +86,6 @@ export default function MyAttendance() {
         attendanceService.getEmployeeSummary(employeeId, month.toString(), year.toString())
       ]);
 
-      console.log('Attendance response:', attendanceResponse);
-      console.log('Summary response:', summaryResponse);
 
       // Set attendance records
       if (Array.isArray(attendanceResponse)) {
@@ -173,6 +174,23 @@ export default function MyAttendance() {
     }
   };
 
+  const getStatusVariant = (status: AttendanceRecord['status']) => {
+    switch (status) {
+      case 'PRESENT':
+      case 'LEAVE_APPROVED':
+        return 'default';
+      case 'LATE':
+        return 'secondary';
+      case 'ABSENT':
+        return 'destructive';
+      case 'HALF_DAY':
+        return 'outline';
+      case 'WFH_APPROVED':
+        return 'default';
+      default:
+        return 'outline';
+    }
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -348,40 +366,94 @@ export default function MyAttendance() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
-              <div className="flex-1">
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Filter by Status</label>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="All statuses" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="PRESENT">Present</SelectItem>
-                    <SelectItem value="ABSENT">Absent</SelectItem>
-                    <SelectItem value="LATE">Late</SelectItem>
-                    <SelectItem value="HALF_DAY">Half Day</SelectItem>
-                    <SelectItem value="LEAVE_APPROVED">Leave Approved</SelectItem>
-                    <SelectItem value="WFH_APPROVED">Work From Home</SelectItem>
-                  </SelectContent>
-                </Select>
+            {/* Enhanced Filters */}
+            <div className="space-y-4 mb-6 p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-2 mb-3">
+                <Filter className="h-4 w-4 text-gray-600" />
+                <span className="text-sm font-medium text-gray-700">Filters</span>
               </div>
-              <div className="flex-1">
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Filter by Date</label>
-                <Input
-                  type="date"
-                  value={dateFilter}
-                  onChange={(e) => setDateFilter(e.target.value)}
-                  className="w-full"
-                />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-1 block">Status</label>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="All statuses" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Statuses</SelectItem>
+                      <SelectItem value="PRESENT">Present</SelectItem>
+                      <SelectItem value="ABSENT">Absent</SelectItem>
+                      <SelectItem value="LATE">Late</SelectItem>
+                      <SelectItem value="HALF_DAY">Half Day</SelectItem>
+                      <SelectItem value="LEAVE_APPROVED">Leave Approved</SelectItem>
+                      <SelectItem value="WFH_APPROVED">Work From Home</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-1 block">Month</label>
+                  <Select value={monthFilter} onValueChange={setMonthFilter}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select month" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({length: 12}, (_, i) => (
+                        <SelectItem key={i} value={i.toString()}>
+                          {new Date(0, i).toLocaleDateString('en-US', { month: 'long' })}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-1 block">Year</label>
+                  <Select value={yearFilter} onValueChange={setYearFilter}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({length: 5}, (_, i) => {
+                        const year = new Date().getFullYear() - i;
+                        return (
+                          <SelectItem key={year} value={year.toString()}>
+                            {year}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-1 block">Specific Date</label>
+                  <Input
+                    type="date"
+                    value={dateFilter}
+                    onChange={(e) => setDateFilter(e.target.value)}
+                    className="w-full"
+                    placeholder="Select date"
+                  />
+                </div>
               </div>
-              {(statusFilter !== 'all' || dateFilter) && (
-                <div className="flex items-end">
+
+              {(statusFilter !== 'all' || dateFilter || monthFilter !== new Date().getMonth().toString() || yearFilter !== new Date().getFullYear().toString()) && (
+                <div className="flex items-center justify-between pt-2 border-t">
+                  <div className="text-xs text-gray-600">
+                    {filteredRecords.length} record{filteredRecords.length !== 1 ? 's' : ''} found
+                  </div>
                   <Button
                     variant="outline"
-                    onClick={() => { setStatusFilter('all'); setDateFilter(''); }}
-                    className="whitespace-nowrap"
+                    size="sm"
+                    onClick={() => {
+                      setStatusFilter('all');
+                      setDateFilter('');
+                      setMonthFilter(new Date().getMonth().toString());
+                      setYearFilter(new Date().getFullYear().toString());
+                    }}
+                    className="text-xs"
                   >
                     Clear Filters
                   </Button>
@@ -409,70 +481,79 @@ export default function MyAttendance() {
                     <p className="text-sm text-gray-500 mt-1">Records will appear here once attendance is tracked</p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    {filteredRecords.slice(0, 8).map((record, index) => (
-                  <div key={record.id} className="p-4 hover:bg-gray-50 transition-colors duration-200">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <div className="text-lg font-semibold text-gray-900">
-                            {new Date(record.date).toLocaleDateString('en-US', {
-                              weekday: 'short',
-                              month: 'short',
-                              day: 'numeric'
-                            })}
-                          </div>
-                          <div className="flex items-center space-x-2 px-3 py-1 bg-gray-100 rounded-full">
-                            {getStatusIcon(record.status)}
-                            <span className="text-sm font-medium text-gray-900">
-                              {formatStatus(record.status)}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div className="flex items-center space-x-2">
-                            <Clock className="h-4 w-4 text-gray-700" />
-                            <span className="text-muted-foreground">Check In:</span>
-                            <span className="font-medium text-gray-700">
-                              {record.checkInTime || '--:--'}
-                            </span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Clock className="h-4 w-4 text-gray-800" />
-                            <span className="text-muted-foreground">Check Out:</span>
-                            <span className="font-medium text-gray-800">
-                              {record.checkOutTime || '--:--'}
-                            </span>
-                          </div>
-                        </div>
-
-                        {record.hoursWorked && (
-                          <div className="mt-2 flex items-center space-x-2 text-sm">
-                            <TrendingUp className="h-4 w-4 text-gray-700" />
-                            <span className="text-muted-foreground">Hours Worked:</span>
-                            <span className="font-medium text-gray-700">{record.hoursWorked?.toFixed(1) || '0.0'}h</span>
-                          </div>
-                        )}
-
-                        {record.remarks && (
-                          <div className="mt-2 p-2 bg-gray-50 rounded-md">
-                            <p className="text-xs text-blue-700 italic">
-                              Note: {record.remarks}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex flex-col items-end space-y-2">
-                        <div className="text-sm font-medium text-gray-900 bg-gray-100 px-2 py-1 rounded">
-                          #{index + 1}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="border-b bg-gray-50">
+                          <th className="text-left p-3 font-medium text-gray-700">#</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Date</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Status</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Check In</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Check Out</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Hours</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Remarks</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredRecords.map((record, index) => (
+                          <tr key={record.id} className="border-b hover:bg-gray-50 transition-colors">
+                            <td className="p-3 text-sm text-gray-600">
+                              {index + 1}
+                            </td>
+                            <td className="p-3">
+                              <div className="text-sm font-medium text-gray-900">
+                                {new Date(record.date).toLocaleDateString('en-US', {
+                                  weekday: 'short',
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric'
+                                })}
+                              </div>
+                            </td>
+                            <td className="p-3">
+                              <div className="flex items-center space-x-2">
+                                {getStatusIcon(record.status)}
+                                <Badge variant={getStatusVariant(record.status)} className="text-xs">
+                                  {formatStatus(record.status)}
+                                </Badge>
+                              </div>
+                            </td>
+                            <td className="p-3 text-sm">
+                              <div className="flex items-center space-x-1">
+                                <Clock className="h-3 w-3 text-gray-500" />
+                                <span className="font-medium">
+                                  {record.checkInTime || '--:--'}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="p-3 text-sm">
+                              <div className="flex items-center space-x-1">
+                                <Clock className="h-3 w-3 text-gray-500" />
+                                <span className="font-medium">
+                                  {record.checkOutTime || '--:--'}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="p-3 text-sm">
+                              <span className="font-medium text-gray-700">
+                                {record.hoursWorked?.toFixed(1) || '0.0'}h
+                              </span>
+                            </td>
+                            <td className="p-3 text-sm">
+                              {record.remarks ? (
+                                <div className="max-w-32 truncate" title={record.remarks}>
+                                  <span className="text-blue-700 italic text-xs">
+                                    {record.remarks}
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className="text-gray-400">--</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </TabsContent>

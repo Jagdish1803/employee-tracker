@@ -33,6 +33,9 @@ export default function FlowaceActivity() {
   });
   const [productivityFilter, setProductivityFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<string>('');
+  const [monthFilter, setMonthFilter] = useState<string>(new Date().getMonth().toString());
+  const [yearFilter, setYearFilter] = useState<string>(new Date().getFullYear().toString());
+  const [hoursFilter, setHoursFilter] = useState<string>('all');
 
   const employeeId = employee?.id || 1;
 
@@ -43,7 +46,13 @@ export default function FlowaceActivity() {
       (productivityFilter === 'low' && (record.productivityPercentage || 0) < 60);
 
     const dateMatch = !dateFilter || record.date.includes(dateFilter);
-    return productivityMatch && dateMatch;
+
+    const hoursMatch = hoursFilter === 'all' ||
+      (hoursFilter === 'full' && (record.loggedHours || 0) >= 7) ||
+      (hoursFilter === 'partial' && (record.loggedHours || 0) >= 4 && (record.loggedHours || 0) < 7) ||
+      (hoursFilter === 'minimal' && (record.loggedHours || 0) < 4);
+
+    return productivityMatch && dateMatch && hoursMatch;
   });
 
   const fetchFlowaceData = useCallback(async () => {
@@ -100,7 +109,7 @@ export default function FlowaceActivity() {
     } finally {
       setLoading(false);
     }
-  }, [employeeId, dateRange]);
+  }, [employeeId, dateRange, employee?.name]);
 
   useEffect(() => {
     fetchFlowaceData();
@@ -346,45 +355,211 @@ export default function FlowaceActivity() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {/* Filter Controls */}
-            <div className="flex flex-wrap gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center space-x-2">
-                <label htmlFor="productivity-filter" className="text-sm font-medium text-gray-700">
-                  Productivity:
-                </label>
-                <Select value={productivityFilter} onValueChange={setProductivityFilter}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue placeholder="All" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="high">High (≥80%)</SelectItem>
-                    <SelectItem value="medium">Medium (60-79%)</SelectItem>
-                    <SelectItem value="low">Low (&lt;60%)</SelectItem>
-                  </SelectContent>
-                </Select>
+            {/* Enhanced Filter Controls */}
+            <div className="space-y-4 mb-6 p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-2 mb-3">
+                <Activity className="h-4 w-4 text-gray-600" />
+                <span className="text-sm font-medium text-gray-700">Filters</span>
               </div>
 
-              <div className="flex items-center space-x-2">
-                <label htmlFor="date-filter" className="text-sm font-medium text-gray-700">
-                  Date:
-                </label>
-                <Input
-                  id="date-filter"
-                  type="date"
-                  value={dateFilter}
-                  onChange={(e) => setDateFilter(e.target.value)}
-                  className="w-40"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-1 block">Productivity</label>
+                  <Select value={productivityFilter} onValueChange={setProductivityFilter}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="All levels" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Levels</SelectItem>
+                      <SelectItem value="high">High (≥80%)</SelectItem>
+                      <SelectItem value="medium">Medium (60-79%)</SelectItem>
+                      <SelectItem value="low">Low (&lt;60%)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-1 block">Hours Worked</label>
+                  <Select value={hoursFilter} onValueChange={setHoursFilter}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="All hours" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Hours</SelectItem>
+                      <SelectItem value="full">Full Day (≥7h)</SelectItem>
+                      <SelectItem value="partial">Partial Day (4-7h)</SelectItem>
+                      <SelectItem value="minimal">Minimal (&lt;4h)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-1 block">Month</label>
+                  <Select value={monthFilter} onValueChange={setMonthFilter}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select month" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({length: 12}, (_, i) => (
+                        <SelectItem key={i} value={i.toString()}>
+                          {new Date(0, i).toLocaleDateString('en-US', { month: 'long' })}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-1 block">Year</label>
+                  <Select value={yearFilter} onValueChange={setYearFilter}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({length: 5}, (_, i) => {
+                        const year = new Date().getFullYear() - i;
+                        return (
+                          <SelectItem key={year} value={year.toString()}>
+                            {year}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-1 block">Specific Date</label>
+                  <Input
+                    type="date"
+                    value={dateFilter}
+                    onChange={(e) => setDateFilter(e.target.value)}
+                    className="w-full"
+                    placeholder="Select date"
+                  />
+                </div>
               </div>
+
+              {(productivityFilter !== 'all' || hoursFilter !== 'all' || dateFilter || monthFilter !== new Date().getMonth().toString() || yearFilter !== new Date().getFullYear().toString()) && (
+                <div className="flex items-center justify-between pt-2 border-t">
+                  <div className="text-xs text-gray-600">
+                    {filteredRecords.length} record{filteredRecords.length !== 1 ? 's' : ''} found
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setProductivityFilter('all');
+                      setHoursFilter('all');
+                      setDateFilter('');
+                      setMonthFilter(new Date().getMonth().toString());
+                      setYearFilter(new Date().getFullYear().toString());
+                    }}
+                    className="text-xs"
+                  >
+                    Clear Filters
+                  </Button>
+                </div>
+              )}
             </div>
 
-            <Tabs defaultValue="details" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+            <Tabs defaultValue="table" className="w-full">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="table">Table View</TabsTrigger>
                 <TabsTrigger value="details">Details</TabsTrigger>
                 <TabsTrigger value="timeline">Timeline</TabsTrigger>
                 <TabsTrigger value="metrics">Metrics</TabsTrigger>
               </TabsList>
+
+              <TabsContent value="table" className="mt-6">
+                {flowaceRecords.length === 0 ? (
+                  <div className="text-center py-12">
+                    <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground text-lg font-medium">No activity data</p>
+                    <p className="text-sm text-muted-foreground mt-1">Activity tracking data will appear here</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="border-b bg-gray-50">
+                          <th className="text-left p-3 font-medium text-gray-700">#</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Date</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Work Hours</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Active Hours</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Productive Hours</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Productivity %</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Activity %</th>
+                          <th className="text-left p-3 font-medium text-gray-700">Team</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredRecords.map((record, index) => (
+                          <tr key={record.id || index} className="border-b hover:bg-gray-50 transition-colors">
+                            <td className="p-3 text-sm text-gray-600">
+                              {index + 1}
+                            </td>
+                            <td className="p-3">
+                              <div className="text-sm font-medium text-gray-900">
+                                {format(new Date(record.date), 'MMM d, yyyy')}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {format(new Date(record.date), 'EEEE')}
+                              </div>
+                            </td>
+                            <td className="p-3 text-sm">
+                              <span className="font-medium">
+                                {record.workStartTime} - {record.workEndTime}
+                              </span>
+                              <div className="text-xs text-gray-500">
+                                {record.loggedHours?.toFixed(1) || '0.0'}h logged
+                              </div>
+                            </td>
+                            <td className="p-3 text-sm">
+                              <span className="font-medium text-blue-600">
+                                {record.activeHours?.toFixed(1) || '0.0'}h
+                              </span>
+                            </td>
+                            <td className="p-3 text-sm">
+                              <span className="font-medium text-green-600">
+                                {record.productiveHours?.toFixed(1) || '0.0'}h
+                              </span>
+                            </td>
+                            <td className="p-3">
+                              <div className="flex items-center space-x-2">
+                                <div className={`w-2 h-2 rounded-full ${
+                                  (record.productivityPercentage ?? 0) >= 80 ? 'bg-green-500' :
+                                  (record.productivityPercentage ?? 0) >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                                }`} />
+                                <span className="font-medium">
+                                  {record.productivityPercentage?.toFixed(1) || '0.0'}%
+                                </span>
+                              </div>
+                            </td>
+                            <td className="p-3 text-sm">
+                              <span className="font-medium">
+                                {record.activityPercentage?.toFixed(1) || '0.0'}%
+                              </span>
+                            </td>
+                            <td className="p-3 text-sm">
+                              <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                                {record.teams || 'N/A'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {filteredRecords.length > 10 && (
+                      <div className="mt-4 text-center">
+                        <p className="text-sm text-gray-500">
+                          Showing {Math.min(filteredRecords.length, 50)} of {filteredRecords.length} records
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </TabsContent>
 
               <TabsContent value="details" className="mt-6">
                 {loading ? (

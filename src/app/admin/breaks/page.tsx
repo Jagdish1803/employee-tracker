@@ -19,6 +19,7 @@ export default function BreaksPage() {
   const [employeeFilter, setEmployeeFilter] = useState<string>('all');
   const [warningConfirmOpen, setWarningConfirmOpen] = useState(false);
   const [breakToWarn, setBreakToWarn] = useState<Break | null>(null);
+  const [autoRefresh, setAutoRefresh] = useState(true);
 
   // React Query hooks
   const { data: employees = [], isLoading: loadingEmployees } = useEmployees();
@@ -26,11 +27,23 @@ export default function BreaksPage() {
     breaks,
     activeBreaks,
     todayBreaks,
-    isLoading: loadingBreaks
+    isLoading: loadingBreaks,
+    refetch
   } = useBreakManagement({
     date: selectedDate,
     employeeId: employeeFilter !== 'all' ? parseInt(employeeFilter) : undefined
   });
+
+  // Auto-refresh every 30 seconds for real-time updates
+  React.useEffect(() => {
+    if (!autoRefresh) return;
+
+    const interval = setInterval(() => {
+      if (refetch) refetch();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [autoRefresh, refetch]);
 
   const handleWarnEmployee = (breakRecord: Break) => {
     setBreakToWarn(breakRecord);
@@ -74,8 +87,8 @@ export default function BreaksPage() {
     const duration = new Date(breakRecord.breakOutTime).getTime() - new Date(breakRecord.breakInTime!).getTime();
     const minutes = Math.floor(duration / (1000 * 60));
     
-    if (minutes > 60) return 'excessive';
-    if (minutes > 30) return 'long';
+    if (minutes > 20) return 'excessive';
+    if (minutes > 15) return 'long';
     return 'normal';
   };
 
@@ -107,6 +120,22 @@ export default function BreaksPage() {
             Break Management
           </h1>
           <p className="text-muted-foreground mt-1">Monitor and manage employee break times</p>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setAutoRefresh(!autoRefresh)}
+            className={autoRefresh ? 'bg-green-50 text-green-700 border-green-200' : ''}
+          >
+            <Clock className={`h-4 w-4 mr-1 ${autoRefresh ? 'animate-pulse' : ''}`} />
+            Auto-refresh {autoRefresh ? 'ON' : 'OFF'}
+          </Button>
+          {refetch && (
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
+              Refresh Now
+            </Button>
+          )}
         </div>
       </div>
 
@@ -186,6 +215,48 @@ export default function BreaksPage() {
         </Card>
       </div>
 
+      {/* Real-time Status */}
+      {activeBreaksCount > 0 && (
+        <Card className="mb-6 border-blue-200 bg-blue-50">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2 text-blue-800">
+              <Clock className="h-5 w-5 animate-pulse" />
+              <span>Live Break Status</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <p className="text-blue-700 font-medium">
+                {activeBreaksCount} employee{activeBreaksCount > 1 ? 's are' : ' is'} currently on break
+              </p>
+              <div className="grid gap-2">
+                {activeBreaks.slice(0, 3).map((breakRecord: Break) => {
+                  const employee = employees.find(emp => emp.id === breakRecord.employeeId);
+                  const startTime = new Date(breakRecord.breakInTime!);
+                  const duration = Math.floor((new Date().getTime() - startTime.getTime()) / (1000 * 60));
+                  const isLongBreak = duration > 20;
+
+                  return (
+                    <div key={breakRecord.id} className="flex items-center justify-between p-2 bg-white rounded border">
+                      <div className="flex items-center space-x-2">
+                        <div className={`w-2 h-2 rounded-full ${isLongBreak ? 'bg-red-500 animate-pulse' : 'bg-blue-500'}`} />
+                        <span className="text-sm font-medium">{employee?.name}</span>
+                      </div>
+                      <span className={`text-xs px-2 py-1 rounded ${isLongBreak ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
+                        {duration}m
+                      </span>
+                    </div>
+                  );
+                })}
+                {activeBreaksCount > 3 && (
+                  <p className="text-xs text-blue-600">+{activeBreaksCount - 3} more employees on break</p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Breaks List */}
       {breaks.length === 0 ? (
         <Card>
@@ -193,14 +264,22 @@ export default function BreaksPage() {
             <Coffee className="mx-auto h-12 w-12 text-muted-foreground" />
             <h3 className="mt-4 text-lg font-medium">No breaks found</h3>
             <p className="mt-2 text-sm text-muted-foreground">
-              No break records found for the selected date and filters.
+              {selectedDate === getCurrentISTDate() ?
+                'No employees have taken breaks today yet.' :
+                'No break records found for the selected date and filters.'
+              }
             </p>
           </CardContent>
         </Card>
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>Break Records</CardTitle>
+            <CardTitle className="flex items-center justify-between">
+              <span>Break Records</span>
+              <div className="text-sm text-muted-foreground">
+                {breaks.length} record{breaks.length > 1 ? 's' : ''} found
+              </div>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -233,6 +312,7 @@ export default function BreaksPage() {
                         <div className="text-sm font-medium">
                           {formatTime(new Date(breakRecord.breakInTime!).toTimeString().slice(0,5))}
                           {breakRecord.breakOutTime && ` - ${formatTime(new Date(breakRecord.breakOutTime).toTimeString().slice(0,5))}`}
+                          {!breakRecord.breakOutTime && <span className="text-blue-600 ml-2">(Active)</span>}
                         </div>
                         <div className="text-sm text-muted-foreground">
                           Duration: {duration}
@@ -243,7 +323,7 @@ export default function BreaksPage() {
                         {status.charAt(0).toUpperCase() + status.slice(1)}
                       </span>
                       
-                      {status === 'excessive' && (
+                      {(status === 'excessive' || status === 'long') && (
                         <Button
                           onClick={() => handleWarnEmployee(breakRecord)}
                           variant="outline"

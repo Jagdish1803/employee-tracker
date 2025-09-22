@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
+import { useBreakStatus } from '@/hooks/useBreakStatus';
 import {
   Home,
   Coffee,
@@ -77,6 +78,7 @@ const navigation = [
 export default function EmployeeSidebar({ isCollapsed }: EmployeeSidebarProps) {
   const pathname = usePathname();
   const { employee, logout } = useEmployeeAuth();
+  const breakStatus = useBreakStatus(employee?.id);
 
   const handleSignOut = () => {
     logout();
@@ -145,6 +147,42 @@ export default function EmployeeSidebar({ isCollapsed }: EmployeeSidebarProps) {
             ))}
           </div>
         </div>
+
+        {/* Break Status Indicator */}
+        {breakStatus.isOnBreak && (
+          <div className="mx-2 mt-4">
+            <div className={`rounded-lg p-3 ${breakStatus.isLongBreak ? 'bg-red-100 border border-red-200' : 'bg-blue-100 border border-blue-200'}`}>
+              {!isCollapsed ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${breakStatus.isLongBreak ? 'bg-red-500 animate-pulse' : 'bg-blue-500 animate-pulse'}`} />
+                    <span className={`text-sm font-medium ${breakStatus.isLongBreak ? 'text-red-800' : 'text-blue-800'}`}>
+                      On Break
+                    </span>
+                  </div>
+                  <div className={`text-xs ${breakStatus.isLongBreak ? 'text-red-700' : 'text-blue-700'}`}>
+                    Duration: {breakStatus.duration}m
+                    {breakStatus.isLongBreak && (
+                      <div className="mt-1 text-red-600 font-medium">
+                        Exceeds 20 min limit!
+                      </div>
+                    )}
+                  </div>
+                  <Link
+                    href="/employee/breaks"
+                    className={`text-xs underline ${breakStatus.isLongBreak ? 'text-red-700 hover:text-red-800' : 'text-blue-700 hover:text-blue-800'}`}
+                  >
+                    End Break
+                  </Link>
+                </div>
+              ) : (
+                <div className="flex justify-center">
+                  <Coffee className={`size-4 ${breakStatus.isLongBreak ? 'text-red-600 animate-pulse' : 'text-blue-600 animate-pulse'}`} />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Footer - Fixed */}
