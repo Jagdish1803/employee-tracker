@@ -74,14 +74,68 @@ export async function GET(request: NextRequest) {
       })
     };
 
-    // Add employee filter - try both employeeId and name matching
+    // Add employee filter - prioritize name matching over ID
     if (employeeId && employeeInfo) {
+      console.log('Matching flowace records for employee:', employeeInfo);
+
+      // Create flexible name matching patterns
+      const employeeName = employeeInfo.name;
+      const nameVariations = [
+        employeeName, // Exact match
+        employeeName.toLowerCase().trim(), // Case insensitive
+        employeeName.split(' ')[0], // First name only
+      ];
+
+      // Special mappings for known name variations from your flowace data
+      const nameMapping: Record<string, string[]> = {
+        'narayan': ['naryan yadav', 'narayan yadav'],
+        'nandini': ['nandini k', 'nandini'],
+        'divya': ['divya gatkal', 'divya  gatkal'],
+        'prarthana': ['prarthana g', 'prarthana'],
+        'yash': ['yash pawar', 'yash kalambe'],
+        'neha': ['neha yadav'],
+        'kritika': ['kritika soni'],
+        'pratik': ['pratik pawar'],
+        'radha': ['radha thevar'],
+        'karuna': ['karuna mhatre'],
+        'shahnawaz': ['shahnawaz zombalkar'],
+        'asmita': ['asmita shelar'],
+        'magesh': ['magesh konar'],
+        'shreedhar': ['shreedhar parab'],
+        'kunal': ['kunal karotiya'],
+        'hrithik': ['hrithik kadam'],
+        'faizan': ['faizan mansuri'],
+        'shrusti': ['shrusti lad'],
+        'ronit': ['ronit sakpal'],
+        'bilal': ['bilal shaikh'],
+        'sneha': ['sneha dudhe'],
+        'maahi': ['maahi chaugule'],
+        'kashish': ['kashish dhakoliya'],
+        'madan': ['madan devendra'],
+        'aishwarya': ['aishwarya nadar']
+      };
+
+      if (nameMapping[employeeName.toLowerCase()]) {
+        nameVariations.push(...nameMapping[employeeName.toLowerCase()]);
+      }
+
+      console.log('Trying name variations:', nameVariations);
+
+      // Build OR condition for name matching
       whereClause.OR = [
+        // Try exact employeeId match first
         { employeeId: parseInt(employeeId) },
-        { employeeName: { equals: employeeInfo.name, mode: 'insensitive' } },
+        // Then try all name variations
+        ...nameVariations.map(name => ({
+          employeeName: { equals: name, mode: 'insensitive' }
+        })),
+        // Also try partial matches
+        { employeeName: { contains: employeeName, mode: 'insensitive' } },
+        // Try employee code match
         ...(employeeInfo.employeeCode ? [{ employeeCode: employeeInfo.employeeCode }] : [])
       ];
     } else if (employeeId) {
+      // Fallback to just ID matching
       whereClause = { ...whereClause, ...employeeFilter };
     }
 
