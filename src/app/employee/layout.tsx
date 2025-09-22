@@ -13,8 +13,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { EmployeeAuthProvider } from '@/contexts/EmployeeAuthContext';
-import { EmployeeAuthGuard } from '@/components/auth/EmployeeAuthGuard';
+import { SignedIn, SignedOut, RedirectToSignIn } from '@clerk/nextjs';
 
 interface EmployeeLayoutProps {
   children: React.ReactNode;
@@ -79,10 +78,13 @@ function EmployeeLayoutContent({ children }: EmployeeLayoutProps) {
 
 export default function EmployeeLayout({ children }: EmployeeLayoutProps) {
   return (
-    <EmployeeAuthProvider>
-      <EmployeeAuthGuard>
+    <>
+      <SignedIn>
         <EmployeeLayoutContent>{children}</EmployeeLayoutContent>
-      </EmployeeAuthGuard>
-    </EmployeeAuthProvider>
+      </SignedIn>
+      <SignedOut>
+        <RedirectToSignIn />
+      </SignedOut>
+    </>
   );
 }

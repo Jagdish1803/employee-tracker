@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
+import { useUser, useClerk } from '@clerk/nextjs';
 import { useBreakStatus } from '@/hooks/useBreakStatus';
 import {
   Home,
@@ -77,11 +77,12 @@ const navigation = [
 
 export default function EmployeeSidebar({ isCollapsed }: EmployeeSidebarProps) {
   const pathname = usePathname();
-  const { employee, logout } = useEmployeeAuth();
-  const breakStatus = useBreakStatus(employee?.id);
+  const { user } = useUser();
+  const { signOut } = useClerk();
+  const breakStatus = useBreakStatus(1); // Use default employee ID for now
 
   const handleSignOut = () => {
-    logout();
+    signOut();
   };
 
   return (
@@ -186,22 +187,22 @@ export default function EmployeeSidebar({ isCollapsed }: EmployeeSidebarProps) {
       </div>
 
       {/* Footer - Fixed */}
-      {employee && (
+      {user && (
         <div className="border-t border-sidebar-border/50 p-2 flex-shrink-0">
           <div
             className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           >
             <Avatar className="h-8 w-8 rounded-lg">
-              <AvatarImage src="/placeholder-avatar.jpg" alt={employee.name || 'Employee'} />
+              <AvatarImage src={user.imageUrl} alt={user.fullName || 'Employee'} />
               <AvatarFallback className="rounded-lg bg-primary text-primary-foreground font-medium">
-                {employee.name?.charAt(0)?.toUpperCase() || 'E'}
+                {user.firstName?.charAt(0)?.toUpperCase() || user.emailAddresses[0]?.emailAddress?.charAt(0)?.toUpperCase() || 'E'}
               </AvatarFallback>
             </Avatar>
             {!isCollapsed && (
               <>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold text-sidebar-foreground">{employee.name}</span>
-                  <span className="truncate text-xs text-sidebar-foreground/70">{employee.employeeCode}</span>
+                  <span className="truncate font-semibold text-sidebar-foreground">{user.fullName || user.firstName || 'Employee'}</span>
+                  <span className="truncate text-xs text-sidebar-foreground/70">{user.emailAddresses[0]?.emailAddress}</span>
                 </div>
                 <button
                   onClick={handleSignOut}
