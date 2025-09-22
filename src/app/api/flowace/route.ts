@@ -76,10 +76,12 @@ export async function GET(request: NextRequest) {
 
     // Add employee filter - prioritize name matching over ID
     if (employeeId && employeeInfo) {
-      console.log('Matching flowace records for employee:', employeeInfo);
+      console.log('Matching flowace records for employee ID:', employeeId);
+      console.log('Employee info retrieved:', employeeInfo);
 
       // Create flexible name matching patterns
       const employeeName = employeeInfo.name;
+      console.log('Using employee name for matching:', employeeName);
       const nameVariations = [
         employeeName, // Exact match
         employeeName.toLowerCase().trim(), // Case insensitive
