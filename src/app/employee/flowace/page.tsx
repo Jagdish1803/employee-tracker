@@ -16,14 +16,11 @@ import {
   Award,
   Timer,
   Play,
-  Pause,
   Brain,
   Users,
   Calendar,
   Filter,
-  Sparkles,
-  Gauge,
-  CheckCircle2
+  Sparkles
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
@@ -35,26 +32,26 @@ interface FlowaceRecord {
   employeeId: number;
   employeeName: string;
   employeeCode: string;
-  memberEmail: string;
-  teams: string;
+  memberEmail?: string;
+  teams?: string;
   date: string;
-  workStartTime: string;
-  workEndTime: string;
-  loggedHours: number;
-  activeHours: number;
-  idleHours: number;
-  classifiedHours: number;
-  unclassifiedHours: number;
-  productiveHours: number;
-  unproductiveHours: number;
-  neutralHours: number;
-  availableHours: number;
-  missingHours: number;
-  activityPercentage: number;
-  classifiedPercentage: number;
-  productivityPercentage: number;
-  classifiedBillableDuration: number;
-  classifiedNonBillableDuration: number;
+  workStartTime?: string;
+  workEndTime?: string;
+  loggedHours?: number;
+  activeHours?: number;
+  idleHours?: number;
+  classifiedHours?: number;
+  unclassifiedHours?: number;
+  productiveHours?: number;
+  unproductiveHours?: number;
+  neutralHours?: number;
+  availableHours?: number;
+  missingHours?: number;
+  activityPercentage?: number;
+  classifiedPercentage?: number;
+  productivityPercentage?: number;
+  classifiedBillableDuration?: number;
+  classifiedNonBillableDuration?: number;
   batchId: string;
   createdAt: string;
   updatedAt: string;
@@ -62,7 +59,7 @@ interface FlowaceRecord {
     id: number;
     name: string;
     employeeCode: string;
-    department: string;
+    department?: string;
   };
 }
 
@@ -416,7 +413,7 @@ export default function FlowaceActivity() {
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-blue-900 font-medium">
-                            {record.workStartTime} - {record.workEndTime}
+                            {record.workStartTime || 'N/A'} - {record.workEndTime || 'N/A'}
                           </span>
                           <span className="text-blue-700 text-sm">
                             {record.loggedHours?.toFixed(1) || '0.0'}h logged

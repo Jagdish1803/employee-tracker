@@ -8,19 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import {
   CalendarDays,
-  Download,
-  Clock,
-  CheckCircle,
-  XCircle,
   AlertTriangle,
-  Home,
   Coffee,
-  TrendingUp,
-  Calendar,
   Filter,
   BarChart3,
   Target,
-  Users,
   Award,
   Activity,
   MapPin,
@@ -134,30 +126,12 @@ export default function MyAttendance() {
     } finally {
       setLoading(false);
     }
-  }, [employeeId]);
+  }, [employeeId, attendanceRecords]);
 
   useEffect(() => {
     fetchAttendanceData();
   }, [fetchAttendanceData]);
 
-  const getStatusIcon = (status: AttendanceRecord['status']) => {
-    switch (status) {
-      case 'PRESENT':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'LATE':
-        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
-      case 'ABSENT':
-        return <XCircle className="h-4 w-4 text-red-500" />;
-      case 'HALF_DAY':
-        return <Clock className="h-4 w-4 text-blue-500" />;
-      case 'LEAVE_APPROVED':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'WFH_APPROVED':
-        return <Home className="h-4 w-4 text-purple-500" />;
-      default:
-        return <Clock className="h-4 w-4 text-gray-500" />;
-    }
-  };
 
   const formatStatus = (status: AttendanceRecord['status']) => {
     switch (status) {
