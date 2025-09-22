@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation';
 import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
 import {
   Home,
-  Calendar,
   Coffee,
   FileText,
   User,
@@ -32,14 +31,8 @@ const navigation = [
     badge: null
   },
   {
-    name: 'Work Log',
-    href: '/employee/work-log',
-    icon: Calendar,
-    badge: null
-  },
-  {
-    name: 'My Assignments',
-    href: '/employee/assignments',
+    name: 'Work & Assignments',
+    href: '/employee/work-assignments',
     icon: ClipboardList,
     badge: null
   },
