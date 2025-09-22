@@ -18,18 +18,16 @@ import {
 import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
 import { attendanceService } from '@/api';
 import { toast } from 'sonner';
+import { AttendanceRecord as APIAttendanceRecord } from '@/types';
 
-interface AttendanceRecord {
-  id: number;
-  employeeId: number;
-  date: string;
-  status: 'PRESENT' | 'ABSENT' | 'LATE' | 'HALF_DAY' | 'LEAVE_APPROVED' | 'WFH_APPROVED';
-  checkInTime?: string;
-  checkOutTime?: string;
-  lunchOutTime?: string;
-  lunchInTime?: string;
-  hoursWorked?: number;
-  remarks?: string;
+interface AttendanceRecord extends APIAttendanceRecord {
+  breakInTime?: string;
+  breakOutTime?: string;
+  lunchBreakIn?: string;
+  lunchBreakOut?: string;
+  breakStartTime?: string;
+  breakEndTime?: string;
+  [key: string]: unknown;
 }
 
 interface AttendanceSummary {
@@ -85,6 +83,13 @@ export default function MyAttendance() {
       let currentRecords: AttendanceRecord[] = [];
       if (Array.isArray(attendanceResponse)) {
         currentRecords = attendanceResponse as AttendanceRecord[];
+
+        // Debug: Log the first record to see all available fields
+        if (currentRecords.length > 0) {
+          console.log('First attendance record fields:', Object.keys(currentRecords[0]));
+          console.log('Sample record with break data:', currentRecords[0]);
+        }
+
         setAttendanceRecords(currentRecords);
       } else if (attendanceResponse && typeof attendanceResponse === 'object' && 'data' in attendanceResponse) {
         // Handle case where API returns { data: [...] }
@@ -139,6 +144,16 @@ export default function MyAttendance() {
   useEffect(() => {
     fetchAttendanceData();
   }, [fetchAttendanceData]);
+
+  // Helper function to get break in time with fallback logic
+  const getBreakInTime = (record: AttendanceRecord) => {
+    return record.lunchOutTime || record.breakOutTime || record.breakStartTime || record.lunchBreakOut || 'Not recorded';
+  };
+
+  // Helper function to get break out time with fallback logic
+  const getBreakOutTime = (record: AttendanceRecord) => {
+    return record.lunchInTime || record.breakInTime || record.breakEndTime || record.lunchBreakIn || 'Not recorded';
+  };
 
   const getStatusVariant = (status: AttendanceRecord['status']) => {
     switch (status) {
@@ -422,10 +437,10 @@ export default function MyAttendance() {
                         {record.checkOutTime || 'Not recorded'}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                        {record.lunchOutTime || 'Not recorded'}
+                        {getBreakInTime(record)}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                        {record.lunchInTime || 'Not recorded'}
+                        {getBreakOutTime(record)}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                         {record.hoursWorked?.toFixed(1) || '0.0'}h
