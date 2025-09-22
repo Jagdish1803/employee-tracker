@@ -19,6 +19,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { attendanceService, issueService, logService, flowaceService } from '@/api';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -53,12 +54,16 @@ interface DashboardStats {
 
 export default function EmployeeDashboard() {
   const { user } = useUser();
+  const { employee, loading: employeeLoading, error: employeeError, employeeId } = useEmployeeData();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const employeeId = 1; // Use default employee ID for now
-
   const loadDashboardData = useCallback(async () => {
+    if (!employeeId) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -157,7 +162,24 @@ export default function EmployeeDashboard() {
     loadDashboardData();
   }, [employeeId, loadDashboardData]);
 
-  if (loading) {
+  // Show error if employee data failed to load
+  if (employeeError) {
+    return (
+      <div className="min-h-screen w-full bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-12">
+            <AlertCircle className="h-16 w-16 text-red-300 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-red-600 mb-2">Access Error</h3>
+            <p className="text-gray-500">{employeeError}</p>
+            <p className="text-sm text-gray-400 mt-2">Please contact your administrator to verify your employee code.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading if employee data is still loading
+  if (employeeLoading || loading) {
     return (
       <div className="p-6 space-y-6">
         <div className="animate-pulse">

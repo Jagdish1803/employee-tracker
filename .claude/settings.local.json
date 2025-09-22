@@ -22,7 +22,8 @@
       "Bash(tree:*)",
       "Bash(xargs sed:*)",
       "Bash(npm uninstall:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []
