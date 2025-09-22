@@ -81,7 +81,7 @@ export default function EmployeeDashboard() {
       // Process attendance data
       let attendanceStats = {
         presentDays: 0,
-        totalDays: 22,
+        totalDays: 26, // Default to 26 working days (exclude Sundays only)
         attendanceRate: 0,
         totalHours: 0
       };
@@ -90,7 +90,7 @@ export default function EmployeeDashboard() {
         const attData = attendanceData.value as Record<string, unknown>;
         attendanceStats = {
           presentDays: (attData.presentDays as number) || 0,
-          totalDays: (attData.totalWorkingDays as number) || 22,
+          totalDays: (attData.totalWorkingDays as number) || 26,
           attendanceRate: (attData.attendancePercentage as number) || 0,
           totalHours: (attData.totalHoursWorked as number) || 0
         };
@@ -219,7 +219,7 @@ export default function EmployeeDashboard() {
                     {Math.round(stats?.attendance.thisMonth.attendanceRate || 0)}%
                   </p>
                   <p className="text-xs text-gray-600 mt-1">
-                    {stats?.attendance.thisMonth.presentDays || 0} of {stats?.attendance.thisMonth.totalDays || 22} days
+                    {stats?.attendance.thisMonth.presentDays || 0} of {stats?.attendance.thisMonth.totalDays || 26} days
                   </p>
                 </div>
                 <div className="p-3 bg-gray-100 rounded-full">

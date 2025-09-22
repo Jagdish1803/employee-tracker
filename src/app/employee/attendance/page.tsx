@@ -102,7 +102,7 @@ export default function MyAttendance() {
           employeeId: employeeId,
           month: month.toString().padStart(2, '0'),
           year: year.toString(),
-          totalWorkingDays: 22, // Default working days in a month
+          totalWorkingDays: 26, // Default working days in a month (exclude Sundays only)
           presentDays: attendanceResponse?.filter((r: unknown) => (r as AttendanceRecord).status === 'PRESENT').length || 0,
           absentDays: attendanceResponse?.filter((r: unknown) => (r as AttendanceRecord).status === 'ABSENT').length || 0,
           halfDays: attendanceResponse?.filter((r: unknown) => (r as AttendanceRecord).status === 'HALF_DAY').length || 0,

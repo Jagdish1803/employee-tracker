@@ -33,10 +33,10 @@ export async function GET(
     const startDate = new Date(parseInt(year), parseInt(month) - 1, 1);
     const endDate = new Date(parseInt(year), parseInt(month), 0);
 
-    const attendanceRecords = await prisma.attendance.findMany({
+    const attendanceRecords = await prisma.attendanceRecord.findMany({
       where: {
         employeeId: employeeId,
-        attendanceDate: {
+        date: {
           gte: startDate,
           lte: endDate,
         }
@@ -57,8 +57,8 @@ export async function GET(
       r.status === 'LEAVE_APPROVED' || r.status === 'WFH_APPROVED'
     ).length;
 
-    const totalHoursWorked = attendanceRecords.reduce((total, record) => 
-      total + (record.hoursWorked || 0), 0
+    const totalHoursWorked = attendanceRecords.reduce((total, record) =>
+      total + (record.totalHours || 0), 0
     );
 
     const averageHoursPerDay = presentDays > 0 ? totalHoursWorked / presentDays : 0;
