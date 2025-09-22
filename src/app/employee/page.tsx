@@ -16,7 +16,6 @@ import {
   Target,
   BarChart3,
   ArrowRight,
-  Users,
   AlertCircle
 } from 'lucide-react';
 import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
@@ -389,14 +388,14 @@ export default function EmployeeDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Link href="/employee/work-log" className="block">
+                <Link href="/employee/work-assignments" className="block">
                   <div className="flex items-center p-3 rounded-lg border hover:bg-gray-50 transition-colors group">
                     <div className="p-2 bg-gray-100 rounded-lg mr-3 group-hover:bg-purple-200 transition-colors">
                       <FileText className="h-4 w-4 text-gray-600" />
                     </div>
                     <div className="flex-1">
-                      <div className="font-medium">Submit Work Log</div>
-                      <div className="text-sm text-gray-600">Track daily tasks</div>
+                      <div className="font-medium">Work & Assignments</div>
+                      <div className="text-sm text-gray-600">Track tasks and log work</div>
                     </div>
                     <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
                   </div>
@@ -423,19 +422,6 @@ export default function EmployeeDashboard() {
                     <div className="flex-1">
                       <div className="font-medium">Track Breaks</div>
                       <div className="text-sm text-gray-600">Manage break times</div>
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
-                  </div>
-                </Link>
-
-                <Link href="/employee/assignments" className="block">
-                  <div className="flex items-center p-3 rounded-lg border hover:bg-gray-50 transition-colors group">
-                    <div className="p-2 bg-gray-100 rounded-lg mr-3 group-hover:bg-blue-200 transition-colors">
-                      <Users className="h-4 w-4 text-gray-600" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-medium">My Assignments</div>
-                      <div className="text-sm text-gray-600">View tasks</div>
                     </div>
                     <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
                   </div>
