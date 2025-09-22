@@ -166,30 +166,21 @@ export default function FlowaceActivity() {
     consistentDays: filteredRecords.filter(r => (r.productivityPercentage || 0) >= 70).length
   };
 
-  const getProductivityColor = (percentage: number) => {
-    if (percentage >= 80) return 'text-gray-900 bg-gray-100 border-gray-300';
-    if (percentage >= 60) return 'text-gray-700 bg-gray-50 border-gray-200';
-    return 'text-gray-600 bg-gray-50 border-gray-200';
-  };
-
-  const getProductivityIcon = (percentage: number) => {
-    if (percentage >= 80) return <Target className="h-4 w-4 text-gray-900" />;
-    if (percentage >= 60) return <TrendingUp className="h-4 w-4 text-gray-700" />;
-    return <Activity className="h-4 w-4 text-gray-600" />;
+  const getProductivityLevel = (percentage: number) => {
+    if (percentage >= 80) return { label: 'High', color: 'text-green-600' };
+    if (percentage >= 60) return { label: 'Medium', color: 'text-yellow-600' };
+    return { label: 'Low', color: 'text-red-600' };
   };
 
   return (
     <div className="min-h-screen bg-white p-6">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <div className="text-center space-y-4">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-900 rounded-full mb-4">
-            <Activity className="h-8 w-8 text-white" />
-          </div>
-          <h1 className="text-4xl font-bold text-gray-900">
-            Activity Analytics Dashboard
+        <div className="flex items-center space-x-3 mb-6">
+          <Activity className="h-6 w-6 text-blue-600" />
+          <h1 className="text-2xl font-bold text-gray-900">
+            Activity Analytics
           </h1>
-          <p className="text-lg text-gray-600">Monitor your productivity, optimize your workflow</p>
         </div>
 
         {/* Key Metrics Cards */}
@@ -202,7 +193,7 @@ export default function FlowaceActivity() {
                   <p className="text-3xl font-bold text-gray-900">{summary.avgProductivity.toFixed(1)}%</p>
                   <p className="text-gray-500 text-sm">{summary.totalSessions} sessions tracked</p>
                 </div>
-                <Target className="h-12 w-12 text-gray-400" />
+                <Target className="h-8 w-8 text-blue-600" />
               </div>
             </CardContent>
           </Card>
@@ -215,7 +206,7 @@ export default function FlowaceActivity() {
                   <p className="text-3xl font-bold text-gray-900">{summary.totalHours.toFixed(1)}h</p>
                   <p className="text-gray-500 text-sm">{summary.totalActiveHours.toFixed(1)}h active time</p>
                 </div>
-                <Timer className="h-12 w-12 text-gray-400" />
+                <Timer className="h-8 w-8 text-green-600" />
               </div>
             </CardContent>
           </Card>
@@ -228,7 +219,7 @@ export default function FlowaceActivity() {
                   <p className="text-3xl font-bold text-gray-900">{summary.peakProductivity.toFixed(1)}%</p>
                   <p className="text-gray-500 text-sm">{summary.consistentDays} consistent days</p>
                 </div>
-                <Award className="h-12 w-12 text-gray-400" />
+                <Award className="h-8 w-8 text-purple-600" />
               </div>
             </CardContent>
           </Card>
@@ -241,7 +232,7 @@ export default function FlowaceActivity() {
                   <p className="text-3xl font-bold text-gray-900">{summary.avgActivity.toFixed(1)}%</p>
                   <p className="text-gray-500 text-sm">{summary.totalProductiveHours.toFixed(1)}h productive</p>
                 </div>
-                <Zap className="h-12 w-12 text-gray-400" />
+                <Zap className="h-8 w-8 text-red-600" />
               </div>
             </CardContent>
           </Card>
@@ -251,7 +242,7 @@ export default function FlowaceActivity() {
         <Card className="border border-gray-200 shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5 text-gray-600" />
+              <Filter className="h-5 w-5 text-blue-600" />
               Analytics Filters
             </CardTitle>
           </CardHeader>
@@ -357,158 +348,114 @@ export default function FlowaceActivity() {
           </CardContent>
         </Card>
 
-        {/* Activity Records */}
-        <Card className="border border-gray-200 shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-gray-600" />
-              Daily Activity Sessions
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-600 mx-auto mb-4"></div>
-                <p className="text-gray-600">Analyzing your activity data...</p>
+        {/* Activity Records Table */}
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-4 py-4 border-b border-gray-200 bg-gray-50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <BarChart3 className="h-5 w-5 text-blue-600" />
+                <h3 className="text-lg font-semibold text-gray-900">Daily Activity Sessions</h3>
               </div>
-            ) : flowaceRecords.length === 0 ? (
-              <div className="text-center py-12">
-                <Activity className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-600 mb-2">No Activity Data</h3>
-                <p className="text-gray-500">Your activity tracking data will appear here once uploaded</p>
+              <div className="text-sm text-gray-500">
+                Total: {filteredRecords.length} records
               </div>
-            ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {filteredRecords.map((record, index) => (
-                  <Card key={record.id || index} className={`hover:shadow-md transition-all duration-300 border-l-4 ${
-                    (record.productivityPercentage || 0) >= 80 ? 'border-l-gray-900' :
-                    (record.productivityPercentage || 0) >= 60 ? 'border-l-gray-600' : 'border-l-gray-400'
-                  } bg-white border border-gray-200`}>
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="p-3 rounded-full bg-gray-100">
-                            <Calendar className="h-6 w-6 text-gray-600" />
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Analyzing your activity data...</p>
+            </div>
+          ) : flowaceRecords.length === 0 ? (
+            <div className="text-center py-12">
+              <Activity className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-600 mb-2">No Activity Data</h3>
+              <p className="text-gray-500">Your activity tracking data will appear here once uploaded</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Work Schedule
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Logged Hours
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Active Hours
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Productive Hours
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Productivity
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Activity
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Team
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredRecords.map((record, index) => {
+                    const productivity = getProductivityLevel(record.productivityPercentage || 0);
+                    return (
+                      <tr key={record.id || index} className="hover:bg-gray-50">
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">
+                            {format(new Date(record.date), 'MMM d, yyyy')}
                           </div>
-                          <div>
-                            <h3 className="font-bold text-gray-900 text-lg">
-                              {format(new Date(record.date), 'MMM d')}
-                            </h3>
-                            <p className="text-sm text-gray-500">
-                              {format(new Date(record.date), 'EEEE')}
-                            </p>
+                          <div className="text-xs text-gray-500">
+                            {format(new Date(record.date), 'EEEE')}
                           </div>
-                        </div>
-                        <div className={`px-3 py-1 rounded-full border ${getProductivityColor(record.productivityPercentage || 0)}`}>
-                          <div className="flex items-center space-x-1">
-                            {getProductivityIcon(record.productivityPercentage || 0)}
-                            <span className="text-xs font-medium">
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                          {record.workStartTime && record.workEndTime ?
+                            `${record.workStartTime} - ${record.workEndTime}` :
+                            'Not recorded'
+                          }
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                          {record.loggedHours?.toFixed(1) || '0.0'}h
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                          {record.activeHours?.toFixed(1) || '0.0'}h
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                          {record.productiveHours?.toFixed(1) || '0.0'}h
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <div className="flex items-center space-x-2">
+                            <span className={`text-sm font-medium ${productivity.color}`}>
                               {(record.productivityPercentage || 0).toFixed(1)}%
                             </span>
-                          </div>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {/* Work Schedule */}
-                      <div className="bg-gray-50 p-3 rounded-lg">
-                        <div className="flex items-center space-x-2 mb-2">
-                          <Clock className="h-4 w-4 text-gray-600" />
-                          <span className="text-sm font-medium text-gray-800">Work Schedule</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-gray-900 font-medium">
-                            {record.workStartTime || 'N/A'} - {record.workEndTime || 'N/A'}
-                          </span>
-                          <span className="text-gray-700 text-sm">
-                            {record.loggedHours?.toFixed(1) || '0.0'}h logged
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Activity Metrics */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-gray-50 p-3 rounded-lg">
-                          <div className="flex items-center space-x-1 mb-1">
-                            <Play className="h-3 w-3 text-gray-600" />
-                            <span className="text-xs font-medium text-gray-800">Active</span>
-                          </div>
-                          <p className="text-lg font-bold text-gray-900">
-                            {record.activeHours?.toFixed(1) || '0.0'}h
-                          </p>
-                        </div>
-                        <div className="bg-gray-100 p-3 rounded-lg">
-                          <div className="flex items-center space-x-1 mb-1">
-                            <Brain className="h-3 w-3 text-gray-700" />
-                            <span className="text-xs font-medium text-gray-800">Productive</span>
-                          </div>
-                          <p className="text-lg font-bold text-gray-900">
-                            {record.productiveHours?.toFixed(1) || '0.0'}h
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Progress Bars */}
-                      <div className="space-y-3">
-                        <div>
-                          <div className="flex justify-between items-center mb-1">
-                            <span className="text-xs font-medium text-gray-700">Productivity</span>
-                            <span className="text-xs text-gray-600">{(record.productivityPercentage || 0).toFixed(1)}%</span>
-                          </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div
-                              className={`h-2 rounded-full transition-all duration-500 ${
-                                (record.productivityPercentage || 0) >= 80 ? 'bg-gray-900' :
-                                (record.productivityPercentage || 0) >= 60 ? 'bg-gray-600' : 'bg-gray-400'
-                              }`}
-                              style={{ width: `${Math.min(record.productivityPercentage || 0, 100)}%` }}
-                            ></div>
-                          </div>
-                        </div>
-
-                        <div>
-                          <div className="flex justify-between items-center mb-1">
-                            <span className="text-xs font-medium text-gray-700">Activity</span>
-                            <span className="text-xs text-gray-600">{(record.activityPercentage || 0).toFixed(1)}%</span>
-                          </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div
-                              className="bg-gray-700 h-2 rounded-full transition-all duration-500"
-                              style={{ width: `${Math.min(record.activityPercentage || 0, 100)}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Team Info */}
-                      {record.teams && (
-                        <div className="bg-gray-50 p-3 rounded-lg">
-                          <div className="flex items-center space-x-2">
-                            <Users className="h-4 w-4 text-gray-600" />
-                            <span className="text-sm font-medium text-gray-700">Team</span>
                             <Badge variant="outline" className="text-xs">
-                              {record.teams}
+                              {productivity.label}
                             </Badge>
                           </div>
-                        </div>
-                      )}
-
-                      {/* Performance Badge */}
-                      {(record.productivityPercentage || 0) >= 90 && (
-                        <div className="bg-gray-100 p-3 rounded-lg border border-gray-300">
-                          <div className="flex items-center space-x-2">
-                            <Sparkles className="h-4 w-4 text-gray-700" />
-                            <span className="text-sm font-medium text-gray-800">Exceptional Performance!</span>
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                          {(record.activityPercentage || 0).toFixed(1)}%
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate">
+                          {record.teams || '-'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

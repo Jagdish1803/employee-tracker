@@ -15,5 +15,6 @@ export {
   breakService,
   warningService,
   assignmentService,
-  flowaceService
+  flowaceService,
+  assetService
 } from './services';

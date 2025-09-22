@@ -79,12 +79,22 @@ export default function BreakTracker() {
     try {
       setLoading(true);
 
-      // Fetch break status and summary
-      const [statusResponse, summaryResponse] = await Promise.all([
-        breakService.getStatus(employeeId),
-        breakService.getSummary(employeeId)
-      ]);
+      // Fetch break status and summary with individual error handling
+      let statusResponse, summaryResponse;
 
+      try {
+        statusResponse = await breakService.getStatus(employeeId);
+      } catch (error) {
+        console.log('Break status not found, user likely not on break');
+        statusResponse = null;
+      }
+
+      try {
+        summaryResponse = await breakService.getSummary(employeeId);
+      } catch (error) {
+        console.log('Break summary not found');
+        summaryResponse = null;
+      }
 
       // Process break status
       if (statusResponse && typeof statusResponse === 'object') {
@@ -127,7 +137,8 @@ export default function BreakTracker() {
         });
       }
 
-    } catch {
+    } catch (error) {
+      console.error('Error fetching break data:', error);
       toast.error('Failed to load break data', {
         description: 'Unable to connect to the server. Please try again later.',
         duration: 5000
@@ -170,11 +181,8 @@ export default function BreakTracker() {
       } else {
         setBreakHistory([]);
       }
-    } catch {
-      toast.info('No break history available', {
-        description: 'Unable to load break history for the selected date.',
-        duration: 4000
-      });
+    } catch (error) {
+      console.log('No break history found for', selectedDate);
       setBreakHistory([]);
     }
   }, [employeeId, selectedDate]);

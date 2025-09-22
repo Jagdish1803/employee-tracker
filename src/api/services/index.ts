@@ -10,3 +10,5 @@ export { warningService, WarningService } from './warning.service';
 export { assignmentService, AssignmentService } from './assignment.service';
 export { flowaceService, FlowaceService } from './flowace.service';
 export type { FlowaceRecord } from './flowace.service';
+export { assetService, AssetService } from './asset.service';
+export type { Asset, AssetAssignment } from './asset.service';

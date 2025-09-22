@@ -56,7 +56,7 @@ const issueCategories = [
   'Other'
 ];
 
-export default function MyIssues() {
+export default function RaiseQuery() {
   const { employee } = useEmployeeAuth();
   const [issues, setIssues] = useState<Issue[]>([]);
   const [filteredIssues, setFilteredIssues] = useState<Issue[]>([]);
@@ -90,8 +90,8 @@ export default function MyIssues() {
         setIssues([]);
       }
     } catch (error) {
-      console.error('Error fetching issues:', error);
-      toast.error('Failed to load issues');
+      console.error('Error fetching queries:', error);
+      // Don't show error toast for empty results
       setIssues([]);
     } finally {
       setLoading(false);
@@ -138,7 +138,7 @@ export default function MyIssues() {
       });
 
       if (response.data && response.data.success) {
-        toast.success('Issue created successfully');
+        toast.success('Query submitted successfully');
         setNewIssue({ issueCategory: '', issueDescription: '' });
         setIsCreateDialogOpen(false);
         await fetchIssues(); // Refresh the list
@@ -208,8 +208,8 @@ export default function MyIssues() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">My Issues</h1>
-          <p className="text-muted-foreground">Report and track workplace issues</p>
+          <h1 className="text-3xl font-bold">Raise Query</h1>
+          <p className="text-muted-foreground">Submit and track your queries</p>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>

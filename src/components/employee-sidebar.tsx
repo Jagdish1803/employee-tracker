@@ -56,7 +56,7 @@ const navigation = [
     badge: null
   },
   {
-    name: 'My Issues',
+    name: 'Raise Query',
     href: '/employee/issues',
     icon: FileText,
     badge: null

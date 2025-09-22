@@ -143,26 +143,6 @@ export default function MyAttendance() {
     fetchAttendanceData();
   }, [fetchAttendanceData]);
 
-
-  const formatStatus = (status: AttendanceRecord['status']) => {
-    switch (status) {
-      case 'PRESENT':
-        return 'Present';
-      case 'LATE':
-        return 'Late';
-      case 'ABSENT':
-        return 'Absent';
-      case 'HALF_DAY':
-        return 'Half Day';
-      case 'LEAVE_APPROVED':
-        return 'Leave';
-      case 'WFH_APPROVED':
-        return 'WFH';
-      default:
-        return status;
-    }
-  };
-
   const getStatusVariant = (status: AttendanceRecord['status']) => {
     switch (status) {
       case 'PRESENT':
@@ -181,18 +161,34 @@ export default function MyAttendance() {
     }
   };
 
+  const formatStatus = (status: AttendanceRecord['status']) => {
+    switch (status) {
+      case 'PRESENT':
+        return 'Present';
+      case 'ABSENT':
+        return 'Absent';
+      case 'LATE':
+        return 'Late';
+      case 'HALF_DAY':
+        return 'Half Day';
+      case 'LEAVE_APPROVED':
+        return 'Leave';
+      case 'WFH_APPROVED':
+        return 'WFH';
+      default:
+        return status;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white p-6">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <div className="text-center space-y-4">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-900 rounded-full mb-4">
-            <CalendarDays className="h-8 w-8 text-white" />
-          </div>
-          <h1 className="text-4xl font-bold text-gray-900">
-            My Attendance Dashboard
+        <div className="flex items-center space-x-3 mb-6">
+          <CalendarDays className="h-6 w-6 text-blue-600" />
+          <h1 className="text-2xl font-bold text-gray-900">
+            My Attendance
           </h1>
-          <p className="text-lg text-gray-600">Track your presence, monitor your progress</p>
         </div>
 
         {/* Key Metrics Cards */}
@@ -206,7 +202,7 @@ export default function MyAttendance() {
                     <p className="text-3xl font-bold text-gray-900">{Math.round(summary.attendancePercentage)}%</p>
                     <p className="text-gray-500 text-sm">{summary.presentDays} of {summary.totalWorkingDays} days</p>
                   </div>
-                  <Target className="h-12 w-12 text-gray-400" />
+                  <Target className="h-8 w-8 text-blue-600" />
                 </div>
               </CardContent>
             </Card>
@@ -219,7 +215,7 @@ export default function MyAttendance() {
                     <p className="text-3xl font-bold text-gray-900">{summary.totalHoursWorked.toFixed(1)}h</p>
                     <p className="text-gray-500 text-sm">Avg: {summary.averageHoursPerDay.toFixed(1)}h/day</p>
                   </div>
-                  <Timer className="h-12 w-12 text-gray-400" />
+                  <Timer className="h-8 w-8 text-green-600" />
                 </div>
               </CardContent>
             </Card>
@@ -232,7 +228,7 @@ export default function MyAttendance() {
                     <p className="text-3xl font-bold text-gray-900">{summary.presentDays}</p>
                     <p className="text-gray-500 text-sm">Including {summary.lateDays} late</p>
                   </div>
-                  <Award className="h-12 w-12 text-gray-400" />
+                  <Award className="h-8 w-8 text-purple-600" />
                 </div>
               </CardContent>
             </Card>
@@ -245,7 +241,7 @@ export default function MyAttendance() {
                     <p className="text-3xl font-bold text-gray-900">{summary.absentDays}</p>
                     <p className="text-gray-500 text-sm">{summary.leaveDays} approved leaves</p>
                   </div>
-                  <Activity className="h-12 w-12 text-gray-400" />
+                  <Activity className="h-8 w-8 text-red-600" />
                 </div>
               </CardContent>
             </Card>
@@ -256,7 +252,7 @@ export default function MyAttendance() {
         <Card className="border border-gray-200 shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5 text-gray-600" />
+              <Filter className="h-5 w-5 text-blue-600" />
               Filters
             </CardTitle>
           </CardHeader>
@@ -348,148 +344,93 @@ export default function MyAttendance() {
           </CardContent>
         </Card>
 
-        {/* Attendance Records */}
-        <Card className="border border-gray-200 shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-gray-600" />
-              Attendance Records
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-600 mx-auto mb-4"></div>
-                <p className="text-gray-600">Loading your attendance data...</p>
+        {/* Attendance Records Table */}
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-4 py-4 border-b border-gray-200 bg-gray-50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <BarChart3 className="h-5 w-5 text-blue-600" />
+                <h3 className="text-lg font-semibold text-gray-900">Attendance Records</h3>
               </div>
-            ) : attendanceRecords.length === 0 ? (
-              <div className="text-center py-12">
-                <CalendarDays className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-600 mb-2">No Records Yet</h3>
-                <p className="text-gray-500">Your attendance records will appear here once you start tracking</p>
+              <div className="text-sm text-gray-500">
+                Total: {filteredRecords.length} records
               </div>
-            ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {filteredRecords.map((record) => {
-                  const getBorderColor = (status: AttendanceRecord['status']) => {
-                    switch (status) {
-                      case 'PRESENT': return 'border-l-gray-900';
-                      case 'LATE': return 'border-l-gray-600';
-                      case 'ABSENT': return 'border-l-gray-400';
-                      case 'HALF_DAY': return 'border-l-gray-700';
-                      case 'LEAVE_APPROVED': return 'border-l-gray-800';
-                      case 'WFH_APPROVED': return 'border-l-gray-500';
-                      default: return 'border-l-gray-300';
-                    }
-                  };
+            </div>
+          </div>
 
-                  return (
-                    <Card key={record.id} className={`hover:shadow-md transition-all duration-300 border-l-4 ${getBorderColor(record.status)} bg-white border border-gray-200`}>
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="p-3 rounded-full bg-gray-100">
-                              <CalendarDays className="h-6 w-6 text-gray-600" />
-                            </div>
-                            <div>
-                              <h3 className="font-bold text-gray-900 text-lg">
-                                {new Date(record.date).toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric'
-                                })}
-                              </h3>
-                              <p className="text-sm text-gray-500">
-                                {new Date(record.date).toLocaleDateString('en-US', { weekday: 'long' })}
-                              </p>
-                            </div>
-                          </div>
-                          <Badge variant={getStatusVariant(record.status)} className="text-xs font-medium">
-                            {formatStatus(record.status)}
-                          </Badge>
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading your attendance data...</p>
+            </div>
+          ) : attendanceRecords.length === 0 ? (
+            <div className="text-center py-12">
+              <CalendarDays className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-600 mb-2">No Records Yet</h3>
+              <p className="text-gray-500">Your attendance records will appear here once you start tracking</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Check In
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Check Out
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Hours Worked
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Remarks
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredRecords.map((record) => (
+                    <tr key={record.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {new Date(record.date).toLocaleDateString('en-US', {
+                            weekday: 'short',
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                          })}
                         </div>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        {/* Time Grid */}
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="bg-green-50 p-3 rounded-lg">
-                            <div className="flex items-center space-x-2 mb-1">
-                              <MapPin className="h-4 w-4 text-green-600" />
-                              <span className="text-xs font-medium text-green-800">Check In</span>
-                            </div>
-                            <p className="text-lg font-bold text-green-900">
-                              {record.checkInTime || '--:--'}
-                            </p>
-                          </div>
-                          <div className="bg-red-50 p-3 rounded-lg">
-                            <div className="flex items-center space-x-2 mb-1">
-                              <MapPin className="h-4 w-4 text-red-600" />
-                              <span className="text-xs font-medium text-red-800">Check Out</span>
-                            </div>
-                            <p className="text-lg font-bold text-red-900">
-                              {record.checkOutTime || '--:--'}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Hours Worked */}
-                        <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center space-x-2">
-                              <Timer className="h-5 w-5 text-blue-600" />
-                              <span className="text-sm font-medium text-gray-700">Hours Worked</span>
-                            </div>
-                            <span className="text-2xl font-bold text-blue-900">
-                              {record.hoursWorked?.toFixed(1) || '0.0'}h
-                            </span>
-                          </div>
-                          <div className="w-full bg-blue-100 rounded-full h-3">
-                            <div
-                              className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-500"
-                              style={{ width: `${Math.min((record.hoursWorked || 0) / 8 * 100, 100)}%` }}
-                            ></div>
-                          </div>
-                        </div>
-
-                        {/* Lunch Break */}
-                        {(record.lunchOutTime || record.lunchInTime) && (
-                          <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                            <div className="flex items-center space-x-2 mb-2">
-                              <Coffee className="h-4 w-4 text-yellow-600" />
-                              <span className="text-sm font-medium text-yellow-800">Lunch Break</span>
-                            </div>
-                            <div className="grid grid-cols-2 gap-2 text-sm">
-                              <div>
-                                <span className="text-yellow-700">Out: </span>
-                                <span className="font-medium">{record.lunchOutTime || '--:--'}</span>
-                              </div>
-                              <div>
-                                <span className="text-yellow-700">In: </span>
-                                <span className="font-medium">{record.lunchInTime || '--:--'}</span>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Remarks */}
-                        {record.remarks && (
-                          <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                            <div className="flex items-start space-x-2">
-                              <AlertTriangle className="h-4 w-4 text-gray-600 mt-0.5" />
-                              <div>
-                                <span className="text-sm font-medium text-gray-700">Note</span>
-                                <p className="text-sm text-gray-600 mt-1">{record.remarks}</p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <Badge variant={getStatusVariant(record.status)} className="text-xs">
+                          {formatStatus(record.status)}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                        {record.checkInTime || 'Not recorded'}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                        {record.checkOutTime || 'Not recorded'}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                        {record.hoursWorked?.toFixed(1) || '0.0'}h
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate">
+                        {record.remarks || '-'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

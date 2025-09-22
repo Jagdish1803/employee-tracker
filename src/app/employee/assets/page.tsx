@@ -6,38 +6,18 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Laptop, Search, Calendar, Package, CheckCircle2, AlertCircle } from 'lucide-react';
-
-interface Asset {
-  id: number;
-  assetName: string;
-  assetType: string;
-  assetTag?: string;
-  serialNumber?: string;
-  model?: string;
-  brand?: string;
-  condition: string;
-  status: string;
-}
-
-interface AssetAssignment {
-  id: number;
-  assetId: number;
-  employeeId: number;
-  assignedDate: string;
-  returnDate?: string;
-  status: 'ACTIVE' | 'RETURNED' | 'LOST' | 'DAMAGED_RETURN';
-  assignmentNotes?: string;
-  returnNotes?: string;
-  returnCondition?: string;
-  asset: Asset;
-}
+import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
+import { assetService, AssetAssignment } from '@/api';
 
 export default function MyAssets() {
+  const { employee } = useEmployeeAuth();
   const [assignments, setAssignments] = useState<AssetAssignment[]>([]);
   const [filteredAssignments, setFilteredAssignments] = useState<AssetAssignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'returned'>('all');
+
+  const employeeId = employee?.id || 1;
 
 
   const filterAssignments = useCallback(() => {
@@ -62,86 +42,27 @@ export default function MyAssets() {
     setFilteredAssignments(filtered);
   }, [assignments, searchTerm, statusFilter]);
 
+  const fetchAssetAssignments = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await assetService.getEmployeeAssignments(employeeId);
+      setAssignments(response);
+    } catch (error) {
+      console.error('Error fetching asset assignments:', error);
+      // Don't show error toast for empty results, just log it
+      setAssignments([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [employeeId]);
+
   useEffect(() => {
     fetchAssetAssignments();
-  }, []);
+  }, [fetchAssetAssignments]);
 
   useEffect(() => {
     filterAssignments();
   }, [assignments, searchTerm, statusFilter, filterAssignments]);
-
-  const fetchAssetAssignments = async () => {
-    try {
-      setLoading(true);
-
-      // Mock data
-      const mockAssignments: AssetAssignment[] = [
-        {
-          id: 1,
-          assetId: 1,
-          employeeId: 1,
-          assignedDate: '2024-01-01',
-          status: 'ACTIVE',
-          assignmentNotes: 'Primary work laptop',
-          asset: {
-            id: 1,
-            assetName: 'Dell Latitude 7420',
-            assetType: 'LAPTOP',
-            serialNumber: 'DL7420001',
-            model: 'Latitude 7420',
-            brand: 'Dell',
-            condition: 'GOOD',
-            status: 'ASSIGNED'
-          }
-        },
-        {
-          id: 2,
-          assetId: 2,
-          employeeId: 1,
-          assignedDate: '2024-01-01',
-          status: 'ACTIVE',
-          assignmentNotes: 'External monitor for workspace',
-          asset: {
-            id: 2,
-            assetName: 'Samsung 24" Monitor',
-            assetType: 'MONITOR',
-            serialNumber: 'SM24001',
-            model: 'F24T450FQN',
-            brand: 'Samsung',
-            condition: 'EXCELLENT',
-            status: 'ASSIGNED'
-          }
-        },
-        {
-          id: 3,
-          assetId: 3,
-          employeeId: 1,
-          assignedDate: '2023-12-01',
-          returnDate: '2024-01-01',
-          status: 'RETURNED',
-          assignmentNotes: 'Temporary laptop during setup',
-          returnNotes: 'Replaced with newer model',
-          returnCondition: 'GOOD',
-          asset: {
-            id: 3,
-            assetName: 'HP EliteBook 840',
-            assetType: 'LAPTOP',
-            serialNumber: 'HP840001',
-            model: 'EliteBook 840 G8',
-            brand: 'HP',
-            condition: 'GOOD',
-            status: 'AVAILABLE'
-          }
-        }
-      ];
-
-      setAssignments(mockAssignments);
-    } catch (error) {
-      console.error('Error fetching asset assignments:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const getAssetTypeIcon = (assetType: string) => {
     switch (assetType.toUpperCase()) {
