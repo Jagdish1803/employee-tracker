@@ -5,6 +5,7 @@ import { Inter } from 'next/font/google';
 import { Toaster } from 'sonner';
 import QueryProvider from '@/providers/QueryProvider';
 import { PerformanceMonitor } from '@/components/PerformanceMonitor';
+import { ClerkProvider } from '@clerk/nextjs';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -22,22 +23,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body 
-        className={inter.className}
-        suppressHydrationWarning={true}
-      >
-        <QueryProvider>
-          <PerformanceMonitor />
-          {children}
-        </QueryProvider>
-        <Toaster
-          position="top-right"
-          duration={4000}
-          richColors
-          theme="dark"
-        />
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body
+          className={inter.className}
+          suppressHydrationWarning={true}
+        >
+          <QueryProvider>
+            <PerformanceMonitor />
+            {children}
+          </QueryProvider>
+          <Toaster
+            position="top-right"
+            duration={4000}
+            richColors
+            theme="dark"
+          />
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

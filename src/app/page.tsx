@@ -6,6 +6,13 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { User, Shield } from 'lucide-react';
+import {
+  SignInButton,
+  SignUpButton,
+  SignedIn,
+  SignedOut,
+  UserButton,
+} from '@clerk/nextjs';
 
 export default function HomePage() {
   const router = useRouter();
@@ -22,11 +29,30 @@ export default function HomePage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="w-full max-w-4xl">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Employee Tracker</h1>
-          <p className="text-xl text-gray-600">Choose your portal to access the system</p>
+          <div className="flex justify-center items-center gap-4 mb-6">
+            <h1 className="text-4xl font-bold text-gray-900">Employee Tracker</h1>
+            <SignedIn>
+              <UserButton />
+            </SignedIn>
+          </div>
+          <SignedOut>
+            <p className="text-xl text-gray-600 mb-6">Please sign in to access the system</p>
+            <div className="flex justify-center gap-4 mb-8">
+              <SignInButton>
+                <Button>Sign In</Button>
+              </SignInButton>
+              <SignUpButton>
+                <Button variant="outline">Sign Up</Button>
+              </SignUpButton>
+            </div>
+          </SignedOut>
+          <SignedIn>
+            <p className="text-xl text-gray-600">Choose your portal to access the system</p>
+          </SignedIn>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto">
+        <SignedIn>
+          <div className="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto">
           {/* Employee Portal Card */}
           <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={handleEmployeeLogin}>
             <CardHeader className="text-center pb-2">
@@ -98,7 +124,8 @@ export default function HomePage() {
               </Button>
             </CardContent>
           </Card>
-        </div>
+          </div>
+        </SignedIn>
 
         <div className="text-center mt-12 text-sm text-gray-500">
           <p>Need help? Contact your system administrator</p>
