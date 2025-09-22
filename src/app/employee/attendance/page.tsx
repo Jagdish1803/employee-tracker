@@ -16,6 +16,7 @@ import {
   Timer
 } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { attendanceService } from '@/api';
 import { toast } from 'sonner';
 import { AttendanceRecord as APIAttendanceRecord } from '@/types';
@@ -47,6 +48,7 @@ interface AttendanceSummary {
 
 export default function MyAttendance() {
   const { user } = useUser();
+  const { employee, loading: employeeLoading, error: employeeError, employeeId } = useEmployeeData();
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [summary, setSummary] = useState<AttendanceSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,8 +57,6 @@ export default function MyAttendance() {
   const [monthFilter, setMonthFilter] = useState<string>(new Date().getMonth().toString());
   const [yearFilter, setYearFilter] = useState<string>(new Date().getFullYear().toString());
 
-  const employeeId = 1; // Use default employee ID for now
-
   const filteredRecords = attendanceRecords.filter(record => {
     const statusMatch = statusFilter === 'all' || record.status === statusFilter;
     const dateMatch = !dateFilter || record.date.includes(dateFilter);
@@ -64,6 +64,11 @@ export default function MyAttendance() {
   });
 
   const fetchAttendanceData = useCallback(async () => {
+    if (!employeeId) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -142,8 +147,10 @@ export default function MyAttendance() {
   }, [employeeId, monthFilter, yearFilter]);
 
   useEffect(() => {
-    fetchAttendanceData();
-  }, [fetchAttendanceData]);
+    if (employeeId) {
+      fetchAttendanceData();
+    }
+  }, [fetchAttendanceData, employeeId]);
 
   // Helper function to get break in time with fallback logic
   const getBreakInTime = (record: AttendanceRecord) => {
@@ -192,6 +199,36 @@ export default function MyAttendance() {
     }
   };
 
+  // Show error if employee data failed to load
+  if (employeeError) {
+    return (
+      <div className="min-h-screen bg-white p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-12">
+            <CalendarDays className="h-16 w-16 text-red-300 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-red-600 mb-2">Access Error</h3>
+            <p className="text-gray-500">{employeeError}</p>
+            <p className="text-sm text-gray-400 mt-2">Please contact your administrator to verify your employee code.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading if employee data is still loading
+  if (employeeLoading) {
+    return (
+      <div className="min-h-screen bg-white p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading your profile...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white p-6">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -199,7 +236,7 @@ export default function MyAttendance() {
         <div className="flex items-center space-x-3 mb-6">
           <CalendarDays className="h-6 w-6 text-blue-600" />
           <h1 className="text-2xl font-bold text-gray-900">
-            My Attendance
+            My Attendance {employee && `- ${employee.name}`}
           </h1>
         </div>
 

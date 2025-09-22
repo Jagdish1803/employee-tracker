@@ -70,6 +70,17 @@ export class EmployeeService {
       throw error;
     }
   }
+
+  // Get employee by code
+  async getByCode(employeeCode: string): Promise<{ data: { success: boolean; data?: Employee } }> {
+    try {
+      const response = await apiClient.get(`${this.basePath}/code/${employeeCode}`);
+      return { data: response.data };
+    } catch (error) {
+      console.error('Error fetching employee by code:', error);
+      throw error;
+    }
+  }
 }
 
 export const employeeService = new EmployeeService();
