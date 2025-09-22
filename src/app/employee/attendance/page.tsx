@@ -8,14 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import {
   CalendarDays,
-  AlertTriangle,
-  Coffee,
   Filter,
   BarChart3,
   Target,
   Award,
   Activity,
-  MapPin,
   Timer
 } from 'lucide-react';
 import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
@@ -72,8 +69,8 @@ export default function MyAttendance() {
     try {
       setLoading(true);
 
-      const month = new Date().getMonth() + 1;
-      const year = new Date().getFullYear();
+      const month = parseInt(monthFilter) + 1;
+      const year = parseInt(yearFilter);
 
       // Fetch real attendance data from API
       const [attendanceResponse, summaryResponse] = await Promise.all([
@@ -137,7 +134,7 @@ export default function MyAttendance() {
     } finally {
       setLoading(false);
     }
-  }, [employeeId]);
+  }, [employeeId, monthFilter, yearFilter]);
 
   useEffect(() => {
     fetchAttendanceData();
@@ -387,6 +384,12 @@ export default function MyAttendance() {
                       Check Out
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Break In
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Break Out
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Hours Worked
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -417,6 +420,12 @@ export default function MyAttendance() {
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                         {record.checkOutTime || 'Not recorded'}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                        {record.lunchOutTime || 'Not recorded'}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                        {record.lunchInTime || 'Not recorded'}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                         {record.hoursWorked?.toFixed(1) || '0.0'}h

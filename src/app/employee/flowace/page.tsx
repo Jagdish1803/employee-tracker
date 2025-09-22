@@ -9,20 +9,12 @@ import { Input } from '@/components/ui/input';
 import {
   Activity,
   BarChart3,
-  Clock,
-  TrendingUp,
   Zap,
   Target,
   Award,
   Timer,
-  Play,
-  Brain,
-  Users,
-  Calendar,
-  Filter,
-  Sparkles
+  Filter
 } from 'lucide-react';
-import { format } from 'date-fns';
 import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
 import { flowaceService } from '@/api';
 import { toast } from 'sonner';
@@ -83,12 +75,20 @@ export default function FlowaceActivity() {
 
     const dateMatch = !dateFilter || record.date.includes(dateFilter);
 
+    // Month/Year filter
+    const recordDate = new Date(record.date);
+    const monthMatch = monthFilter === new Date().getMonth().toString() ||
+      recordDate.getMonth() === parseInt(monthFilter);
+
+    const yearMatch = yearFilter === new Date().getFullYear().toString() ||
+      recordDate.getFullYear() === parseInt(yearFilter);
+
     const hoursMatch = hoursFilter === 'all' ||
       (hoursFilter === 'full' && (record.loggedHours || 0) >= 7) ||
       (hoursFilter === 'partial' && (record.loggedHours || 0) >= 4 && (record.loggedHours || 0) < 7) ||
       (hoursFilter === 'minimal' && (record.loggedHours || 0) < 4);
 
-    return productivityMatch && dateMatch && hoursMatch;
+    return productivityMatch && dateMatch && monthMatch && yearMatch && hoursMatch;
   });
 
   const fetchFlowaceData = useCallback(async () => {
@@ -166,10 +166,44 @@ export default function FlowaceActivity() {
     consistentDays: filteredRecords.filter(r => (r.productivityPercentage || 0) >= 70).length
   };
 
-  const getProductivityLevel = (percentage: number) => {
-    if (percentage >= 80) return { label: 'High', color: 'text-green-600' };
-    if (percentage >= 60) return { label: 'Medium', color: 'text-yellow-600' };
-    return { label: 'Low', color: 'text-red-600' };
+  const formatTime = (timeStr?: string) => {
+    if (!timeStr) return '-';
+    return timeStr.split(':').slice(0, 2).join(':');
+  };
+
+  const formatHoursMinutesSeconds = (hours: number) => {
+    if (hours === undefined || hours === null || hours === 0) {
+      return '00:00:00';
+    }
+
+    const totalSeconds = Math.floor(hours * 3600);
+    const h = Math.floor(totalSeconds / 3600);
+    const remainingSeconds = totalSeconds % 3600;
+    const m = Math.floor(remainingSeconds / 60);
+    const s = remainingSeconds % 60;
+
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const formatDecimal = (value: number, decimals: number = 3) => {
+    return Number(value).toFixed(decimals);
+  };
+
+  const getStatusInfo = (record: FlowaceRecord) => {
+    const totalHours = record.loggedHours || record.activeHours || 0;
+    const productivityScore = record.productivityPercentage || 0;
+
+    if (totalHours < 4) {
+      return { text: 'Low Hours', color: 'bg-red-100 text-red-800' };
+    } else if (totalHours >= 8 && productivityScore > 80) {
+      return { text: 'Excellent', color: 'bg-emerald-100 text-emerald-800' };
+    } else if (totalHours >= 6 && productivityScore > 60) {
+      return { text: 'Good', color: 'bg-green-100 text-green-800' };
+    } else if (totalHours >= 4 && productivityScore > 40) {
+      return { text: 'Average', color: 'bg-yellow-100 text-yellow-800' };
+    } else {
+      return { text: 'Needs Improvement', color: 'bg-orange-100 text-orange-800' };
+    }
   };
 
   return (
@@ -375,78 +409,176 @@ export default function FlowaceActivity() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 text-sm">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Work Schedule
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Logged Hours
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Active Hours
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Productive Hours
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Productivity
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Activity
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Team
-                    </th>
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-gray-50">
+                    <th className="text-left py-3 px-3 font-semibold">Date</th>
+                    <th className="text-left py-3 px-3 font-semibold" title="Start time → End time of work tracking">Work Session</th>
+                    <th className="text-left py-3 px-3 font-semibold" title="Total time tracked by Flowace (Active + Idle)">Total Logged</th>
+                    <th className="text-left py-3 px-3 font-semibold" title="Active work time vs idle/away time">Active/Idle</th>
+                    <th className="text-left py-3 px-3 font-semibold" title="Productive work hours and percentage score">Productivity</th>
+                    <th className="text-left py-3 px-3 font-semibold" title="Mouse/keyboard activity level percentage">Activity %</th>
+                    <th className="text-left py-3 px-3 font-semibold">Status</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody>
                   {filteredRecords.map((record, index) => {
-                    const productivity = getProductivityLevel(record.productivityPercentage || 0);
+                    const statusInfo = getStatusInfo(record);
                     return (
-                      <tr key={record.id || index} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            {format(new Date(record.date), 'MMM d, yyyy')}
+                      <tr key={record.id || index} className="border-b hover:bg-gray-50">
+                        {/* Date */}
+                        <td className="py-3 px-3">
+                          <div className="text-sm text-gray-900">
+                            {new Date(record.date).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: '2-digit'
+                            })}
                           </div>
                           <div className="text-xs text-gray-500">
-                            {format(new Date(record.date), 'EEEE')}
+                            {new Date(record.date).toLocaleDateString('en-US', { weekday: 'short' })}
                           </div>
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                          {record.workStartTime && record.workEndTime ?
-                            `${record.workStartTime} - ${record.workEndTime}` :
-                            'Not recorded'
-                          }
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                          {record.loggedHours?.toFixed(1) || '0.0'}h
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                          {record.activeHours?.toFixed(1) || '0.0'}h
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                          {record.productiveHours?.toFixed(1) || '0.0'}h
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="flex items-center space-x-2">
-                            <span className={`text-sm font-medium ${productivity.color}`}>
-                              {(record.productivityPercentage || 0).toFixed(1)}%
-                            </span>
-                            <Badge variant="outline" className="text-xs">
-                              {productivity.label}
-                            </Badge>
+
+                        {/* Work Hours */}
+                        <td className="py-3 px-3">
+                          <div className="text-sm text-gray-900">
+                            {formatTime(record.workStartTime)} - {formatTime(record.workEndTime)}
+                          </div>
+                          <div className="text-xs text-gray-500 flex items-center">
+                            {record.missingHours && record.missingHours > 0 ? (
+                              <>
+                                <span className="w-1.5 h-1.5 bg-red-500 rounded-full mr-1"></span>
+                                {formatHoursMinutesSeconds(record.missingHours)} missing
+                              </>
+                            ) : record.availableHours ? (
+                              <>
+                                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-1"></span>
+                                {formatHoursMinutesSeconds(record.availableHours)} expected
+                              </>
+                            ) : (
+                              <>
+                                <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></span>
+                                Full time logged
+                              </>
+                            )}
                           </div>
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                          {(record.activityPercentage || 0).toFixed(1)}%
+
+                        {/* Logged Hours */}
+                        <td className="py-3 px-3">
+                          <div className="font-semibold text-blue-600 text-sm" title="Total time tracked by Flowace software">
+                            {formatHoursMinutesSeconds(
+                              record.loggedHours !== undefined && record.loggedHours !== null
+                                ? record.loggedHours
+                                : (record.activeHours || 0)
+                            )}
+                          </div>
+                          <div className="text-xs text-gray-400" title="Decimal hours from CSV">
+                            {formatDecimal(
+                              record.loggedHours !== undefined && record.loggedHours !== null
+                                ? record.loggedHours
+                                : (record.activeHours || 0)
+                            )}h
+                          </div>
+                          {record.activeHours !== undefined && record.activeHours !== null && (
+                            <div className="text-xs text-gray-500">
+                              {formatHoursMinutesSeconds(record.activeHours)} active
+                            </div>
+                          )}
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate">
-                          {record.teams || '-'}
+
+                        {/* Active/Idle Time */}
+                        <td className="py-3 px-3">
+                          <div className="text-sm space-y-1">
+                            <div className="flex items-center text-green-600">
+                              <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                              Active: {formatHoursMinutesSeconds(record.activeHours || 0)}
+                            </div>
+                            <div className="flex items-center text-orange-600">
+                              <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
+                              Idle: {formatHoursMinutesSeconds(record.idleHours || 0)}
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Productivity */}
+                        <td className="py-3 px-3">
+                          <div className="space-y-1">
+                            <div className="flex items-center space-x-1">
+                              <div className="w-12 bg-gray-200 rounded-full h-1.5">
+                                <div
+                                  className={`h-1.5 rounded-full ${
+                                    (record.productivityPercentage || 0) >= 80
+                                      ? 'bg-green-600'
+                                      : (record.productivityPercentage || 0) >= 60
+                                      ? 'bg-yellow-500'
+                                      : 'bg-red-500'
+                                  }`}
+                                  style={{
+                                    width: `${Math.min(100, (record.productivityPercentage || 0))}%`
+                                  }}
+                                ></div>
+                              </div>
+                              <span className="text-xs font-medium">
+                                {(record.productivityPercentage || 0).toFixed(2)}%
+                              </span>
+                            </div>
+                            {(record.productiveHours || record.unproductiveHours) && (
+                              <div className="text-xs text-gray-500 flex items-center space-x-2">
+                                {record.productiveHours && record.productiveHours > 0 && (
+                                  <span className="flex items-center">
+                                    <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></span>
+                                    {formatHoursMinutesSeconds(record.productiveHours)}
+                                  </span>
+                                )}
+                                {record.unproductiveHours && record.unproductiveHours > 0 && (
+                                  <span className="flex items-center">
+                                    <span className="w-1.5 h-1.5 bg-red-500 rounded-full mr-1"></span>
+                                    {formatHoursMinutesSeconds(record.unproductiveHours)}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Activity % */}
+                        <td className="py-3 px-3">
+                          <div className="space-y-1">
+                            <div className="flex items-center space-x-1">
+                              <div className="w-12 bg-gray-200 rounded-full h-1.5">
+                                <div
+                                  className={`h-1.5 rounded-full ${
+                                    (record.activityPercentage || 0) >= 80
+                                      ? 'bg-blue-600'
+                                      : (record.activityPercentage || 0) >= 50
+                                      ? 'bg-blue-400'
+                                      : 'bg-gray-400'
+                                  }`}
+                                  style={{
+                                    width: `${Math.min(100, record.activityPercentage || 0)}%`
+                                  }}
+                                ></div>
+                              </div>
+                              <span className="text-xs font-medium">
+                                {(record.activityPercentage || 0).toFixed(2)}%
+                              </span>
+                            </div>
+                            {record.classifiedPercentage && (
+                              <div className="text-xs text-gray-500 flex items-center">
+                                <span className="w-1.5 h-1.5 bg-purple-500 rounded-full mr-1"></span>
+                                {(record.classifiedPercentage).toFixed(2)}% classified
+                              </div>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Status */}
+                        <td className="py-3 px-3">
+                          <Badge className={statusInfo.color} variant="secondary">
+                            {statusInfo.text}
+                          </Badge>
                         </td>
                       </tr>
                     );

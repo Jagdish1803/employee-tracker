@@ -84,14 +84,14 @@ export default function BreakTracker() {
 
       try {
         statusResponse = await breakService.getStatus(employeeId);
-      } catch (error) {
+      } catch {
         console.log('Break status not found, user likely not on break');
         statusResponse = null;
       }
 
       try {
         summaryResponse = await breakService.getSummary(employeeId);
-      } catch (error) {
+      } catch {
         console.log('Break summary not found');
         summaryResponse = null;
       }
@@ -181,7 +181,7 @@ export default function BreakTracker() {
       } else {
         setBreakHistory([]);
       }
-    } catch (error) {
+    } catch {
       console.log('No break history found for', selectedDate);
       setBreakHistory([]);
     }

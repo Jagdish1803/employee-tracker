@@ -215,12 +215,12 @@ export default function RaiseQuery() {
           <DialogTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
-              New Issue
+              Raise Query
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create New Issue</DialogTitle>
+              <DialogTitle>Raise New Query</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -253,7 +253,7 @@ export default function RaiseQuery() {
                   Cancel
                 </Button>
                 <Button onClick={handleCreateIssue} disabled={submitting}>
-                  {submitting ? 'Submitting...' : 'Submit Issue'}
+                  {submitting ? 'Submitting...' : 'Submit Query'}
                 </Button>
               </div>
             </div>
@@ -265,7 +265,7 @@ export default function RaiseQuery() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Issues</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Queries</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -356,7 +356,7 @@ export default function RaiseQuery() {
       {/* Issues List */}
       <Card>
         <CardHeader>
-          <CardTitle>Your Issues ({filteredIssues.length})</CardTitle>
+          <CardTitle>Your Queries ({filteredIssues.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
