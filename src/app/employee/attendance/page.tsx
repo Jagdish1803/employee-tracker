@@ -461,14 +461,168 @@ export default function MyAttendance() {
               )}
             </div>
 
-            <Tabs defaultValue="recent" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="recent">Recent Records</TabsTrigger>
+            <Tabs defaultValue="cards" className="w-full">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="cards">Card View</TabsTrigger>
+                <TabsTrigger value="table">Table View</TabsTrigger>
                 <TabsTrigger value="status">By Status</TabsTrigger>
                 <TabsTrigger value="analytics">Analytics</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="recent" className="mt-6">
+              <TabsContent value="cards" className="mt-6">
+                {loading ? (
+                  <div className="text-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading attendance records...</p>
+                  </div>
+                ) : attendanceRecords.length === 0 ? (
+                  <div className="text-center py-12">
+                    <CalendarDays className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600 text-lg font-medium">No attendance records found</p>
+                    <p className="text-sm text-gray-500 mt-1">Records will appear here once attendance is tracked</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {filteredRecords.map((record) => {
+                      const getBorderColor = (status: AttendanceRecord['status']) => {
+                        switch (status) {
+                          case 'PRESENT': return 'border-l-green-500';
+                          case 'LATE': return 'border-l-yellow-500';
+                          case 'ABSENT': return 'border-l-red-500';
+                          case 'HALF_DAY': return 'border-l-orange-500';
+                          case 'LEAVE_APPROVED': return 'border-l-blue-500';
+                          case 'WFH_APPROVED': return 'border-l-purple-500';
+                          default: return 'border-l-gray-500';
+                        }
+                      };
+
+                      return (
+                      <Card key={record.id} className={`hover:shadow-lg transition-all duration-300 border-l-4 ${getBorderColor(record.status)}`}>
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <div className={`p-2 rounded-full ${
+                                record.status === 'PRESENT' ? 'bg-green-50' :
+                                record.status === 'LATE' ? 'bg-yellow-50' :
+                                record.status === 'ABSENT' ? 'bg-red-50' :
+                                record.status === 'HALF_DAY' ? 'bg-orange-50' :
+                                record.status === 'LEAVE_APPROVED' ? 'bg-blue-50' :
+                                record.status === 'WFH_APPROVED' ? 'bg-purple-50' : 'bg-gray-50'
+                              }`}>
+                                <CalendarDays className={`h-5 w-5 ${
+                                  record.status === 'PRESENT' ? 'text-green-600' :
+                                  record.status === 'LATE' ? 'text-yellow-600' :
+                                  record.status === 'ABSENT' ? 'text-red-600' :
+                                  record.status === 'HALF_DAY' ? 'text-orange-600' :
+                                  record.status === 'LEAVE_APPROVED' ? 'text-blue-600' :
+                                  record.status === 'WFH_APPROVED' ? 'text-purple-600' : 'text-gray-600'
+                                }`} />
+                              </div>
+                              <div>
+                                <h3 className="font-semibold text-gray-900">
+                                  {new Date(record.date).toLocaleDateString('en-US', {
+                                    weekday: 'short',
+                                    month: 'short',
+                                    day: 'numeric',
+                                    year: 'numeric'
+                                  })}
+                                </h3>
+                                <p className="text-xs text-gray-500">
+                                  {new Date(record.date).toLocaleDateString('en-US', { weekday: 'long' })}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              {getStatusIcon(record.status)}
+                              <Badge variant={getStatusVariant(record.status)} className="text-xs">
+                                {formatStatus(record.status)}
+                              </Badge>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          {/* Time Information */}
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                              <div className="flex items-center space-x-2">
+                                <Clock className="h-4 w-4 text-green-600" />
+                                <span className="text-xs font-medium text-gray-700">Check In</span>
+                              </div>
+                              <p className="text-sm font-semibold text-gray-900 ml-6">
+                                {record.checkInTime || '--:--'}
+                              </p>
+                            </div>
+                            <div className="space-y-1">
+                              <div className="flex items-center space-x-2">
+                                <Clock className="h-4 w-4 text-red-600" />
+                                <span className="text-xs font-medium text-gray-700">Check Out</span>
+                              </div>
+                              <p className="text-sm font-semibold text-gray-900 ml-6">
+                                {record.checkOutTime || '--:--'}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Lunch Break */}
+                          {(record.lunchOutTime || record.lunchInTime) && (
+                            <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                              <div className="flex items-center space-x-2 mb-2">
+                                <Coffee className="h-4 w-4 text-yellow-600" />
+                                <span className="text-xs font-medium text-yellow-800">Lunch Break</span>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2 text-xs">
+                                <div>
+                                  <span className="text-yellow-700">Out: </span>
+                                  <span className="font-medium">{record.lunchOutTime || '--:--'}</span>
+                                </div>
+                                <div>
+                                  <span className="text-yellow-700">In: </span>
+                                  <span className="font-medium">{record.lunchInTime || '--:--'}</span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Hours Worked */}
+                          <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-2">
+                                <TrendingUp className="h-4 w-4 text-blue-600" />
+                                <span className="text-xs font-medium text-blue-800">Hours Worked</span>
+                              </div>
+                              <span className="text-lg font-bold text-blue-900">
+                                {record.hoursWorked?.toFixed(1) || '0.0'}h
+                              </span>
+                            </div>
+                            <div className="mt-2 w-full bg-blue-100 rounded-full h-2">
+                              <div
+                                className="bg-blue-600 h-2 rounded-full transition-all duration-500"
+                                style={{ width: `${Math.min((record.hoursWorked || 0) / 8 * 100, 100)}%` }}
+                              ></div>
+                            </div>
+                          </div>
+
+                          {/* Remarks */}
+                          {record.remarks && (
+                            <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                              <div className="flex items-start space-x-2">
+                                <AlertTriangle className="h-4 w-4 text-gray-600 mt-0.5" />
+                                <div>
+                                  <span className="text-xs font-medium text-gray-700">Remarks</span>
+                                  <p className="text-xs text-gray-600 mt-1">{record.remarks}</p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                      );
+                    })}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="table" className="mt-6">
                 {loading ? (
                   <div className="text-center py-12">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
