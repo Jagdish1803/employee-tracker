@@ -5,11 +5,27 @@ import { createIssueSchema } from '@/lib/validations';
 import { z } from 'zod';
 
 // GET /api/issues - Get issues with filters
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     await ensureConnection();
+
+    const { searchParams } = new URL(request.url);
+    const employeeId = searchParams.get('employeeId');
+    const status = searchParams.get('status');
+
+    // Build where clause
+    const where: { employeeId?: number; issueStatus?: string } = {};
+
+    if (employeeId) {
+      where.employeeId = parseInt(employeeId);
+    }
+
+    if (status) {
+      where.issueStatus = status;
+    }
+
     const issues = await prisma.issue.findMany({
+      where,
       include: { employee: true },
       orderBy: [{ raisedDate: 'desc' }],
     });
@@ -19,7 +35,6 @@ export async function GET(_request: NextRequest) {
       data: issues,
     });
   } catch (error) {
-    console.error('Error fetching issues:', error);
     return NextResponse.json(
       {
         success: false,
@@ -81,7 +96,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Error creating issue:', error);
     return NextResponse.json(
       {
         success: false,

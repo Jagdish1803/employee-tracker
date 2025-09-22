@@ -48,7 +48,6 @@ export default function MyAssets() {
       const response = await assetService.getEmployeeAssignments(employeeId);
       setAssignments(response);
     } catch (error) {
-      console.error('Error fetching asset assignments:', error);
       // Don't show error toast for empty results, just log it
       setAssignments([]);
     } finally {

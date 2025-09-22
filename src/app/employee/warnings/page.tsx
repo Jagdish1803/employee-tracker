@@ -33,7 +33,6 @@ export default function MyWarnings() {
       const response = await warningService.getByEmployee(employeeId);
       setWarnings(response || []);
     } catch (error) {
-      console.error('Error fetching warnings:', error);
       setWarnings([]);
     } finally {
       setLoading(false);

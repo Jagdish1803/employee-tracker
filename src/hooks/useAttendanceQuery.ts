@@ -24,17 +24,14 @@ export function useAttendanceRecords(params?: {
     queryKey: attendanceKeys.records(params),
     queryFn: async () => {
       try {
-        console.log('React Query fetching attendance...');
         const response = await attendanceApi.getAllAttendance({
           month: params?.month,
           year: params?.year,
           status: params?.status === 'ALL' ? undefined : params?.status,
           search: params?.search
         });
-        console.log('React Query received:', response.length, 'records');
         return response;
       } catch (error) {
-        console.error('React Query failed to fetch attendance records:', error);
         // Return empty array instead of throwing to prevent infinite loading
         return [];
       }
@@ -62,12 +59,9 @@ export function useUploadHistory() {
     queryKey: attendanceKeys.uploadHistory(),
     queryFn: async () => {
       try {
-        console.log('React Query fetching upload history...');
         const response = await attendanceApi.getUploadHistory();
-        console.log('React Query received upload history:', response.length, 'items');
         return response;
       } catch (error) {
-        console.error('React Query failed to fetch upload history:', error);
         // Return empty array instead of throwing
         return [];
       }
@@ -105,7 +99,6 @@ export function useUpdateAttendanceRecord() {
       queryClient.invalidateQueries({ queryKey: attendanceKeys.all });
     },
     onError: (error) => {
-      console.error('Update error:', error);
       toast.error('Failed to update attendance record');
     },
   });
@@ -151,7 +144,6 @@ export function useDeleteAttendanceRecord() {
         queryClient.setQueryData(attendanceKeys.records(), context.previousRecords);
       }
       
-      console.error('Delete error:', error);
       toast.error('Failed to delete attendance record');
     },
     onSettled: () => {
@@ -203,7 +195,6 @@ export function useDeleteUploadHistory() {
         queryClient.setQueryData(attendanceKeys.uploadHistory(), context.previousUploadHistory);
       }
 
-      console.error('Delete upload history error:', error);
       toast.error('Failed to delete upload history');
     },
     onSettled: () => {
@@ -253,7 +244,6 @@ export function useDeleteBatch() {
         queryClient.setQueryData(attendanceKeys.records(), context.previousRecords);
       }
       
-      console.error('Delete batch error:', error);
       toast.error('Failed to delete file');
     },
     onSettled: () => {
@@ -300,7 +290,6 @@ export function useUploadAttendanceFile() {
       uploadDate: string;
       onProgress?: (progress: number) => void;
     }) => {
-      console.log('Starting optimized file upload...');
 
       // Create FormData for the upload
       const formData = new FormData();
@@ -317,7 +306,6 @@ export function useUploadAttendanceFile() {
             const progress = Math.round((event.loaded / event.total) * 100);
             setUploadProgress(progress);
             onProgress?.(progress);
-            console.log(`Upload progress: ${progress}%`);
           }
         });
 
@@ -361,10 +349,8 @@ export function useUploadAttendanceFile() {
     onMutate: () => {
       // Reset progress at start
       setUploadProgress(0);
-      console.log('Upload mutation started');
     },
     onSuccess: (data) => {
-      console.log('Upload completed successfully:', data);
       setUploadProgress(100);
 
       // Invalidate all related queries to refresh data
@@ -375,7 +361,6 @@ export function useUploadAttendanceFile() {
       toast.success(`File uploaded successfully! Processed ${(data as { data?: { processedRecords?: number } })?.data?.processedRecords || 0} records`);
     },
     onError: (error) => {
-      console.error('Upload failed:', error);
       setUploadProgress(0);
 
       // Show detailed error message

@@ -85,14 +85,12 @@ export default function BreakTracker() {
       try {
         statusResponse = await breakService.getStatus(employeeId);
       } catch {
-        console.log('Break status not found, user likely not on break');
         statusResponse = null;
       }
 
       try {
         summaryResponse = await breakService.getSummary(employeeId);
       } catch {
-        console.log('Break summary not found');
         summaryResponse = null;
       }
 
@@ -138,7 +136,6 @@ export default function BreakTracker() {
       }
 
     } catch (error) {
-      console.error('Error fetching break data:', error);
       toast.error('Failed to load break data', {
         description: 'Unable to connect to the server. Please try again later.',
         duration: 5000
@@ -182,7 +179,6 @@ export default function BreakTracker() {
         setBreakHistory([]);
       }
     } catch {
-      console.log('No break history found for', selectedDate);
       setBreakHistory([]);
     }
   }, [employeeId, selectedDate]);

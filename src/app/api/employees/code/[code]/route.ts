@@ -57,7 +57,6 @@ export async function GET(
       data: employee
     });
   } catch (error) {
-    console.error('Error fetching employee by code:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to fetch employee' },
       { status: 500 }

@@ -44,7 +44,6 @@ export default function MyPerformance() {
       // Fetch real Flowace data for the current employee
       const flowaceResponse = await flowaceService.getByEmployee(employeeId);
 
-      console.log('Flowace response:', flowaceResponse);
 
       if (flowaceResponse.success && flowaceResponse.records) {
         // Process flowace records for performance data
@@ -125,7 +124,6 @@ export default function MyPerformance() {
         setWeeklyStats(basicWeeklyStats);
       }
     } catch (error) {
-      console.error('Error fetching performance data:', error);
       toast.error('Failed to load performance data');
 
       // Set empty data on error

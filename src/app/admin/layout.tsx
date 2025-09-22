@@ -86,8 +86,8 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
     if (isLoaded && user) {
       // Check if user has admin code TIPL1002
       const isAdmin = user.publicMetadata?.adminCode === 'TIPL1002' ||
-                     user.username === 'TIPL1002' ||
-                     user.emailAddresses[0]?.emailAddress.includes('TIPL1002');
+                     user.username?.toUpperCase() === 'TIPL1002' ||
+                     user.emailAddresses[0]?.emailAddress.toUpperCase().includes('TIPL1002');
 
       if (!isAdmin) {
         // Redirect non-admin users to employee page
@@ -107,8 +107,8 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
 
   // If user is not admin, don't render anything (will redirect)
   const isAdmin = user?.publicMetadata?.adminCode === 'TIPL1002' ||
-                 user?.username === 'TIPL1002' ||
-                 user?.emailAddresses[0]?.emailAddress.includes('TIPL1002');
+                 user?.username?.toUpperCase() === 'TIPL1002' ||
+                 user?.emailAddresses[0]?.emailAddress.toUpperCase().includes('TIPL1002');
 
   if (!isAdmin) {
     return (

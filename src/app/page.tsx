@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   SignInButton,
-  SignUpButton,
   SignedIn,
   SignedOut,
   UserButton,
@@ -19,10 +18,10 @@ export default function HomePage() {
 
   useEffect(() => {
     if (isLoaded && user) {
-      // Check if user has admin code TIPL1002 in their metadata or username
+      // Check if user has admin code TIPL1002 in their metadata, username, or email
       const isAdmin = user.publicMetadata?.adminCode === 'TIPL1002' ||
-                     user.username === 'TIPL1002' ||
-                     user.emailAddresses[0]?.emailAddress.includes('TIPL1002');
+                     user.username?.toUpperCase() === 'TIPL1002' ||
+                     user.emailAddresses[0]?.emailAddress.toUpperCase().includes('TIPL1002');
 
       if (isAdmin) {
         router.push('/admin');
@@ -56,21 +55,6 @@ export default function HomePage() {
                     Sign In
                   </Button>
                 </SignInButton>
-
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-gray-300" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-2 text-gray-500">New user?</span>
-                  </div>
-                </div>
-
-                <SignUpButton mode="modal">
-                  <Button variant="outline" className="w-full" size="lg">
-                    Create Account
-                  </Button>
-                </SignUpButton>
               </div>
 
               <div className="mt-6 text-xs text-gray-500 text-center">

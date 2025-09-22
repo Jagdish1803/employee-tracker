@@ -30,7 +30,6 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search');
     const employeeId = searchParams.get('employeeId');
 
-    console.log('Fetching unified attendance records with params:', { month, year, status, search, employeeId });
 
     // Build where clause for date filtering with proper date handling
     let dateFilter: Record<string, unknown> = {};
@@ -84,11 +83,9 @@ export async function GET(request: NextRequest) {
         { employee: { name: 'asc' } }
       ]
     }).catch(error => {
-      console.error('Error querying AttendanceRecord table:', error);
       return [];
     });
 
-    console.log(`Found ${attendanceRecords.length} records from AttendanceRecord table`);
 
     // Helper function for safe time formatting (timezone-agnostic)
     const formatTime = (dateTime: Date | null | undefined): string | null => {
@@ -103,7 +100,6 @@ export async function GET(request: NextRequest) {
         
         return `${hours}:${minutes}`;
       } catch (error) {
-        console.error('Error formatting time:', error);
         return null;
       }
     };
@@ -114,7 +110,6 @@ export async function GET(request: NextRequest) {
       try {
         return date.toISOString().split('T')[0];
       } catch (error) {
-        console.error('Error formatting date:', error);
         return '';
       }
     };
@@ -145,7 +140,6 @@ export async function GET(request: NextRequest) {
           employee: record.employee
         };
       } catch (error) {
-        console.error('Error transforming AttendanceRecord:', error, record);
         return null;
       }
     }).filter(Boolean);
@@ -158,12 +152,10 @@ export async function GET(request: NextRequest) {
         if (dateCompare !== 0) return dateCompare;
         return (a.employeeName || '').localeCompare(b.employeeName || '');
       } catch (error) {
-        console.error('Error sorting records:', error);
         return 0;
       }
     });
 
-    console.log(`Returning ${transformedRecords.length} total records after processing`);
 
     return NextResponse.json({
       success: true,
@@ -175,7 +167,6 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error fetching unified attendance records:', error);
     return NextResponse.json(
       {
         success: false,
@@ -192,7 +183,6 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    console.log('Creating attendance record with data:', body);
 
     const validatedData = createAttendanceSchema.parse(body);
 
@@ -252,7 +242,6 @@ export async function POST(request: NextRequest) {
           return utcDate;
         }
       } catch (error) {
-        console.error(`Error parsing time ${timeStr}:`, error);
         return null;
       }
     };
@@ -274,7 +263,6 @@ export async function POST(request: NextRequest) {
     // Validate status logic
     const finalStatus = validatedData.status;
     if (finalStatus === 'PRESENT' && !checkInTime && !totalHours && !hasTagWork && !hasFlowaceWork) {
-      console.warn(`Employee ${employee.name} marked present but no evidence of work found`);
     }
 
     const attendanceRecord = await prisma.attendanceRecord.upsert({
@@ -329,7 +317,6 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    console.log('Successfully created/updated attendance record:', attendanceRecord.id);
 
     return NextResponse.json({
       success: true,
@@ -338,7 +325,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error in POST /api/attendance:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

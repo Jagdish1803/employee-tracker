@@ -18,7 +18,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { clearAdminSession } from "@/lib/admin-auth";
+import { useClerk } from "@clerk/nextjs";
 
 const navigation = [
   { 
@@ -108,10 +108,10 @@ interface AdminSidebarProps {
 export default function AdminSidebar({ isCollapsed = false }: AdminSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { signOut } = useClerk();
 
   const handleLogout = () => {
-    clearAdminSession();
-    router.push('/');
+    signOut(() => router.push('/'));
   };
   
   return (

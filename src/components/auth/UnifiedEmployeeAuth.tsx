@@ -1,34 +1,14 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
 import { useRouter } from 'next/navigation'
-import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { User, ArrowLeft } from 'lucide-react'
-import { toast } from 'sonner'
+import { SignInButton } from '@clerk/nextjs'
 
 export function UnifiedEmployeeAuth() {
   const router = useRouter()
-  const { login, isLoading } = useEmployeeAuth()
-  const [employeeCode, setEmployeeCode] = useState('')
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!employeeCode.trim()) {
-      toast.error('Please enter your employee code')
-      return
-    }
-
-    const success = await login(employeeCode.trim().toUpperCase())
-
-    if (!success) {
-      setEmployeeCode('') // Clear the input on failed login
-    }
-  }
 
   const handleBack = () => {
     router.push('/')
@@ -52,33 +32,15 @@ export function UnifiedEmployeeAuth() {
           </div>
           <CardTitle className="text-2xl">Employee Portal</CardTitle>
           <CardDescription>
-            Enter your employee code to access your dashboard
+            Sign in to access your employee dashboard
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="employeeCode">Employee Code</Label>
-              <div className="relative">
-                <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  id="employeeCode"
-                  type="text"
-                  placeholder="e.g., ZOOT1049"
-                  value={employeeCode}
-                  onChange={(e) => setEmployeeCode(e.target.value)}
-                  className="pl-10"
-                  autoFocus
-                />
-              </div>
-              <p className="text-xs text-gray-500">
-                Use your unique employee code assigned by the administrator
-              </p>
-            </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Verifying...' : 'Access Employee Portal'}
+          <SignInButton mode="modal">
+            <Button className="w-full">
+              Sign In to Employee Portal
             </Button>
-          </form>
+          </SignInButton>
         </CardContent>
       </Card>
     </div>

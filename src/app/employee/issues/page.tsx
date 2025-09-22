@@ -90,7 +90,6 @@ export default function RaiseQuery() {
         setIssues([]);
       }
     } catch (error) {
-      console.error('Error fetching queries:', error);
       // Don't show error toast for empty results
       setIssues([]);
     } finally {
@@ -146,7 +145,6 @@ export default function RaiseQuery() {
         toast.error('Failed to create issue');
       }
     } catch (error) {
-      console.error('Error creating issue:', error);
       toast.error('Failed to create issue');
     } finally {
       setSubmitting(false);

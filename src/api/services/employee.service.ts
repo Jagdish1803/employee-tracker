@@ -11,7 +11,6 @@ export class EmployeeService {
       const response = await apiClient.get(this.basePath);
       return { data: response.data };
     } catch (error) {
-      console.error('Error fetching employees:', error);
       throw error;
     }
   }
@@ -22,7 +21,6 @@ export class EmployeeService {
       const response = await apiClient.get(`${this.basePath}/${id}`);
       return { data: response.data };
     } catch (error) {
-      console.error('Error fetching employee:', error);
       throw error;
     }
   }
@@ -33,7 +31,6 @@ export class EmployeeService {
       const response = await apiClient.post(this.basePath, data);
       return { data: response.data };
     } catch (error) {
-      console.error('Error creating employee:', error);
       throw error;
     }
   }
@@ -44,7 +41,6 @@ export class EmployeeService {
       const response = await apiClient.put(`${this.basePath}/${id}`, data);
       return { data: response.data };
     } catch (error) {
-      console.error('Error updating employee:', error);
       throw error;
     }
   }
@@ -55,7 +51,6 @@ export class EmployeeService {
       const response = await apiClient.delete(`${this.basePath}/${id}`);
       return { data: response.data };
     } catch (error) {
-      console.error('Error deleting employee:', error);
       throw error;
     }
   }
@@ -66,7 +61,6 @@ export class EmployeeService {
       const response = await apiClient.post(`${this.basePath}/login`, { employeeCode });
       return { data: response.data };
     } catch (error) {
-      console.error('Error during employee login:', error);
       throw error;
     }
   }
@@ -77,7 +71,6 @@ export class EmployeeService {
       const response = await apiClient.get(`${this.basePath}/code/${employeeCode}`);
       return { data: response.data };
     } catch (error) {
-      console.error('Error fetching employee by code:', error);
       throw error;
     }
   }

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,9 +17,20 @@ import {
 } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
-import { attendanceService } from '@/api';
 import { toast } from 'sonner';
 import { AttendanceRecord as APIAttendanceRecord } from '@/types';
+import { useEmployeeCalendar, useEmployeeSummary } from '@/hooks/useAttendanceQuery';
+
+interface AttendanceSummary {
+  attendancePercentage: number;
+  presentDays: number;
+  totalWorkingDays: number;
+  totalHoursWorked: number;
+  averageHoursPerDay: number;
+  lateDays: number;
+  absentDays: number;
+  leaveDays: number;
+}
 
 interface AttendanceRecord extends APIAttendanceRecord {
   breakInTime?: string;
@@ -31,126 +42,59 @@ interface AttendanceRecord extends APIAttendanceRecord {
   [key: string]: unknown;
 }
 
-interface AttendanceSummary {
-  employeeId: number;
-  month: string;
-  year: string;
-  totalWorkingDays: number;
-  presentDays: number;
-  absentDays: number;
-  halfDays: number;
-  lateDays: number;
-  leaveDays: number;
-  totalHoursWorked: number;
-  averageHoursPerDay: number;
-  attendancePercentage: number;
-}
 
 export default function MyAttendance() {
   const { user } = useUser();
   const { employee, loading: employeeLoading, error: employeeError, employeeId } = useEmployeeData();
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
-  const [summary, setSummary] = useState<AttendanceSummary | null>(null);
-  const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<string>('');
   const [monthFilter, setMonthFilter] = useState<string>(new Date().getMonth().toString());
   const [yearFilter, setYearFilter] = useState<string>(new Date().getFullYear().toString());
+
+  // Calculate current month/year for React Query
+  const month = (parseInt(monthFilter) + 1).toString();
+  const year = yearFilter;
+
+  // Use React Query hooks for optimized data fetching
+  const {
+    data: calendarData,
+    isLoading: calendarLoading,
+    error: calendarError
+  } = useEmployeeCalendar(employeeId || 0, month, year);
+
+  const {
+    data: summary,
+    isLoading: summaryLoading,
+    error: summaryError
+  } = useEmployeeSummary(employeeId || 0, month, year);
+
+  // Handle loading and error states
+  const loading = calendarLoading || summaryLoading || employeeLoading;
+
+  // Process calendar data into attendance records
+  React.useEffect(() => {
+    if (calendarData && Array.isArray(calendarData)) {
+      setAttendanceRecords(calendarData as AttendanceRecord[]);
+    } else if (calendarData && 'data' in calendarData && Array.isArray((calendarData as { data: unknown }).data)) {
+      setAttendanceRecords((calendarData as { data: AttendanceRecord[] }).data);
+    } else {
+      setAttendanceRecords([]);
+    }
+  }, [calendarData]);
+
+  // Show error notifications
+  React.useEffect(() => {
+    if (calendarError || summaryError) {
+      toast.error('Failed to load attendance data');
+    }
+  }, [calendarError, summaryError]);
 
   const filteredRecords = attendanceRecords.filter(record => {
     const statusMatch = statusFilter === 'all' || record.status === statusFilter;
     const dateMatch = !dateFilter || record.date.includes(dateFilter);
     return statusMatch && dateMatch;
   });
-
-  const fetchAttendanceData = useCallback(async () => {
-    if (!employeeId) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      const month = parseInt(monthFilter) + 1;
-      const year = parseInt(yearFilter);
-
-      // Fetch real attendance data from API
-      const [attendanceResponse, summaryResponse] = await Promise.all([
-        attendanceService.getByEmployee(employeeId, {
-          month: month.toString(),
-          year: year.toString()
-        }),
-        attendanceService.getEmployeeSummary(employeeId, month.toString(), year.toString())
-      ]);
-
-      // Set attendance records
-      let currentRecords: AttendanceRecord[] = [];
-      if (Array.isArray(attendanceResponse)) {
-        currentRecords = attendanceResponse as AttendanceRecord[];
-
-        // Debug: Log the first record to see all available fields
-        if (currentRecords.length > 0) {
-          console.log('First attendance record fields:', Object.keys(currentRecords[0]));
-          console.log('Sample record with break data:', currentRecords[0]);
-        }
-
-        setAttendanceRecords(currentRecords);
-      } else if (attendanceResponse && typeof attendanceResponse === 'object' && 'data' in attendanceResponse) {
-        // Handle case where API returns { data: [...] }
-        const data = (attendanceResponse as { data: unknown }).data;
-        if (Array.isArray(data)) {
-          currentRecords = data as AttendanceRecord[];
-          setAttendanceRecords(currentRecords);
-        } else {
-          setAttendanceRecords([]);
-        }
-      } else {
-        setAttendanceRecords([]);
-      }
-
-      // Set summary
-      if (summaryResponse && typeof summaryResponse === 'object') {
-        setSummary(summaryResponse as unknown as AttendanceSummary);
-      } else {
-        // Create a basic summary from current records
-        const basicSummary: AttendanceSummary = {
-          employeeId,
-          month: month.toString(),
-          year: year.toString(),
-          totalWorkingDays: 26,
-          presentDays: currentRecords.filter(r => ['PRESENT', 'LATE', 'WFH_APPROVED'].includes(r.status)).length,
-          absentDays: currentRecords.filter(r => r.status === 'ABSENT').length,
-          halfDays: currentRecords.filter(r => r.status === 'HALF_DAY').length,
-          lateDays: currentRecords.filter(r => r.status === 'LATE').length,
-          leaveDays: currentRecords.filter(r => r.status === 'LEAVE_APPROVED').length,
-          totalHoursWorked: currentRecords.reduce((sum, r) => sum + (r.hoursWorked || 0), 0),
-          averageHoursPerDay: 0,
-          attendancePercentage: 0
-        };
-
-        if (basicSummary.presentDays > 0) {
-          basicSummary.averageHoursPerDay = basicSummary.totalHoursWorked / basicSummary.presentDays;
-          basicSummary.attendancePercentage = (basicSummary.presentDays / basicSummary.totalWorkingDays) * 100;
-        }
-
-        setSummary(basicSummary);
-      }
-    } catch (error) {
-      console.error('Error fetching attendance:', error);
-      toast.error('Failed to load attendance data');
-      setAttendanceRecords([]);
-      setSummary(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [employeeId, monthFilter, yearFilter]);
-
-  useEffect(() => {
-    if (employeeId) {
-      fetchAttendanceData();
-    }
-  }, [fetchAttendanceData, employeeId]);
 
   // Helper function to get break in time with fallback logic
   const getBreakInTime = (record: AttendanceRecord) => {
@@ -248,8 +192,8 @@ export default function MyAttendance() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-gray-500 text-sm font-medium">Attendance Rate</p>
-                    <p className="text-3xl font-bold text-gray-900">{Math.round(summary.attendancePercentage)}%</p>
-                    <p className="text-gray-500 text-sm">{summary.presentDays} of {summary.totalWorkingDays} days</p>
+                    <p className="text-3xl font-bold text-gray-900">{Math.round((summary as unknown as AttendanceSummary)?.attendancePercentage || 0)}%</p>
+                    <p className="text-gray-500 text-sm">{(summary as unknown as AttendanceSummary)?.presentDays || 0} of {(summary as unknown as AttendanceSummary)?.totalWorkingDays || 0} days</p>
                   </div>
                   <Target className="h-8 w-8 text-blue-600" />
                 </div>
@@ -261,8 +205,8 @@ export default function MyAttendance() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-gray-500 text-sm font-medium">Total Hours</p>
-                    <p className="text-3xl font-bold text-gray-900">{summary.totalHoursWorked.toFixed(1)}h</p>
-                    <p className="text-gray-500 text-sm">Avg: {summary.averageHoursPerDay.toFixed(1)}h/day</p>
+                    <p className="text-3xl font-bold text-gray-900">{((summary as unknown as AttendanceSummary)?.totalHoursWorked || 0).toFixed(1)}h</p>
+                    <p className="text-gray-500 text-sm">Avg: {((summary as unknown as AttendanceSummary)?.averageHoursPerDay || 0).toFixed(1)}h/day</p>
                   </div>
                   <Timer className="h-8 w-8 text-green-600" />
                 </div>
@@ -274,8 +218,8 @@ export default function MyAttendance() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-gray-500 text-sm font-medium">Present Days</p>
-                    <p className="text-3xl font-bold text-gray-900">{summary.presentDays}</p>
-                    <p className="text-gray-500 text-sm">Including {summary.lateDays} late</p>
+                    <p className="text-3xl font-bold text-gray-900">{(summary as unknown as AttendanceSummary)?.presentDays || 0}</p>
+                    <p className="text-gray-500 text-sm">Including {(summary as unknown as AttendanceSummary)?.lateDays || 0} late</p>
                   </div>
                   <Award className="h-8 w-8 text-purple-600" />
                 </div>
@@ -287,8 +231,8 @@ export default function MyAttendance() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-gray-500 text-sm font-medium">Absent Days</p>
-                    <p className="text-3xl font-bold text-gray-900">{summary.absentDays}</p>
-                    <p className="text-gray-500 text-sm">{summary.leaveDays} approved leaves</p>
+                    <p className="text-3xl font-bold text-gray-900">{(summary as unknown as AttendanceSummary)?.absentDays || 0}</p>
+                    <p className="text-gray-500 text-sm">{(summary as unknown as AttendanceSummary)?.leaveDays || 0} approved leaves</p>
                   </div>
                   <Activity className="h-8 w-8 text-red-600" />
                 </div>

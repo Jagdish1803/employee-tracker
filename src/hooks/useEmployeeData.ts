@@ -24,18 +24,9 @@ export function useEmployeeData() {
         // Extract employee code from various possible sources
         let employeeCode: string | null = null;
 
-        console.log('User data for employee lookup:', {
-          username: user.username,
-          email: user.emailAddresses?.[0]?.emailAddress,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          fullName: user.fullName
-        });
-
         // Check if username is the employee code
         if (user.username) {
           employeeCode = user.username.toUpperCase();
-          console.log('Using username as employee code:', employeeCode);
         }
         // Check if email contains the employee code (e.g., ZOOT1806@company.com)
         else if (user.emailAddresses?.[0]?.emailAddress) {
@@ -44,26 +35,20 @@ export function useEmployeeData() {
           // Check if email prefix looks like an employee code (alphanumeric)
           if (/^[A-Z0-9]+$/i.test(emailPrefix)) {
             employeeCode = emailPrefix.toUpperCase();
-            console.log('Using email prefix as employee code:', employeeCode);
           }
         }
         // Check if firstName or lastName contains the employee code
         else if (user.firstName && /^[A-Z0-9]+$/i.test(user.firstName)) {
           employeeCode = user.firstName.toUpperCase();
-          console.log('Using firstName as employee code:', employeeCode);
         }
 
         if (!employeeCode) {
-          console.log('No valid employee code found in user profile');
           setError('No valid employee code found in user profile');
           setLoading(false);
           return;
         }
 
-        console.log('Looking up employee with code:', employeeCode);
-
         const response = await employeeService.getByCode(employeeCode);
-        console.log('Employee lookup response:', response);
 
         if (response.data.success && response.data.data) {
           // Map API response to Employee type
@@ -87,14 +72,11 @@ export function useEmployeeData() {
             role: apiEmployee.role as 'ADMIN' | 'EMPLOYEE',
             createdAt: new Date(apiEmployee.createdAt)
           };
-          console.log('✅ Employee found and mapped:', employee);
           setEmployee(employee);
         } else {
-          console.log('❌ Employee not found for code:', employeeCode);
           setError(`Employee not found for code: ${employeeCode}`);
         }
       } catch (err) {
-        console.error('Error fetching employee data:', err);
         setError('Failed to fetch employee data');
       } finally {
         setLoading(false);

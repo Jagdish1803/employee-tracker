@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext'
+import { useUser } from '@clerk/nextjs'
 import { UnifiedEmployeeAuth } from './UnifiedEmployeeAuth'
 
 interface EmployeeAuthGuardProps {
@@ -9,9 +9,9 @@ interface EmployeeAuthGuardProps {
 }
 
 export function EmployeeAuthGuard({ children }: EmployeeAuthGuardProps) {
-  const { isAuthenticated, isLoading } = useEmployeeAuth()
+  const { isSignedIn, isLoaded } = useUser()
 
-  if (isLoading) {
+  if (!isLoaded) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center">
@@ -22,7 +22,7 @@ export function EmployeeAuthGuard({ children }: EmployeeAuthGuardProps) {
     )
   }
 
-  if (!isAuthenticated) {
+  if (!isSignedIn) {
     return <UnifiedEmployeeAuth />
   }
 
