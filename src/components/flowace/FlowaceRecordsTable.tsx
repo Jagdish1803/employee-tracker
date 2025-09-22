@@ -191,9 +191,11 @@ export function FlowaceRecordsTable({
                                 <div className="font-medium text-gray-900 text-sm">
                                   {record.employeeName}
                                 </div>
-                                <div className="text-xs text-gray-500">
-                                  {record.employeeCode}
-                                </div>
+                                {record.memberEmail && (
+                                  <div className="text-xs text-gray-500">
+                                    {record.memberEmail}
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>

@@ -108,8 +108,16 @@ export class FlowaceService {
   // Get flowace records by employee
   async getByEmployee(employeeId: number): Promise<{ success: boolean; records: FlowaceRecord[] }> {
     try {
-      const response = await apiClient.get(`${this.basePath}/employee/${employeeId}`);
-      return response.data;
+      const response = await apiClient.get(`${this.basePath}?employeeId=${employeeId}`);
+      const apiData = response.data;
+
+      // Handle the API response structure: { success: true, data: [...], meta: {...} }
+      if (apiData.success && Array.isArray(apiData.data)) {
+        return { success: true, records: apiData.data };
+      } else {
+        console.warn('Unexpected API response structure:', apiData);
+        return { success: false, records: [] };
+      }
     } catch (error) {
       console.error('Error fetching flowace records by employee:', error);
       return { success: false, records: [] };

@@ -269,7 +269,7 @@ export default function FlowaceActivity() {
                   </div>
                   <div className="text-center p-4 bg-gray-50 rounded-lg">
                     <div className="text-3xl font-bold text-gray-600 mb-1">
-                      {flowaceRecords.reduce((sum, record) => sum + (record.totalHours || 0), 0).toFixed(1)}h
+                      {flowaceRecords.reduce((sum, record) => sum + (record.loggedHours || 0), 0).toFixed(1)}h
                     </div>
                     <p className="text-sm text-gray-600/70">Total Hours</p>
                   </div>
@@ -289,7 +289,7 @@ export default function FlowaceActivity() {
                         </div>
                         <div className="text-right">
                           <div className="text-sm font-medium">{record.productivityPercentage ?? 0}%</div>
-                          <div className="text-xs text-gray-500">{record.totalHours ?? 0}h</div>
+                          <div className="text-xs text-gray-500">{record.loggedHours ?? 0}h</div>
                         </div>
                       </div>
                     ))}
@@ -459,7 +459,7 @@ export default function FlowaceActivity() {
                         }`}></div>
                         <div>
                           <p className="font-medium text-gray-900">{format(new Date(record.date), 'MMM d, yyyy')}</p>
-                          <p className="text-sm text-gray-600">{record.totalHours ?? 0} hours tracked</p>
+                          <p className="text-sm text-gray-600">{record.loggedHours ?? 0} hours tracked</p>
                         </div>
                       </div>
                       <div className="text-right">
@@ -494,7 +494,7 @@ export default function FlowaceActivity() {
                   <div className="p-4 border rounded-lg">
                     <h4 className="font-medium text-gray-900 mb-2">Hours Tracked</h4>
                     <div className="text-2xl font-bold text-gray-900">
-                      {filteredRecords.reduce((sum, record) => sum + (record.totalHours || 0), 0).toFixed(1)}h
+                      {filteredRecords.reduce((sum, record) => sum + (record.loggedHours || 0), 0).toFixed(1)}h
                     </div>
                   </div>
                 </div>

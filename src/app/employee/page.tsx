@@ -186,7 +186,7 @@ export default function EmployeeDashboard() {
                 Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {employee?.name || 'Employee'}!
               </h1>
               <p className="text-gray-600 mt-1">
-                Employee ID: <span className="font-medium">{employee?.employeeCode}</span> • 
+                Employee: <span className="font-medium">{employee?.name}</span> •
                 {employee?.department && <span className="ml-1">{employee.department}</span>}
               </p>
             </div>
