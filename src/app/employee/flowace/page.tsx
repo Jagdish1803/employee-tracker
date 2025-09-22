@@ -50,11 +50,35 @@ export default function FlowaceActivity() {
     try {
       setLoading(true);
       console.log('Fetching flowace data for employee ID:', employeeId);
+
+      // First try to get employee-specific records
       const response = await flowaceService.getByEmployee(employeeId);
       console.log('Flowace API response:', response);
 
       if (response.success && Array.isArray(response.records)) {
         console.log('Total flowace records found:', response.records.length);
+
+        if (response.records.length === 0) {
+          console.log('No records found for this employee. Checking if ANY flowace records exist...');
+
+          // Try to get ALL records to see if there's any flowace data at all
+          try {
+            const allRecordsResponse = await flowaceService.getAll();
+            console.log('All flowace records response:', allRecordsResponse);
+
+            if (allRecordsResponse.success && allRecordsResponse.records.length > 0) {
+              console.log(`Found ${allRecordsResponse.records.length} total flowace records in database, but none for employee ID ${employeeId}`);
+              console.log('Available employees in flowace data:', [...new Set(allRecordsResponse.records.map(r => `${r.employeeName} (ID: ${r.employeeId})`))]);
+              toast.error(`No flowace data found for your account. Found ${allRecordsResponse.records.length} total records for other employees.`);
+            } else {
+              console.log('No flowace records exist in the database at all');
+              toast.error('No flowace data has been uploaded yet. Please contact your administrator.');
+            }
+          } catch (allRecordsError) {
+            console.error('Error checking all records:', allRecordsError);
+          }
+        }
+
         // Filter records by current month
         const filteredRecords = response.records.filter(record => {
           const recordDate = new Date(record.date);
