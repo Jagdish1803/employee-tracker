@@ -99,8 +99,22 @@ export default function FlowaceActivity() {
 
       if (response.success && Array.isArray(response.records)) {
         setFlowaceRecords(response.records);
+      } else if (response && typeof response === 'object' && 'data' in response) {
+        // Handle case where API returns { data: [...] }
+        const data = (response as { data: unknown }).data;
+        if (Array.isArray(data)) {
+          setFlowaceRecords(data);
+        } else {
+          setFlowaceRecords([]);
+        }
+      } else {
+        setFlowaceRecords([]);
+      }
 
-        if (response.records.length === 0) {
+        const recordsToCheck = response.success && Array.isArray(response.records) ? response.records :
+                           (response && 'data' in response && Array.isArray((response as { data: unknown }).data)) ? (response as { data: FlowaceRecord[] }).data : [];
+
+        if (recordsToCheck.length === 0) {
           // Try to get ALL records to see if there's any flowace data at all
           try {
             const allRecordsResponse = await flowaceService.getAll();
@@ -123,9 +137,6 @@ export default function FlowaceActivity() {
             });
           }
         }
-      } else {
-        setFlowaceRecords([]);
-      }
     } catch {
       toast.error('Failed to load activity data', {
         description: "There was an error connecting to the server. Please try again later.",
@@ -156,26 +167,26 @@ export default function FlowaceActivity() {
   };
 
   const getProductivityColor = (percentage: number) => {
-    if (percentage >= 80) return 'text-green-600 bg-green-50 border-green-200';
-    if (percentage >= 60) return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-    return 'text-red-600 bg-red-50 border-red-200';
+    if (percentage >= 80) return 'text-gray-900 bg-gray-100 border-gray-300';
+    if (percentage >= 60) return 'text-gray-700 bg-gray-50 border-gray-200';
+    return 'text-gray-600 bg-gray-50 border-gray-200';
   };
 
   const getProductivityIcon = (percentage: number) => {
-    if (percentage >= 80) return <Target className="h-4 w-4 text-green-600" />;
-    if (percentage >= 60) return <TrendingUp className="h-4 w-4 text-yellow-600" />;
-    return <Activity className="h-4 w-4 text-red-600" />;
+    if (percentage >= 80) return <Target className="h-4 w-4 text-gray-900" />;
+    if (percentage >= 60) return <TrendingUp className="h-4 w-4 text-gray-700" />;
+    return <Activity className="h-4 w-4 text-gray-600" />;
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 p-6">
+    <div className="min-h-screen bg-white p-6">
       <div className="max-w-7xl mx-auto space-y-8">
-        {/* Modern Header */}
+        {/* Header */}
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-900 rounded-full mb-4">
             <Activity className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold text-gray-900">
             Activity Analytics Dashboard
           </h1>
           <p className="text-lg text-gray-600">Monitor your productivity, optimize your workflow</p>
@@ -183,65 +194,65 @@ export default function FlowaceActivity() {
 
         {/* Key Metrics Cards */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+          <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-purple-100 text-sm font-medium">Avg Productivity</p>
-                  <p className="text-3xl font-bold">{summary.avgProductivity.toFixed(1)}%</p>
-                  <p className="text-purple-100 text-sm">{summary.totalSessions} sessions tracked</p>
+                  <p className="text-gray-500 text-sm font-medium">Avg Productivity</p>
+                  <p className="text-3xl font-bold text-gray-900">{summary.avgProductivity.toFixed(1)}%</p>
+                  <p className="text-gray-500 text-sm">{summary.totalSessions} sessions tracked</p>
                 </div>
-                <Target className="h-12 w-12 text-purple-200" />
+                <Target className="h-12 w-12 text-gray-400" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+          <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-100 text-sm font-medium">Total Hours</p>
-                  <p className="text-3xl font-bold">{summary.totalHours.toFixed(1)}h</p>
-                  <p className="text-blue-100 text-sm">{summary.totalActiveHours.toFixed(1)}h active time</p>
+                  <p className="text-gray-500 text-sm font-medium">Total Hours</p>
+                  <p className="text-3xl font-bold text-gray-900">{summary.totalHours.toFixed(1)}h</p>
+                  <p className="text-gray-500 text-sm">{summary.totalActiveHours.toFixed(1)}h active time</p>
                 </div>
-                <Timer className="h-12 w-12 text-blue-200" />
+                <Timer className="h-12 w-12 text-gray-400" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+          <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-green-100 text-sm font-medium">Peak Performance</p>
-                  <p className="text-3xl font-bold">{summary.peakProductivity.toFixed(1)}%</p>
-                  <p className="text-green-100 text-sm">{summary.consistentDays} consistent days</p>
+                  <p className="text-gray-500 text-sm font-medium">Peak Performance</p>
+                  <p className="text-3xl font-bold text-gray-900">{summary.peakProductivity.toFixed(1)}%</p>
+                  <p className="text-gray-500 text-sm">{summary.consistentDays} consistent days</p>
                 </div>
-                <Award className="h-12 w-12 text-green-200" />
+                <Award className="h-12 w-12 text-gray-400" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+          <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-orange-100 text-sm font-medium">Activity Rate</p>
-                  <p className="text-3xl font-bold">{summary.avgActivity.toFixed(1)}%</p>
-                  <p className="text-orange-100 text-sm">{summary.totalProductiveHours.toFixed(1)}h productive</p>
+                  <p className="text-gray-500 text-sm font-medium">Activity Rate</p>
+                  <p className="text-3xl font-bold text-gray-900">{summary.avgActivity.toFixed(1)}%</p>
+                  <p className="text-gray-500 text-sm">{summary.totalProductiveHours.toFixed(1)}h productive</p>
                 </div>
-                <Zap className="h-12 w-12 text-orange-200" />
+                <Zap className="h-12 w-12 text-gray-400" />
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Advanced Filters */}
-        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+        <Card className="border border-gray-200 shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5 text-purple-600" />
-              Smart Analytics Filters
+              <Filter className="h-5 w-5 text-gray-600" />
+              Analytics Filters
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -346,18 +357,18 @@ export default function FlowaceActivity() {
           </CardContent>
         </Card>
 
-        {/* Beautiful Activity Records */}
-        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+        {/* Activity Records */}
+        <Card className="border border-gray-200 shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-purple-600" />
+              <BarChart3 className="h-5 w-5 text-gray-600" />
               Daily Activity Sessions
             </CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
               <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-600 mx-auto mb-4"></div>
                 <p className="text-gray-600">Analyzing your activity data...</p>
               </div>
             ) : flowaceRecords.length === 0 ? (
@@ -369,21 +380,15 @@ export default function FlowaceActivity() {
             ) : (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {filteredRecords.map((record, index) => (
-                  <Card key={record.id || index} className={`hover:shadow-xl transition-all duration-300 border-l-4 ${
-                    (record.productivityPercentage || 0) >= 80 ? 'border-l-green-500' :
-                    (record.productivityPercentage || 0) >= 60 ? 'border-l-yellow-500' : 'border-l-red-500'
-                  } bg-white/90 backdrop-blur-sm`}>
+                  <Card key={record.id || index} className={`hover:shadow-md transition-all duration-300 border-l-4 ${
+                    (record.productivityPercentage || 0) >= 80 ? 'border-l-gray-900' :
+                    (record.productivityPercentage || 0) >= 60 ? 'border-l-gray-600' : 'border-l-gray-400'
+                  } bg-white border border-gray-200`}>
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          <div className={`p-3 rounded-full ${
-                            (record.productivityPercentage || 0) >= 80 ? 'bg-green-50' :
-                            (record.productivityPercentage || 0) >= 60 ? 'bg-yellow-50' : 'bg-red-50'
-                          }`}>
-                            <Calendar className={`h-6 w-6 ${
-                              (record.productivityPercentage || 0) >= 80 ? 'text-green-600' :
-                              (record.productivityPercentage || 0) >= 60 ? 'text-yellow-600' : 'text-red-600'
-                            }`} />
+                          <div className="p-3 rounded-full bg-gray-100">
+                            <Calendar className="h-6 w-6 text-gray-600" />
                           </div>
                           <div>
                             <h3 className="font-bold text-gray-900 text-lg">
@@ -406,16 +411,16 @@ export default function FlowaceActivity() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       {/* Work Schedule */}
-                      <div className="bg-blue-50 p-3 rounded-lg">
+                      <div className="bg-gray-50 p-3 rounded-lg">
                         <div className="flex items-center space-x-2 mb-2">
-                          <Clock className="h-4 w-4 text-blue-600" />
-                          <span className="text-sm font-medium text-blue-800">Work Schedule</span>
+                          <Clock className="h-4 w-4 text-gray-600" />
+                          <span className="text-sm font-medium text-gray-800">Work Schedule</span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-blue-900 font-medium">
+                          <span className="text-gray-900 font-medium">
                             {record.workStartTime || 'N/A'} - {record.workEndTime || 'N/A'}
                           </span>
-                          <span className="text-blue-700 text-sm">
+                          <span className="text-gray-700 text-sm">
                             {record.loggedHours?.toFixed(1) || '0.0'}h logged
                           </span>
                         </div>
@@ -423,21 +428,21 @@ export default function FlowaceActivity() {
 
                       {/* Activity Metrics */}
                       <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-green-50 p-3 rounded-lg">
+                        <div className="bg-gray-50 p-3 rounded-lg">
                           <div className="flex items-center space-x-1 mb-1">
-                            <Play className="h-3 w-3 text-green-600" />
-                            <span className="text-xs font-medium text-green-800">Active</span>
+                            <Play className="h-3 w-3 text-gray-600" />
+                            <span className="text-xs font-medium text-gray-800">Active</span>
                           </div>
-                          <p className="text-lg font-bold text-green-900">
+                          <p className="text-lg font-bold text-gray-900">
                             {record.activeHours?.toFixed(1) || '0.0'}h
                           </p>
                         </div>
-                        <div className="bg-purple-50 p-3 rounded-lg">
+                        <div className="bg-gray-100 p-3 rounded-lg">
                           <div className="flex items-center space-x-1 mb-1">
-                            <Brain className="h-3 w-3 text-purple-600" />
-                            <span className="text-xs font-medium text-purple-800">Productive</span>
+                            <Brain className="h-3 w-3 text-gray-700" />
+                            <span className="text-xs font-medium text-gray-800">Productive</span>
                           </div>
-                          <p className="text-lg font-bold text-purple-900">
+                          <p className="text-lg font-bold text-gray-900">
                             {record.productiveHours?.toFixed(1) || '0.0'}h
                           </p>
                         </div>
@@ -453,8 +458,8 @@ export default function FlowaceActivity() {
                           <div className="w-full bg-gray-200 rounded-full h-2">
                             <div
                               className={`h-2 rounded-full transition-all duration-500 ${
-                                (record.productivityPercentage || 0) >= 80 ? 'bg-green-500' :
-                                (record.productivityPercentage || 0) >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                                (record.productivityPercentage || 0) >= 80 ? 'bg-gray-900' :
+                                (record.productivityPercentage || 0) >= 60 ? 'bg-gray-600' : 'bg-gray-400'
                               }`}
                               style={{ width: `${Math.min(record.productivityPercentage || 0, 100)}%` }}
                             ></div>
@@ -468,7 +473,7 @@ export default function FlowaceActivity() {
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2">
                             <div
-                              className="bg-blue-500 h-2 rounded-full transition-all duration-500"
+                              className="bg-gray-700 h-2 rounded-full transition-all duration-500"
                               style={{ width: `${Math.min(record.activityPercentage || 0, 100)}%` }}
                             ></div>
                           </div>
@@ -490,10 +495,10 @@ export default function FlowaceActivity() {
 
                       {/* Performance Badge */}
                       {(record.productivityPercentage || 0) >= 90 && (
-                        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-3 rounded-lg border border-yellow-200">
+                        <div className="bg-gray-100 p-3 rounded-lg border border-gray-300">
                           <div className="flex items-center space-x-2">
-                            <Sparkles className="h-4 w-4 text-yellow-600" />
-                            <span className="text-sm font-medium text-yellow-800">Exceptional Performance!</span>
+                            <Sparkles className="h-4 w-4 text-gray-700" />
+                            <span className="text-sm font-medium text-gray-800">Exceptional Performance!</span>
                           </div>
                         </div>
                       )}

@@ -85,8 +85,19 @@ export default function MyAttendance() {
       ]);
 
       // Set attendance records
+      let currentRecords: AttendanceRecord[] = [];
       if (Array.isArray(attendanceResponse)) {
-        setAttendanceRecords(attendanceResponse as AttendanceRecord[]);
+        currentRecords = attendanceResponse as AttendanceRecord[];
+        setAttendanceRecords(currentRecords);
+      } else if (attendanceResponse && typeof attendanceResponse === 'object' && 'data' in attendanceResponse) {
+        // Handle case where API returns { data: [...] }
+        const data = (attendanceResponse as { data: unknown }).data;
+        if (Array.isArray(data)) {
+          currentRecords = data as AttendanceRecord[];
+          setAttendanceRecords(currentRecords);
+        } else {
+          setAttendanceRecords([]);
+        }
       } else {
         setAttendanceRecords([]);
       }
@@ -95,18 +106,18 @@ export default function MyAttendance() {
       if (summaryResponse && typeof summaryResponse === 'object') {
         setSummary(summaryResponse as unknown as AttendanceSummary);
       } else {
-        // Create a basic summary if none available
+        // Create a basic summary from current records
         const basicSummary: AttendanceSummary = {
           employeeId,
           month: month.toString(),
           year: year.toString(),
           totalWorkingDays: 26,
-          presentDays: attendanceRecords.filter(r => ['PRESENT', 'LATE', 'WFH_APPROVED'].includes(r.status)).length,
-          absentDays: attendanceRecords.filter(r => r.status === 'ABSENT').length,
-          halfDays: attendanceRecords.filter(r => r.status === 'HALF_DAY').length,
-          lateDays: attendanceRecords.filter(r => r.status === 'LATE').length,
-          leaveDays: attendanceRecords.filter(r => r.status === 'LEAVE_APPROVED').length,
-          totalHoursWorked: attendanceRecords.reduce((sum, r) => sum + (r.hoursWorked || 0), 0),
+          presentDays: currentRecords.filter(r => ['PRESENT', 'LATE', 'WFH_APPROVED'].includes(r.status)).length,
+          absentDays: currentRecords.filter(r => r.status === 'ABSENT').length,
+          halfDays: currentRecords.filter(r => r.status === 'HALF_DAY').length,
+          lateDays: currentRecords.filter(r => r.status === 'LATE').length,
+          leaveDays: currentRecords.filter(r => r.status === 'LEAVE_APPROVED').length,
+          totalHoursWorked: currentRecords.reduce((sum, r) => sum + (r.hoursWorked || 0), 0),
           averageHoursPerDay: 0,
           attendancePercentage: 0
         };
@@ -126,7 +137,7 @@ export default function MyAttendance() {
     } finally {
       setLoading(false);
     }
-  }, [employeeId, attendanceRecords]);
+  }, [employeeId]);
 
   useEffect(() => {
     fetchAttendanceData();
@@ -171,14 +182,14 @@ export default function MyAttendance() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
+    <div className="min-h-screen bg-white p-6">
       <div className="max-w-7xl mx-auto space-y-8">
-        {/* Modern Header */}
+        {/* Header */}
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-900 rounded-full mb-4">
             <CalendarDays className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold text-gray-900">
             My Attendance Dashboard
           </h1>
           <p className="text-lg text-gray-600">Track your presence, monitor your progress</p>
@@ -187,66 +198,66 @@ export default function MyAttendance() {
         {/* Key Metrics Cards */}
         {summary && (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-green-100 text-sm font-medium">Attendance Rate</p>
-                    <p className="text-3xl font-bold">{Math.round(summary.attendancePercentage)}%</p>
-                    <p className="text-green-100 text-sm">{summary.presentDays} of {summary.totalWorkingDays} days</p>
+                    <p className="text-gray-500 text-sm font-medium">Attendance Rate</p>
+                    <p className="text-3xl font-bold text-gray-900">{Math.round(summary.attendancePercentage)}%</p>
+                    <p className="text-gray-500 text-sm">{summary.presentDays} of {summary.totalWorkingDays} days</p>
                   </div>
-                  <Target className="h-12 w-12 text-green-200" />
+                  <Target className="h-12 w-12 text-gray-400" />
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-blue-100 text-sm font-medium">Total Hours</p>
-                    <p className="text-3xl font-bold">{summary.totalHoursWorked.toFixed(1)}h</p>
-                    <p className="text-blue-100 text-sm">Avg: {summary.averageHoursPerDay.toFixed(1)}h/day</p>
+                    <p className="text-gray-500 text-sm font-medium">Total Hours</p>
+                    <p className="text-3xl font-bold text-gray-900">{summary.totalHoursWorked.toFixed(1)}h</p>
+                    <p className="text-gray-500 text-sm">Avg: {summary.averageHoursPerDay.toFixed(1)}h/day</p>
                   </div>
-                  <Timer className="h-12 w-12 text-blue-200" />
+                  <Timer className="h-12 w-12 text-gray-400" />
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-purple-100 text-sm font-medium">Present Days</p>
-                    <p className="text-3xl font-bold">{summary.presentDays}</p>
-                    <p className="text-purple-100 text-sm">Including {summary.lateDays} late</p>
+                    <p className="text-gray-500 text-sm font-medium">Present Days</p>
+                    <p className="text-3xl font-bold text-gray-900">{summary.presentDays}</p>
+                    <p className="text-gray-500 text-sm">Including {summary.lateDays} late</p>
                   </div>
-                  <Award className="h-12 w-12 text-purple-200" />
+                  <Award className="h-12 w-12 text-gray-400" />
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-orange-100 text-sm font-medium">Absent Days</p>
-                    <p className="text-3xl font-bold">{summary.absentDays}</p>
-                    <p className="text-orange-100 text-sm">{summary.leaveDays} approved leaves</p>
+                    <p className="text-gray-500 text-sm font-medium">Absent Days</p>
+                    <p className="text-3xl font-bold text-gray-900">{summary.absentDays}</p>
+                    <p className="text-gray-500 text-sm">{summary.leaveDays} approved leaves</p>
                   </div>
-                  <Activity className="h-12 w-12 text-orange-200" />
+                  <Activity className="h-12 w-12 text-gray-400" />
                 </div>
               </CardContent>
             </Card>
           </div>
         )}
 
-        {/* Advanced Filters */}
-        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+        {/* Filters */}
+        <Card className="border border-gray-200 shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5 text-blue-600" />
-              Smart Filters
+              <Filter className="h-5 w-5 text-gray-600" />
+              Filters
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -337,18 +348,18 @@ export default function MyAttendance() {
           </CardContent>
         </Card>
 
-        {/* Beautiful Attendance Records */}
-        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+        {/* Attendance Records */}
+        <Card className="border border-gray-200 shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-blue-600" />
+              <BarChart3 className="h-5 w-5 text-gray-600" />
               Attendance Records
             </CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
               <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-600 mx-auto mb-4"></div>
                 <p className="text-gray-600">Loading your attendance data...</p>
               </div>
             ) : attendanceRecords.length === 0 ? (
@@ -362,37 +373,23 @@ export default function MyAttendance() {
                 {filteredRecords.map((record) => {
                   const getBorderColor = (status: AttendanceRecord['status']) => {
                     switch (status) {
-                      case 'PRESENT': return 'border-l-green-500';
-                      case 'LATE': return 'border-l-yellow-500';
-                      case 'ABSENT': return 'border-l-red-500';
-                      case 'HALF_DAY': return 'border-l-orange-500';
-                      case 'LEAVE_APPROVED': return 'border-l-blue-500';
-                      case 'WFH_APPROVED': return 'border-l-purple-500';
-                      default: return 'border-l-gray-500';
+                      case 'PRESENT': return 'border-l-gray-900';
+                      case 'LATE': return 'border-l-gray-600';
+                      case 'ABSENT': return 'border-l-gray-400';
+                      case 'HALF_DAY': return 'border-l-gray-700';
+                      case 'LEAVE_APPROVED': return 'border-l-gray-800';
+                      case 'WFH_APPROVED': return 'border-l-gray-500';
+                      default: return 'border-l-gray-300';
                     }
                   };
 
                   return (
-                    <Card key={record.id} className={`hover:shadow-xl transition-all duration-300 border-l-4 ${getBorderColor(record.status)} bg-white/90 backdrop-blur-sm`}>
+                    <Card key={record.id} className={`hover:shadow-md transition-all duration-300 border-l-4 ${getBorderColor(record.status)} bg-white border border-gray-200`}>
                       <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3">
-                            <div className={`p-3 rounded-full ${
-                              record.status === 'PRESENT' ? 'bg-green-50' :
-                              record.status === 'LATE' ? 'bg-yellow-50' :
-                              record.status === 'ABSENT' ? 'bg-red-50' :
-                              record.status === 'HALF_DAY' ? 'bg-orange-50' :
-                              record.status === 'LEAVE_APPROVED' ? 'bg-blue-50' :
-                              record.status === 'WFH_APPROVED' ? 'bg-purple-50' : 'bg-gray-50'
-                            }`}>
-                              <CalendarDays className={`h-6 w-6 ${
-                                record.status === 'PRESENT' ? 'text-green-600' :
-                                record.status === 'LATE' ? 'text-yellow-600' :
-                                record.status === 'ABSENT' ? 'text-red-600' :
-                                record.status === 'HALF_DAY' ? 'text-orange-600' :
-                                record.status === 'LEAVE_APPROVED' ? 'text-blue-600' :
-                                record.status === 'WFH_APPROVED' ? 'text-purple-600' : 'text-gray-600'
-                              }`} />
+                            <div className="p-3 rounded-full bg-gray-100">
+                              <CalendarDays className="h-6 w-6 text-gray-600" />
                             </div>
                             <div>
                               <h3 className="font-bold text-gray-900 text-lg">
