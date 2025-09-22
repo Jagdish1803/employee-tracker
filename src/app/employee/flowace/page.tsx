@@ -1,36 +1,75 @@
-'use client'
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { format, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import {
   Activity,
-  Download,
-  Clock,
-  Target,
-  TrendingUp,
   BarChart3,
+  Clock,
+  TrendingUp,
   Zap,
+  Target,
+  Award,
   Timer,
-  Calendar as CalendarIcon,
-  Gauge
+  Play,
+  Pause,
+  Brain,
+  Users,
+  Calendar,
+  Filter,
+  Sparkles,
+  Gauge,
+  CheckCircle2
 } from 'lucide-react';
+import { format } from 'date-fns';
 import { useEmployeeAuth } from '@/contexts/EmployeeAuthContext';
-import { flowaceService, FlowaceRecord } from '@/api';
+import { flowaceService } from '@/api';
 import { toast } from 'sonner';
+
+interface FlowaceRecord {
+  id?: string;
+  employeeId: number;
+  employeeName: string;
+  employeeCode: string;
+  memberEmail: string;
+  teams: string;
+  date: string;
+  workStartTime: string;
+  workEndTime: string;
+  loggedHours: number;
+  activeHours: number;
+  idleHours: number;
+  classifiedHours: number;
+  unclassifiedHours: number;
+  productiveHours: number;
+  unproductiveHours: number;
+  neutralHours: number;
+  availableHours: number;
+  missingHours: number;
+  activityPercentage: number;
+  classifiedPercentage: number;
+  productivityPercentage: number;
+  classifiedBillableDuration: number;
+  classifiedNonBillableDuration: number;
+  batchId: string;
+  createdAt: string;
+  updatedAt: string;
+  employee?: {
+    id: number;
+    name: string;
+    employeeCode: string;
+    department: string;
+  };
+}
 
 export default function FlowaceActivity() {
   const { employee } = useEmployeeAuth();
   const [flowaceRecords, setFlowaceRecords] = useState<FlowaceRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dateRange, setDateRange] = useState({
-    from: format(startOfMonth(new Date()), 'yyyy-MM-dd'),
-    to: format(endOfMonth(new Date()), 'yyyy-MM-dd')
-  });
   const [productivityFilter, setProductivityFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<string>('');
   const [monthFilter, setMonthFilter] = useState<string>(new Date().getMonth().toString());
@@ -59,10 +98,10 @@ export default function FlowaceActivity() {
     try {
       setLoading(true);
 
-      // First try to get employee-specific records
       const response = await flowaceService.getByEmployee(employeeId);
 
       if (response.success && Array.isArray(response.records)) {
+        setFlowaceRecords(response.records);
 
         if (response.records.length === 0) {
           // Try to get ALL records to see if there's any flowace data at all
@@ -87,16 +126,6 @@ export default function FlowaceActivity() {
             });
           }
         }
-
-        // Filter records by current month
-        const filteredRecords = response.records.filter(record => {
-          const recordDate = new Date(record.date);
-          return isWithinInterval(recordDate, {
-            start: new Date(dateRange.from),
-            end: new Date(dateRange.to)
-          });
-        });
-        setFlowaceRecords(filteredRecords);
       } else {
         setFlowaceRecords([]);
       }
@@ -109,605 +138,376 @@ export default function FlowaceActivity() {
     } finally {
       setLoading(false);
     }
-  }, [employeeId, dateRange, employee?.name]);
+  }, [employeeId, employee?.name]);
 
   useEffect(() => {
     fetchFlowaceData();
   }, [fetchFlowaceData]);
 
-  useEffect(() => {
-    // Update date range when month changes
-    setDateRange({
-      from: format(startOfMonth(new Date()), 'yyyy-MM-dd'),
-      to: format(endOfMonth(new Date()), 'yyyy-MM-dd')
-    });
-  }, []);
-
-
-  const getSelectedDateRecord = () => {
-    // Return the most recent record if available
-    if (flowaceRecords.length === 0) return null;
-    return flowaceRecords[0];
+  // Calculate summary statistics
+  const summary = {
+    totalSessions: filteredRecords.length,
+    totalHours: filteredRecords.reduce((sum, record) => sum + (record.loggedHours || 0), 0),
+    avgProductivity: filteredRecords.length > 0 ?
+      filteredRecords.reduce((sum, record) => sum + (record.productivityPercentage || 0), 0) / filteredRecords.length : 0,
+    avgActivity: filteredRecords.length > 0 ?
+      filteredRecords.reduce((sum, record) => sum + (record.activityPercentage || 0), 0) / filteredRecords.length : 0,
+    totalActiveHours: filteredRecords.reduce((sum, record) => sum + (record.activeHours || 0), 0),
+    totalProductiveHours: filteredRecords.reduce((sum, record) => sum + (record.productiveHours || 0), 0),
+    peakProductivity: filteredRecords.length > 0 ? Math.max(...filteredRecords.map(r => r.productivityPercentage || 0)) : 0,
+    consistentDays: filteredRecords.filter(r => (r.productivityPercentage || 0) >= 70).length
   };
 
-  const calculateSummary = () => {
-    if (flowaceRecords.length === 0) {
-      return {
-        totalActiveHours: 0,
-        avgProductivity: 0,
-        totalWorkingDays: 0,
-        avgActiveHours: 0
-      };
-    }
-
-    const totalActiveHours = flowaceRecords.reduce((sum, record) =>
-      sum + (record.activeHours || 0), 0
-    );
-
-    const avgProductivity = flowaceRecords.reduce((sum, record) =>
-      sum + (record.productivityPercentage || 0), 0
-    ) / flowaceRecords.length;
-
-    const totalWorkingDays = flowaceRecords.length;
-    const avgActiveHours = totalActiveHours / totalWorkingDays;
-
-    return {
-      totalActiveHours: Math.round(totalActiveHours * 100) / 100,
-      avgProductivity: Math.round(avgProductivity * 100) / 100,
-      totalWorkingDays,
-      avgActiveHours: Math.round(avgActiveHours * 100) / 100
-    };
+  const getProductivityColor = (percentage: number) => {
+    if (percentage >= 80) return 'text-green-600 bg-green-50 border-green-200';
+    if (percentage >= 60) return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+    return 'text-red-600 bg-red-50 border-red-200';
   };
 
-  const summary = calculateSummary();
-  const selectedRecord = getSelectedDateRecord();
-
-  const formatHours = (hours: number) => {
-    if (hours === 0) return '0h';
-    const h = Math.floor(hours);
-    const m = Math.round((hours - h) * 60);
-    return m > 0 ? `${h}h ${m}m` : `${h}h`;
+  const getProductivityIcon = (percentage: number) => {
+    if (percentage >= 80) return <Target className="h-4 w-4 text-green-600" />;
+    if (percentage >= 60) return <TrendingUp className="h-4 w-4 text-yellow-600" />;
+    return <Activity className="h-4 w-4 text-red-600" />;
   };
-
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Activity Tracking
-          </h1>
-          <p className="text-muted-foreground mt-1">Monitor your daily productivity and activity levels</p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="flex items-center space-x-2 px-3 py-1 bg-gray-50 rounded-full">
-            <Gauge className="h-4 w-4 text-gray-600" />
-            <span className="text-sm font-medium text-gray-700">
-              {summary.avgProductivity}% Avg
-            </span>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 p-6">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Modern Header */}
+        <div className="text-center space-y-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full mb-4">
+            <Activity className="h-8 w-8 text-white" />
           </div>
-          <Button variant="outline" className="hover:bg-gray-50">
-            <Download className="h-4 w-4 mr-2" />
-            Export Report
-          </Button>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+            Activity Analytics Dashboard
+          </h1>
+          <p className="text-lg text-gray-600">Monitor your productivity, optimize your workflow</p>
         </div>
-      </div>
 
-      {/* Enhanced Summary Cards */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-gray-200 hover:shadow-lg transition-all duration-300">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center justify-between text-sm font-medium text-gray-700">
-              <span>Total Active Hours</span>
-              <Clock className="h-5 w-5 text-gray-600" />
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-gray-600 mb-1">
-              {formatHours(summary.totalActiveHours)}
-            </div>
-            <p className="text-sm text-gray-600/70">
-              Across {summary.totalWorkingDays} working days
-            </p>
-            <div className="mt-2 flex items-center space-x-1 text-xs text-gray-600">
-              <TrendingUp className="h-3 w-3" />
-              <span>This month</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-gray-200 hover:shadow-lg transition-all duration-300">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center justify-between text-sm font-medium text-gray-700">
-              <span>Avg Productivity</span>
-              <Target className="h-5 w-5 text-gray-600" />
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-gray-600 mb-1">
-              {summary.avgProductivity}%
-            </div>
-            <p className="text-sm text-gray-600/70">
-              Daily productivity score
-            </p>
-            <div className="mt-2 w-full bg-gray-100 rounded-full h-2">
-              <div
-                className="bg-gray-800 h-2 rounded-full transition-all duration-500"
-                style={{ width: `${Math.min(summary.avgProductivity, 100)}%` }}
-              ></div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-gray-200 hover:shadow-lg transition-all duration-300">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center justify-between text-sm font-medium text-gray-700">
-              <span>Working Days</span>
-              <CalendarIcon className="h-5 w-5 text-gray-600" />
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-gray-600 mb-1">
-              {summary.totalWorkingDays}
-            </div>
-            <p className="text-sm text-gray-600/70">
-              Days with recorded activity
-            </p>
-            <div className="mt-2 flex items-center space-x-1 text-xs text-gray-600">
-              <BarChart3 className="h-3 w-3" />
-              <span>Activity tracked</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-gray-200 hover:shadow-lg transition-all duration-300">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center justify-between text-sm font-medium text-gray-700">
-              <span>Avg Daily Hours</span>
-              <Timer className="h-5 w-5 text-gray-600" />
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-gray-600 mb-1">
-              {formatHours(summary.avgActiveHours)}
-            </div>
-            <p className="text-sm text-gray-600/70">
-              Per working day average
-            </p>
-            <div className="mt-2 flex items-center space-x-1 text-xs text-gray-600">
-              <Zap className="h-3 w-3" />
-              <span>Consistent tracking</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Productivity Analytics */}
-        <Card className="hover:shadow-lg transition-all duration-300">
-          <CardHeader className="bg-gray-50 rounded-t-lg">
-            <CardTitle className="flex items-center space-x-2">
-              <BarChart3 className="h-5 w-5 text-gray-600" />
-              <span>Productivity Analytics</span>
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Your performance metrics overview
-            </p>
-          </CardHeader>
-          <CardContent className="p-6">
-            {flowaceRecords.length > 0 ? (
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <div className="text-3xl font-bold text-gray-600 mb-1">
-                      {(flowaceRecords.reduce((sum, record) => sum + (record.productivityPercentage || 0), 0) / flowaceRecords.length).toFixed(1)}%
-                    </div>
-                    <p className="text-sm text-gray-600/70">Avg Productivity</p>
-                  </div>
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <div className="text-3xl font-bold text-gray-600 mb-1">
-                      {flowaceRecords.reduce((sum, record) => sum + (record.loggedHours || 0), 0).toFixed(1)}h
-                    </div>
-                    <p className="text-sm text-gray-600/70">Total Hours</p>
-                  </div>
-                </div>
-
+        {/* Key Metrics Cards */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-medium mb-3 text-gray-700">Recent Activity Trend</h4>
-                  <div className="space-y-2">
-                    {flowaceRecords.slice(0, 5).map((record, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div className="flex items-center space-x-2">
-                          <div className={`w-3 h-3 rounded-full ${
-                            (record.productivityPercentage ?? 0) >= 80 ? 'bg-gray-800' :
-                            (record.productivityPercentage ?? 0) >= 60 ? 'bg-yellow-500' : 'bg-red-500'
-                          }`}></div>
-                          <span className="text-sm font-medium">{format(new Date(record.date), 'MMM d')}</span>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-sm font-medium">{record.productivityPercentage ?? 0}%</div>
-                          <div className="text-xs text-gray-500">{record.loggedHours ?? 0}h</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <p className="text-purple-100 text-sm font-medium">Avg Productivity</p>
+                  <p className="text-3xl font-bold">{summary.avgProductivity.toFixed(1)}%</p>
+                  <p className="text-purple-100 text-sm">{summary.totalSessions} sessions tracked</p>
                 </div>
+                <Target className="h-12 w-12 text-purple-200" />
               </div>
-            ) : (
-              <div className="text-center py-8">
-                <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground mb-2">No activity data available</p>
-                <p className="text-sm text-muted-foreground">
-                  Activity tracking data will appear here once available
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        {/* Activity Analysis with Tabs */}
-        <Card className="hover:shadow-lg transition-all duration-300">
+          <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-100 text-sm font-medium">Total Hours</p>
+                  <p className="text-3xl font-bold">{summary.totalHours.toFixed(1)}h</p>
+                  <p className="text-blue-100 text-sm">{summary.totalActiveHours.toFixed(1)}h active time</p>
+                </div>
+                <Timer className="h-12 w-12 text-blue-200" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-green-100 text-sm font-medium">Peak Performance</p>
+                  <p className="text-3xl font-bold">{summary.peakProductivity.toFixed(1)}%</p>
+                  <p className="text-green-100 text-sm">{summary.consistentDays} consistent days</p>
+                </div>
+                <Award className="h-12 w-12 text-green-200" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-orange-100 text-sm font-medium">Activity Rate</p>
+                  <p className="text-3xl font-bold">{summary.avgActivity.toFixed(1)}%</p>
+                  <p className="text-orange-100 text-sm">{summary.totalProductiveHours.toFixed(1)}h productive</p>
+                </div>
+                <Zap className="h-12 w-12 text-orange-200" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Advanced Filters */}
+        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Activity className="h-5 w-5" />
-              <span>Activity Analysis</span>
+            <CardTitle className="flex items-center gap-2">
+              <Filter className="h-5 w-5 text-purple-600" />
+              Smart Analytics Filters
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {/* Enhanced Filter Controls */}
-            <div className="space-y-4 mb-6 p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center gap-2 mb-3">
-                <Activity className="h-4 w-4 text-gray-600" />
-                <span className="text-sm font-medium text-gray-700">Filters</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Productivity</label>
+                <Select value={productivityFilter} onValueChange={setProductivityFilter}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="All levels" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Levels</SelectItem>
+                    <SelectItem value="high">High (≥80%)</SelectItem>
+                    <SelectItem value="medium">Medium (60-79%)</SelectItem>
+                    <SelectItem value="low">Low (&lt;60%)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-1 block">Productivity</label>
-                  <Select value={productivityFilter} onValueChange={setProductivityFilter}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="All levels" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Levels</SelectItem>
-                      <SelectItem value="high">High (≥80%)</SelectItem>
-                      <SelectItem value="medium">Medium (60-79%)</SelectItem>
-                      <SelectItem value="low">Low (&lt;60%)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Hours Worked</label>
+                <Select value={hoursFilter} onValueChange={setHoursFilter}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="All hours" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Hours</SelectItem>
+                    <SelectItem value="full">Full Day (≥7h)</SelectItem>
+                    <SelectItem value="partial">Partial Day (4-7h)</SelectItem>
+                    <SelectItem value="minimal">Minimal (&lt;4h)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-1 block">Hours Worked</label>
-                  <Select value={hoursFilter} onValueChange={setHoursFilter}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="All hours" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Hours</SelectItem>
-                      <SelectItem value="full">Full Day (≥7h)</SelectItem>
-                      <SelectItem value="partial">Partial Day (4-7h)</SelectItem>
-                      <SelectItem value="minimal">Minimal (&lt;4h)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Month</label>
+                <Select value={monthFilter} onValueChange={setMonthFilter}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select month" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({length: 12}, (_, i) => (
+                      <SelectItem key={i} value={i.toString()}>
+                        {new Date(0, i).toLocaleDateString('en-US', { month: 'long' })}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-1 block">Month</label>
-                  <Select value={monthFilter} onValueChange={setMonthFilter}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select month" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.from({length: 12}, (_, i) => (
-                        <SelectItem key={i} value={i.toString()}>
-                          {new Date(0, i).toLocaleDateString('en-US', { month: 'long' })}
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Year</label>
+                <Select value={yearFilter} onValueChange={setYearFilter}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({length: 5}, (_, i) => {
+                      const year = new Date().getFullYear() - i;
+                      return (
+                        <SelectItem key={year} value={year.toString()}>
+                          {year}
                         </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-1 block">Year</label>
-                  <Select value={yearFilter} onValueChange={setYearFilter}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select year" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.from({length: 5}, (_, i) => {
-                        const year = new Date().getFullYear() - i;
-                        return (
-                          <SelectItem key={year} value={year.toString()}>
-                            {year}
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-1 block">Specific Date</label>
-                  <Input
-                    type="date"
-                    value={dateFilter}
-                    onChange={(e) => setDateFilter(e.target.value)}
-                    className="w-full"
-                    placeholder="Select date"
-                  />
-                </div>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
               </div>
 
-              {(productivityFilter !== 'all' || hoursFilter !== 'all' || dateFilter || monthFilter !== new Date().getMonth().toString() || yearFilter !== new Date().getFullYear().toString()) && (
-                <div className="flex items-center justify-between pt-2 border-t">
-                  <div className="text-xs text-gray-600">
-                    {filteredRecords.length} record{filteredRecords.length !== 1 ? 's' : ''} found
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setProductivityFilter('all');
-                      setHoursFilter('all');
-                      setDateFilter('');
-                      setMonthFilter(new Date().getMonth().toString());
-                      setYearFilter(new Date().getFullYear().toString());
-                    }}
-                    className="text-xs"
-                  >
-                    Clear Filters
-                  </Button>
-                </div>
-              )}
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Specific Date</label>
+                <Input
+                  type="date"
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  className="w-full"
+                  placeholder="Select date"
+                />
+              </div>
             </div>
 
-            <Tabs defaultValue="table" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="table">Table View</TabsTrigger>
-                <TabsTrigger value="details">Details</TabsTrigger>
-                <TabsTrigger value="timeline">Timeline</TabsTrigger>
-                <TabsTrigger value="metrics">Metrics</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="table" className="mt-6">
-                {flowaceRecords.length === 0 ? (
-                  <div className="text-center py-12">
-                    <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground text-lg font-medium">No activity data</p>
-                    <p className="text-sm text-muted-foreground mt-1">Activity tracking data will appear here</p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr className="border-b bg-gray-50">
-                          <th className="text-left p-3 font-medium text-gray-700">#</th>
-                          <th className="text-left p-3 font-medium text-gray-700">Date</th>
-                          <th className="text-left p-3 font-medium text-gray-700">Work Hours</th>
-                          <th className="text-left p-3 font-medium text-gray-700">Active Hours</th>
-                          <th className="text-left p-3 font-medium text-gray-700">Productive Hours</th>
-                          <th className="text-left p-3 font-medium text-gray-700">Productivity %</th>
-                          <th className="text-left p-3 font-medium text-gray-700">Activity %</th>
-                          <th className="text-left p-3 font-medium text-gray-700">Team</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredRecords.map((record, index) => (
-                          <tr key={record.id || index} className="border-b hover:bg-gray-50 transition-colors">
-                            <td className="p-3 text-sm text-gray-600">
-                              {index + 1}
-                            </td>
-                            <td className="p-3">
-                              <div className="text-sm font-medium text-gray-900">
-                                {format(new Date(record.date), 'MMM d, yyyy')}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                {format(new Date(record.date), 'EEEE')}
-                              </div>
-                            </td>
-                            <td className="p-3 text-sm">
-                              <span className="font-medium">
-                                {record.workStartTime} - {record.workEndTime}
-                              </span>
-                              <div className="text-xs text-gray-500">
-                                {record.loggedHours?.toFixed(1) || '0.0'}h logged
-                              </div>
-                            </td>
-                            <td className="p-3 text-sm">
-                              <span className="font-medium text-blue-600">
-                                {record.activeHours?.toFixed(1) || '0.0'}h
-                              </span>
-                            </td>
-                            <td className="p-3 text-sm">
-                              <span className="font-medium text-green-600">
-                                {record.productiveHours?.toFixed(1) || '0.0'}h
-                              </span>
-                            </td>
-                            <td className="p-3">
-                              <div className="flex items-center space-x-2">
-                                <div className={`w-2 h-2 rounded-full ${
-                                  (record.productivityPercentage ?? 0) >= 80 ? 'bg-green-500' :
-                                  (record.productivityPercentage ?? 0) >= 60 ? 'bg-yellow-500' : 'bg-red-500'
-                                }`} />
-                                <span className="font-medium">
-                                  {record.productivityPercentage?.toFixed(1) || '0.0'}%
-                                </span>
-                              </div>
-                            </td>
-                            <td className="p-3 text-sm">
-                              <span className="font-medium">
-                                {record.activityPercentage?.toFixed(1) || '0.0'}%
-                              </span>
-                            </td>
-                            <td className="p-3 text-sm">
-                              <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-                                {record.teams || 'N/A'}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    {filteredRecords.length > 10 && (
-                      <div className="mt-4 text-center">
-                        <p className="text-sm text-gray-500">
-                          Showing {Math.min(filteredRecords.length, 50)} of {filteredRecords.length} records
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="details" className="mt-6">
-                {loading ? (
-                  <div className="text-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
-                <p className="text-muted-foreground">Loading activity data...</p>
-              </div>
-            ) : selectedRecord ? (
-              <div className="space-y-6">
-                {/* Productivity Score */}
-                <div className="text-center p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
-                  <div className="text-3xl font-bold text-gray-600 mb-1">
-                    {selectedRecord.productivityPercentage ?? 0}%
-                  </div>
-                  <p className="text-sm text-gray-600/70">Productivity Score</p>
-                  <div className="mt-2 w-full bg-gray-100 rounded-full h-2">
-                    <div
-                      className="bg-gray-800 h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${selectedRecord.productivityPercentage ?? 0}%` }}
-                    ></div>
-                  </div>
-                </div>
-
-                {/* Time Details */}
-                <div className="grid grid-cols-1 gap-4">
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center space-x-2">
-                      <Clock className="h-4 w-4 text-gray-600" />
-                      <span className="text-sm font-medium">Work Hours</span>
-                    </div>
-                    <span className="font-bold text-gray-600">
-                      {selectedRecord.workStartTime} - {selectedRecord.workEndTime}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                    <div className="flex items-center space-x-2">
-                      <Target className="h-4 w-4 text-gray-600" />
-                      <span className="text-sm font-medium">Active Hours</span>
-                    </div>
-                    <span className="font-bold text-gray-600">
-                      {formatHours(selectedRecord.activeHours || 0)}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center space-x-2">
-                      <Zap className="h-4 w-4 text-gray-600" />
-                      <span className="text-sm font-medium">Productive Hours</span>
-                    </div>
-                    <span className="font-bold text-gray-600">
-                      {formatHours(selectedRecord.productiveHours || 0)}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center space-x-2">
-                      <Timer className="h-4 w-4 text-gray-600" />
-                      <span className="text-sm font-medium">Total Logged</span>
-                    </div>
-                    <span className="font-bold text-gray-600">
-                      {formatHours(selectedRecord.loggedHours || 0)}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Performance Insight */}
-                <div className="p-4 border-l-4 border-indigo-500 bg-indigo-50 rounded-r-lg">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <BarChart3 className="h-4 w-4 text-indigo-600" />
-                    <span className="font-medium text-indigo-800">Performance Insight</span>
-                  </div>
-                  <p className="text-sm text-indigo-700">
-                    {(selectedRecord.productivityPercentage ?? 0) >= 80
-                      ? "Excellent work! You're maintaining high productivity levels."
-                      : (selectedRecord.productivityPercentage ?? 0) >= 60
-                      ? "Good performance! Consider optimizing your workflow for better results."
-                      : "Room for improvement. Try to minimize distractions and focus on core tasks."}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground text-lg font-medium">No activity recorded</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  No productivity data available
-                </p>
+            {(productivityFilter !== 'all' || hoursFilter !== 'all' || dateFilter || monthFilter !== new Date().getMonth().toString() || yearFilter !== new Date().getFullYear().toString()) && (
+              <div className="flex items-center justify-between pt-4 border-t mt-4">
+                <Badge variant="outline" className="px-3 py-1">
+                  {filteredRecords.length} record{filteredRecords.length !== 1 ? 's' : ''} found
+                </Badge>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setProductivityFilter('all');
+                    setHoursFilter('all');
+                    setDateFilter('');
+                    setMonthFilter(new Date().getMonth().toString());
+                    setYearFilter(new Date().getFullYear().toString());
+                  }}
+                >
+                  Clear Filters
+                </Button>
               </div>
             )}
-              </TabsContent>
+          </CardContent>
+        </Card>
 
-              <TabsContent value="timeline" className="mt-6">
-                <div className="space-y-3">
-                  {filteredRecords.slice(0, 5).map((record, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <div className={`w-3 h-3 rounded-full ${
-                          (record.productivityPercentage ?? 0) >= 80 ? 'bg-gray-800' :
-                          (record.productivityPercentage ?? 0) >= 60 ? 'bg-gray-600' : 'bg-gray-400'
-                        }`}></div>
-                        <div>
-                          <p className="font-medium text-gray-900">{format(new Date(record.date), 'MMM d, yyyy')}</p>
-                          <p className="text-sm text-gray-600">{record.loggedHours ?? 0} hours tracked</p>
+        {/* Beautiful Activity Records */}
+        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-purple-600" />
+              Daily Activity Sessions
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Analyzing your activity data...</p>
+              </div>
+            ) : flowaceRecords.length === 0 ? (
+              <div className="text-center py-12">
+                <Activity className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-600 mb-2">No Activity Data</h3>
+                <p className="text-gray-500">Your activity tracking data will appear here once uploaded</p>
+              </div>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {filteredRecords.map((record, index) => (
+                  <Card key={record.id || index} className={`hover:shadow-xl transition-all duration-300 border-l-4 ${
+                    (record.productivityPercentage || 0) >= 80 ? 'border-l-green-500' :
+                    (record.productivityPercentage || 0) >= 60 ? 'border-l-yellow-500' : 'border-l-red-500'
+                  } bg-white/90 backdrop-blur-sm`}>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className={`p-3 rounded-full ${
+                            (record.productivityPercentage || 0) >= 80 ? 'bg-green-50' :
+                            (record.productivityPercentage || 0) >= 60 ? 'bg-yellow-50' : 'bg-red-50'
+                          }`}>
+                            <Calendar className={`h-6 w-6 ${
+                              (record.productivityPercentage || 0) >= 80 ? 'text-green-600' :
+                              (record.productivityPercentage || 0) >= 60 ? 'text-yellow-600' : 'text-red-600'
+                            }`} />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-gray-900 text-lg">
+                              {format(new Date(record.date), 'MMM d')}
+                            </h3>
+                            <p className="text-sm text-gray-500">
+                              {format(new Date(record.date), 'EEEE')}
+                            </p>
+                          </div>
+                        </div>
+                        <div className={`px-3 py-1 rounded-full border ${getProductivityColor(record.productivityPercentage || 0)}`}>
+                          <div className="flex items-center space-x-1">
+                            {getProductivityIcon(record.productivityPercentage || 0)}
+                            <span className="text-xs font-medium">
+                              {(record.productivityPercentage || 0).toFixed(1)}%
+                            </span>
+                          </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-medium text-gray-900">{record.productivityPercentage ?? 0}%</p>
-                        <p className="text-sm text-gray-600">Productivity</p>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {/* Work Schedule */}
+                      <div className="bg-blue-50 p-3 rounded-lg">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <Clock className="h-4 w-4 text-blue-600" />
+                          <span className="text-sm font-medium text-blue-800">Work Schedule</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-blue-900 font-medium">
+                            {record.workStartTime} - {record.workEndTime}
+                          </span>
+                          <span className="text-blue-700 text-sm">
+                            {record.loggedHours?.toFixed(1) || '0.0'}h logged
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </TabsContent>
 
-              <TabsContent value="metrics" className="mt-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 border rounded-lg">
-                    <h4 className="font-medium text-gray-900 mb-2">Weekly Average</h4>
-                    <div className="text-2xl font-bold text-gray-900">
-                      {filteredRecords.length > 0 ? (filteredRecords.reduce((sum, record) => sum + (record.productivityPercentage || 0), 0) / filteredRecords.length).toFixed(1) : '0'}%
-                    </div>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <h4 className="font-medium text-gray-900 mb-2">Total Sessions</h4>
-                    <div className="text-2xl font-bold text-gray-900">
-                      {filteredRecords.length}
-                    </div>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <h4 className="font-medium text-gray-900 mb-2">Peak Performance</h4>
-                    <div className="text-2xl font-bold text-gray-900">
-                      {filteredRecords.length > 0 ? Math.max(...filteredRecords.map(r => r.productivityPercentage || 0)) : 0}%
-                    </div>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <h4 className="font-medium text-gray-900 mb-2">Hours Tracked</h4>
-                    <div className="text-2xl font-bold text-gray-900">
-                      {filteredRecords.reduce((sum, record) => sum + (record.loggedHours || 0), 0).toFixed(1)}h
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
+                      {/* Activity Metrics */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-green-50 p-3 rounded-lg">
+                          <div className="flex items-center space-x-1 mb-1">
+                            <Play className="h-3 w-3 text-green-600" />
+                            <span className="text-xs font-medium text-green-800">Active</span>
+                          </div>
+                          <p className="text-lg font-bold text-green-900">
+                            {record.activeHours?.toFixed(1) || '0.0'}h
+                          </p>
+                        </div>
+                        <div className="bg-purple-50 p-3 rounded-lg">
+                          <div className="flex items-center space-x-1 mb-1">
+                            <Brain className="h-3 w-3 text-purple-600" />
+                            <span className="text-xs font-medium text-purple-800">Productive</span>
+                          </div>
+                          <p className="text-lg font-bold text-purple-900">
+                            {record.productiveHours?.toFixed(1) || '0.0'}h
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Progress Bars */}
+                      <div className="space-y-3">
+                        <div>
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-xs font-medium text-gray-700">Productivity</span>
+                            <span className="text-xs text-gray-600">{(record.productivityPercentage || 0).toFixed(1)}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className={`h-2 rounded-full transition-all duration-500 ${
+                                (record.productivityPercentage || 0) >= 80 ? 'bg-green-500' :
+                                (record.productivityPercentage || 0) >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                              }`}
+                              style={{ width: `${Math.min(record.productivityPercentage || 0, 100)}%` }}
+                            ></div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-xs font-medium text-gray-700">Activity</span>
+                            <span className="text-xs text-gray-600">{(record.activityPercentage || 0).toFixed(1)}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-blue-500 h-2 rounded-full transition-all duration-500"
+                              style={{ width: `${Math.min(record.activityPercentage || 0, 100)}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Team Info */}
+                      {record.teams && (
+                        <div className="bg-gray-50 p-3 rounded-lg">
+                          <div className="flex items-center space-x-2">
+                            <Users className="h-4 w-4 text-gray-600" />
+                            <span className="text-sm font-medium text-gray-700">Team</span>
+                            <Badge variant="outline" className="text-xs">
+                              {record.teams}
+                            </Badge>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Performance Badge */}
+                      {(record.productivityPercentage || 0) >= 90 && (
+                        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-3 rounded-lg border border-yellow-200">
+                          <div className="flex items-center space-x-2">
+                            <Sparkles className="h-4 w-4 text-yellow-600" />
+                            <span className="text-sm font-medium text-yellow-800">Exceptional Performance!</span>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
     </div>
   );
 }
-
