@@ -240,7 +240,7 @@ export default function EmployeeDashboard() {
                 <div>
                   <p className="text-sm font-medium text-gray-600 mb-1">Work Hours</p>
                   <p className="text-3xl font-bold text-gray-900">
-                    {Math.round(stats?.attendance.thisMonth.totalHours || 0)}h
+                    {(stats?.attendance.thisMonth.totalHours || 0).toFixed(1)}h
                   </p>
                   <p className="text-xs text-gray-600 mt-1">This month</p>
                 </div>
@@ -311,13 +311,13 @@ export default function EmployeeDashboard() {
                   </div>
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
                     <div className="text-2xl font-bold text-gray-900">
-                      {Math.round(stats?.attendance.thisMonth.totalHours || 0)}
+                      {(stats?.attendance.thisMonth.totalHours || 0).toFixed(1)}
                     </div>
                     <div className="text-sm text-gray-600">Total Hours</div>
                   </div>
                   <div className="text-center p-4 bg-purple-50 rounded-lg">
                     <div className="text-2xl font-bold text-gray-900">
-                      {Math.round((stats?.attendance.thisMonth.totalHours || 0) / (stats?.attendance.thisMonth.presentDays || 1))}
+                      {((stats?.attendance.thisMonth.totalHours || 0) / (stats?.attendance.thisMonth.presentDays || 1)).toFixed(1)}
                     </div>
                     <div className="text-sm text-gray-600">Avg Hours/Day</div>
                   </div>
@@ -347,7 +347,7 @@ export default function EmployeeDashboard() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
                     <div className="text-2xl font-bold text-gray-900">
-                      {Math.round(stats?.performance.activeHours || 0)}h
+                      {(stats?.performance.activeHours || 0).toFixed(1)}h
                     </div>
                     <div className="text-sm text-gray-600">Active Hours</div>
                   </div>
@@ -359,7 +359,7 @@ export default function EmployeeDashboard() {
                   </div>
                   <div className="text-center p-4 bg-green-50 rounded-lg">
                     <div className="text-2xl font-bold text-gray-900">
-                      {Math.round(stats?.performance.avgDailyActive || 0)}h
+                      {(stats?.performance.avgDailyActive || 0).toFixed(1)}h
                     </div>
                     <div className="text-sm text-gray-600">Daily Average</div>
                   </div>

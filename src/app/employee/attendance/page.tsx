@@ -230,10 +230,10 @@ export default function MyAttendance() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-gray-600 mb-1">
-                {Math.round(summary.totalHoursWorked)}h
+                {summary.totalHoursWorked.toFixed(1)}h
               </div>
               <p className="text-sm text-gray-600/70">
-                Avg: {Math.round(summary.averageHoursPerDay * 10) / 10}h per day
+                Avg: {summary.averageHoursPerDay.toFixed(1)}h per day
               </p>
               <div className="mt-2 flex items-center space-x-1 text-xs text-gray-600">
                 <TrendingUp className="h-3 w-3" />
@@ -451,7 +451,7 @@ export default function MyAttendance() {
                           <div className="mt-2 flex items-center space-x-2 text-sm">
                             <TrendingUp className="h-4 w-4 text-gray-700" />
                             <span className="text-muted-foreground">Hours Worked:</span>
-                            <span className="font-medium text-gray-700">{record.hoursWorked}h</span>
+                            <span className="font-medium text-gray-700">{record.hoursWorked?.toFixed(1) || '0.0'}h</span>
                           </div>
                         )}
 
