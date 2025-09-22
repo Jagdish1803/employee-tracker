@@ -15,8 +15,6 @@ export async function GET(request: NextRequest) {
     const dateFrom = searchParams.get('dateFrom');
     const dateTo = searchParams.get('dateTo');
 
-    console.log('Fetching flowace records with params:', { month, year, search, employeeId, dateFrom, dateTo });
-
     // Build where clause for date filtering
     let dateFilter: Record<string, unknown> = {};
     if (month && year) {
@@ -52,13 +50,10 @@ export async function GET(request: NextRequest) {
           where: { id: empId },
           select: { name: true, employeeCode: true }
         });
-        console.log('Employee info for ID', empId, ':', employeeInfo);
-      } catch (error) {
-        console.error('Error fetching employee info:', error);
+      } catch {
+        // Silently handle error
       }
     }
-
-    console.log('Employee filter will be:', employeeFilter);
 
     // Get records from database with filters
     let whereClause: Record<string, unknown> = {
@@ -76,12 +71,8 @@ export async function GET(request: NextRequest) {
 
     // Add employee filter - prioritize name matching over ID
     if (employeeId && employeeInfo) {
-      console.log('Matching flowace records for employee ID:', employeeId);
-      console.log('Employee info retrieved:', employeeInfo);
-
       // Create flexible name matching patterns
       const employeeName = employeeInfo.name;
-      console.log('Using employee name for matching:', employeeName);
       const nameVariations = [
         employeeName, // Exact match
         employeeName.toLowerCase().trim(), // Case insensitive
@@ -121,8 +112,6 @@ export async function GET(request: NextRequest) {
         nameVariations.push(...nameMapping[employeeName.toLowerCase()]);
       }
 
-      console.log('Trying name variations:', nameVariations);
-
       // Build OR condition for name matching
       whereClause.OR = [
         // Try exact employeeId match first
@@ -141,7 +130,6 @@ export async function GET(request: NextRequest) {
       whereClause = { ...whereClause, ...employeeFilter };
     }
 
-    console.log('Final where clause:', JSON.stringify(whereClause, null, 2));
 
     const dbRecords = await prisma.flowaceRecord.findMany({
       where: whereClause,
@@ -193,12 +181,6 @@ export async function GET(request: NextRequest) {
       employee: record.employee
     }));
 
-    console.log('Flowace GET: Found', dbRecords.length, 'raw records from database');
-    console.log('Flowace GET: Returning', records.length, 'processed records');
-    if (employeeId) {
-      console.log('Records with matching employeeId:', dbRecords.filter(r => r.employeeId === parseInt(employeeId)).length);
-      console.log('Records with null employeeId:', dbRecords.filter(r => r.employeeId === null).length);
-    }
 
     return NextResponse.json({
       success: true,
@@ -281,7 +263,6 @@ export async function DELETE(request: NextRequest) {
       },
     });
 
-    console.log('Flowace DELETE: Deleted record with ID', recordId);
 
     return NextResponse.json({
       success: true,
