@@ -23,7 +23,8 @@
       "Bash(xargs sed:*)",
       "Bash(npm uninstall:*)",
       "Bash(taskkill:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Read(//c/**)"
     ],
     "deny": [],
     "ask": []

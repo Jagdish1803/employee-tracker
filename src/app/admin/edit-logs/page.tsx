@@ -47,8 +47,11 @@ export default function EditLogsPage() {
       }
 
       const response = await logService.getByDateRange(filter);
+
       if (Array.isArray(response)) {
         setLogs(response as Log[]);
+      } else {
+        setLogs([]);
       }
     } catch (error) {
       console.error('Error loading logs:', error);

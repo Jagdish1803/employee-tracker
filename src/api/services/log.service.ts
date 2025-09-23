@@ -26,9 +26,20 @@ export class LogService {
   async getByDateRange(params: Record<string, unknown>): Promise<unknown[]> {
     try {
       const response = await apiClient.get(`${this.basePath}`, { params });
+
+      // Handle new API response structure
+      if (response.data && response.data.success) {
+        return response.data.data || [];
+      }
+
+      // Fallback for direct array response
       return response.data || [];
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching logs by date range:', error);
+      if (error.response) {
+        console.error('Error response:', error.response.data);
+        console.error('Error status:', error.response.status);
+      }
       return [];
     }
   }
@@ -37,8 +48,12 @@ export class LogService {
     try {
       const response = await apiClient.post(this.basePath, data);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting log:', error);
+      if (error.response) {
+        console.error('Error response:', error.response.data);
+        console.error('Error status:', error.response.status);
+      }
       throw error;
     }
   }

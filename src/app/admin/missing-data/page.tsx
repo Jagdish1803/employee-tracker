@@ -50,12 +50,15 @@ export default function MissingDataPage() {
     setAnalyzing(true);
     try {
       // Get all logs for the date range
+      console.log('Requesting logs for missing data analysis:', { dateFrom, dateTo });
       const logsResponse = await logService.getByDateRange({
         dateFrom,
         dateTo,
       });
+      console.log('Missing data analysis - logs response:', logsResponse);
 
       const logs = Array.isArray(logsResponse) ? logsResponse as Log[] : [];
+      console.log('Processed logs for analysis:', logs.length, 'logs found');
       const workingDays = getWorkingDaysBetween(dateFrom, dateTo);
 
       // Filter employees to only include those with assignments

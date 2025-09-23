@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
     await ensureConnection();
     const { searchParams } = new URL(request.url);
     const query = Object.fromEntries(searchParams.entries());
+
     const validatedQuery = employeeQuerySchema.parse(query);
 
     const where: Record<string, unknown> = {};
@@ -28,6 +29,7 @@ export async function GET(request: NextRequest) {
       };
     }
 
+
     const logs = await prisma.log.findMany({
       where,
       include: {
@@ -41,12 +43,14 @@ export async function GET(request: NextRequest) {
       ],
     });
 
+
     return NextResponse.json({
       success: true,
       data: logs,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
+      console.error('GET /api/logs - Validation error:', error);
       return NextResponse.json(
         {
           success: false,
@@ -57,11 +61,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.error('Error fetching logs:', error);
+    console.error('GET /api/logs - Error fetching logs:', error);
     return NextResponse.json(
       {
         success: false,
         error: 'Failed to fetch logs',
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
@@ -73,6 +78,7 @@ export async function POST(request: NextRequest) {
   try {
     await ensureConnection();
     const body = await request.json();
+
     const validatedData = submitLogSchema.parse(body);
 
     // Check if data already submitted and locked for this date
@@ -124,7 +130,7 @@ export async function POST(request: NextRequest) {
       totalMinutes += minutes;
 
       // Save or update log
-      await prisma.log.upsert({
+      const savedLog = await prisma.log.upsert({
         where: {
           employee_tag_date: {
             employeeId: validatedData.employeeId,
