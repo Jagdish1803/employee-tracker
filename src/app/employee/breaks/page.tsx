@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -57,23 +58,21 @@ export default function BreakTracker() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
-  const employeeId = 1; // Use default employee ID for now
+  // Get actual employee data from authentication
+  const { employeeId, loading: employeeLoading, error: employeeError } = useEmployeeData();
 
   // Update current time every second for real-time UI updates
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(new Date());
-
-      // Refresh break data from server every 30 seconds for persistence
-      if (currentBreak?.isActive) {
-        // Refresh data periodically to maintain persistence
-      }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [currentBreak]);
+  }, []);
 
   const fetchBreakData = useCallback(async () => {
+    if (!employeeId) return; // Don't fetch if no employee ID
+
     try {
       setLoading(true);
 
@@ -150,6 +149,8 @@ export default function BreakTracker() {
   }, [fetchBreakData]);
 
   const fetchBreakHistory = useCallback(async () => {
+    if (!employeeId) return; // Don't fetch if no employee ID
+
     try {
       const historyResponse = await breakService.getHistory(employeeId, selectedDate);
 
@@ -183,19 +184,29 @@ export default function BreakTracker() {
     }
   }, [employeeId, selectedDate]);
 
+  // Initial data load when employee ID is available
   useEffect(() => {
-    const loadData = async () => {
-      await fetchBreakData();
-      await fetchBreakHistory();
-    };
-    loadData();
-  }, [fetchBreakData, fetchBreakHistory]);
+    if (employeeId) {
+      fetchBreakData();
+      fetchBreakHistory();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [employeeId]);
 
+  // Reload history when date changes
   useEffect(() => {
-    fetchBreakHistory();
-  }, [selectedDate, fetchBreakHistory]);
+    if (employeeId) {
+      fetchBreakHistory();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate, employeeId]);
 
   const handleBreakIn = async () => {
+    if (!employeeId) {
+      toast.error('Employee data not available. Please refresh the page.');
+      return;
+    }
+
     if (currentBreak?.isActive) {
       toast.error('You are already on a break');
       return;
@@ -237,6 +248,11 @@ export default function BreakTracker() {
   };
 
   const handleBreakOut = async () => {
+    if (!employeeId) {
+      toast.error('Employee data not available. Please refresh the page.');
+      return;
+    }
+
     if (!currentBreak?.isActive) {
       toast.error('You are not currently on a break');
       return;
@@ -296,6 +312,32 @@ export default function BreakTracker() {
   const currentDuration = getCurrentBreakDuration();
   const isLongBreak = currentDuration > 20;
 
+  // Show error if employee data failed to load
+  if (employeeError) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-12">
+          <AlertTriangle className="h-16 w-16 text-red-300 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-red-600 mb-2">Access Error</h3>
+          <p className="text-gray-500">{employeeError}</p>
+          <p className="text-sm text-gray-400 mt-2">Please contact your administrator to verify your employee code.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading if employee data is still loading
+  if (employeeLoading) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your profile...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -352,7 +394,7 @@ export default function BreakTracker() {
 
               <Button
                 onClick={handleBreakOut}
-                disabled={loading}
+                disabled={loading || employeeLoading || !employeeId}
                 variant={isLongBreak ? 'destructive' : 'default'}
                 className="w-full"
               >
@@ -366,7 +408,7 @@ export default function BreakTracker() {
                 <p className="text-2xl font-bold text-muted-foreground">No Active Break</p>
                 <p className="text-muted-foreground">Ready to start a break</p>
               </div>
-              <Button onClick={handleBreakIn} disabled={loading} className="w-full">
+              <Button onClick={handleBreakIn} disabled={loading || employeeLoading || !employeeId} className="w-full">
                 <Play className="h-4 w-4 mr-2" />
                 {loading ? 'Starting Break...' : 'Start Break'}
               </Button>

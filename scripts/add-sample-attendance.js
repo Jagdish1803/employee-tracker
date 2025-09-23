@@ -80,7 +80,7 @@ async function addSampleAttendance() {
         continue;
       }
 
-      const created = await prisma.attendanceRecord.create({
+      await prisma.attendanceRecord.create({
         data: record
       });
 
