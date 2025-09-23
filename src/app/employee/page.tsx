@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Progress } from '@/components/ui/progress';
 import {
   Clock,
   FileText,
@@ -114,15 +113,37 @@ export default function EmployeeDashboard() {
         console.log('Issues API response:', issuesData.value);
 
         // Handle different response structures
-        let issues = [];
-        if (Array.isArray(issuesData.value)) {
-          issues = issuesData.value;
-        } else if (issuesData.value?.data?.success && Array.isArray(issuesData.value.data.data)) {
-          issues = issuesData.value.data.data;
-        } else if (issuesData.value?.data && Array.isArray(issuesData.value.data)) {
-          issues = issuesData.value.data;
-        } else if (issuesData.value?.success && Array.isArray(issuesData.value.data)) {
-          issues = issuesData.value.data;
+        let issues: { issueStatus: string }[] = [];
+        const responseValue = issuesData.value as unknown;
+
+        if (Array.isArray(responseValue)) {
+          issues = responseValue;
+        } else if (
+          responseValue &&
+          typeof responseValue === 'object' &&
+          'data' in responseValue &&
+          responseValue.data &&
+          typeof responseValue.data === 'object' &&
+          'success' in responseValue.data &&
+          'data' in responseValue.data &&
+          Array.isArray((responseValue.data as { data: unknown }).data)
+        ) {
+          issues = (responseValue.data as { data: { issueStatus: string }[] }).data;
+        } else if (
+          responseValue &&
+          typeof responseValue === 'object' &&
+          'data' in responseValue &&
+          Array.isArray(responseValue.data)
+        ) {
+          issues = responseValue.data as { issueStatus: string }[];
+        } else if (
+          responseValue &&
+          typeof responseValue === 'object' &&
+          'success' in responseValue &&
+          'data' in responseValue &&
+          Array.isArray(responseValue.data)
+        ) {
+          issues = responseValue.data as { issueStatus: string }[];
         }
 
         console.log('Processed issues:', issues);
