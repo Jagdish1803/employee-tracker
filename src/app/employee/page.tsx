@@ -16,7 +16,8 @@ import {
   Target,
   BarChart3,
   ArrowRight,
-  AlertCircle
+  AlertCircle,
+  Timer
 } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
@@ -198,23 +199,23 @@ export default function EmployeeDashboard() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-green-50">
+    <div className="min-h-screen w-full bg-gray-50">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-green-600 shadow-lg border-b w-full">
-        <div className="w-full px-3 md:px-4 lg:px-8 py-6 md:py-12">
+      <div className="bg-white shadow-sm border-b w-full">
+        <div className="w-full px-3 md:px-4 lg:px-8 py-4 md:py-8">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="min-w-0 flex-1">
-              <h1 className="text-xl md:text-4xl font-bold text-white truncate bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+              <h1 className="text-xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
                 Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {user?.fullName || 'Employee'}!
               </h1>
-              <p className="text-blue-100 mt-2 text-sm md:text-lg">
-                Employee: <span className="font-bold text-white">{user?.fullName}</span>
+              <p className="text-muted-foreground mt-1 text-sm md:text-base">
+                Employee: <span className="font-medium">{user?.fullName}</span>
                 <span className="hidden sm:inline"> • General Department</span>
               </p>
             </div>
             <div className="text-left md:text-right flex-shrink-0">
-              <div className="text-xs md:text-sm text-blue-200">Today</div>
-              <div className="text-sm md:text-xl font-bold text-white">
+              <div className="text-xs md:text-sm text-muted-foreground">Today</div>
+              <div className="text-sm md:text-lg font-semibold text-gray-900">
                 {new Date().toLocaleDateString('en-US', {
                   weekday: 'short',
                   month: 'short',
@@ -238,81 +239,73 @@ export default function EmployeeDashboard() {
         <div className="w-full space-y-4 md:space-y-8">
         {/* Quick Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
-          <Card className="relative overflow-hidden group hover:shadow-xl hover:scale-[1.02] transition-all duration-300 border-l-4 border-l-green-500 bg-gradient-to-br from-green-50 to-white">
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-center justify-between">
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs md:text-sm font-medium text-green-700 mb-1">Attendance Rate</p>
-                  <p className="text-2xl md:text-3xl font-bold text-gray-900">
-                    {Math.round(stats?.attendance.thisMonth.attendanceRate || 0)}%
-                  </p>
-                  <p className="text-xs text-green-600 mt-1 truncate">
-                    {stats?.attendance.thisMonth.presentDays || 0} of {stats?.attendance.thisMonth.totalDays || 26} days
-                  </p>
-                </div>
-                <div className="p-2 md:p-3 bg-green-500 rounded-full flex-shrink-0 shadow-lg group-hover:shadow-xl transition-shadow">
-                  <Calendar className="h-4 w-4 md:h-6 md:w-6 text-white" />
-                </div>
+          <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 border-l-green-500 bg-gradient-to-br from-green-50 to-white">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-700">Attendance Rate</CardTitle>
+              <div className="h-8 w-8 rounded-lg bg-green-500/10 flex items-center justify-center">
+                <Calendar className="h-4 w-4 text-green-600" />
               </div>
-              <div className="mt-4">
-                <Progress
-                  value={stats?.attendance.thisMonth.attendanceRate || 0}
-                  className="h-3 bg-green-100"
-                />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-gray-900">
+                {Math.round(stats?.attendance.thisMonth.attendanceRate || 0)}%
               </div>
+              <p className="text-xs text-muted-foreground flex items-center mt-1">
+                <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
+                {stats?.attendance.thisMonth.presentDays || 0} of {stats?.attendance.thisMonth.totalDays || 26} days
+              </p>
             </CardContent>
           </Card>
 
-          <Card className="relative overflow-hidden group hover:shadow-xl hover:scale-[1.02] transition-all duration-300 border-l-4 border-l-blue-500 bg-gradient-to-br from-blue-50 to-white">
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-center justify-between">
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs md:text-sm font-medium text-blue-700 mb-1">Work Hours</p>
-                  <p className="text-2xl md:text-3xl font-bold text-gray-900">
-                    {(stats?.attendance.thisMonth.totalHours || 0).toFixed(1)}h
-                  </p>
-                  <p className="text-xs text-blue-600 mt-1">This month</p>
-                </div>
-                <div className="p-2 md:p-3 bg-blue-500 rounded-full flex-shrink-0 shadow-lg group-hover:shadow-xl transition-shadow">
-                  <Clock className="h-4 w-4 md:h-6 md:w-6 text-white" />
-                </div>
+          <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500 bg-gradient-to-br from-blue-50 to-white">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-700">Work Hours</CardTitle>
+              <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                <Clock className="h-4 w-4 text-blue-600" />
               </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-gray-900">
+                {(stats?.attendance.thisMonth.totalHours || 0).toFixed(1)}h
+              </div>
+              <p className="text-xs text-muted-foreground flex items-center mt-1">
+                <Timer className="h-3 w-3 mr-1 text-blue-500" />
+                This month
+              </p>
             </CardContent>
           </Card>
 
-          <Card className="relative overflow-hidden group hover:shadow-xl hover:scale-[1.02] transition-all duration-300 border-l-4 border-l-purple-500 bg-gradient-to-br from-purple-50 to-white">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-purple-700 mb-1">Productivity</p>
-                  <p className="text-3xl font-bold text-gray-900">
-                    {Math.round(stats?.performance.productivity || 0)}%
-                  </p>
-                  <p className="text-xs text-purple-600 mt-1">Average this month</p>
-                </div>
-                <div className="p-3 bg-purple-500 rounded-full shadow-lg group-hover:shadow-xl transition-shadow">
-                  <TrendingUp className="h-6 w-6 text-white" />
-                </div>
+          <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 border-l-purple-500 bg-gradient-to-br from-purple-50 to-white">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-700">Productivity</CardTitle>
+              <div className="h-8 w-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                <TrendingUp className="h-4 w-4 text-purple-600" />
               </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-gray-900">
+                {Math.round(stats?.performance.productivity || 0)}%
+              </div>
+              <p className="text-xs text-muted-foreground flex items-center mt-1">
+                <Activity className="h-3 w-3 mr-1 text-purple-500" />
+                Average this month
+              </p>
             </CardContent>
           </Card>
 
-          <Card className="relative overflow-hidden group hover:shadow-xl hover:scale-[1.02] transition-all duration-300 border-l-4 border-l-orange-500 bg-gradient-to-br from-orange-50 to-white">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-orange-700 mb-1">Pending Issues</p>
-                  <p className="text-3xl font-bold text-gray-900">
-                    {stats?.issues.pending || 0}
-                  </p>
-                  <p className="text-xs text-orange-600 mt-1">
-                    {stats?.issues.resolved || 0} resolved
-                  </p>
-                </div>
-                <div className="p-3 bg-orange-500 rounded-full shadow-lg group-hover:shadow-xl transition-shadow">
-                  <AlertCircle className="h-6 w-6 text-white" />
-                </div>
+          <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 border-l-red-500 bg-gradient-to-br from-red-50 to-white">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-700">Pending Issues</CardTitle>
+              <div className="h-8 w-8 rounded-lg bg-red-500/10 flex items-center justify-center">
+                <AlertCircle className="h-4 w-4 text-red-600" />
               </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-gray-900">{stats?.issues.pending || 0}</div>
+              <p className="text-xs text-muted-foreground flex items-center mt-1">
+                <Target className="h-3 w-3 mr-1 text-red-500" />
+                {stats?.issues.resolved || 0} resolved
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -322,15 +315,14 @@ export default function EmployeeDashboard() {
           {/* Left Column - Attendance & Activity */}
           <div className="lg:col-span-2 space-y-6">
             {/* Attendance Section */}
-            <Card className="relative overflow-hidden bg-gradient-to-br from-green-50 to-white border-l-4 border-l-green-500 shadow-lg hover:shadow-xl transition-all duration-300">
+            <Card className="relative overflow-hidden bg-gradient-to-br from-green-50 to-white border-l-4 border-l-green-500">
               <CardHeader className="pb-3">
-                <CardTitle className="flex items-center text-lg">
-                  <div className="p-2 bg-green-500 rounded-lg mr-3 shadow-md">
-                    <Calendar className="h-5 w-5 text-white" />
+                <CardTitle className="flex items-center gap-2 text-gray-900">
+                  <div className="p-2 bg-green-500 rounded-lg">
+                    <Calendar className="h-4 w-4 text-white" />
                   </div>
-                  <span className="text-green-800">My Attendance</span>
+                  My Attendance
                 </CardTitle>
-                <p className="text-sm text-green-600">Track your attendance and work hours</p>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -366,15 +358,14 @@ export default function EmployeeDashboard() {
             </Card>
 
             {/* Activity Section */}
-            <Card className="relative overflow-hidden bg-gradient-to-br from-blue-50 to-white border-l-4 border-l-blue-500 shadow-lg hover:shadow-xl transition-all duration-300">
+            <Card className="relative overflow-hidden bg-gradient-to-br from-blue-50 to-white border-l-4 border-l-blue-500">
               <CardHeader className="pb-3">
-                <CardTitle className="flex items-center text-lg">
-                  <div className="p-2 bg-blue-500 rounded-lg mr-3 shadow-md">
-                    <Activity className="h-5 w-5 text-white" />
+                <CardTitle className="flex items-center gap-2 text-gray-900">
+                  <div className="p-2 bg-blue-500 rounded-lg">
+                    <Activity className="h-4 w-4 text-white" />
                   </div>
-                  <span className="text-blue-800">Activity Tracking</span>
+                  Activity Tracking
                 </CardTitle>
-                <p className="text-sm text-blue-600">Monitor your daily productivity and activity levels</p>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -413,13 +404,13 @@ export default function EmployeeDashboard() {
           {/* Right Column - Quick Actions & Links */}
           <div className="space-y-6">
             {/* Quick Actions */}
-            <Card className="relative overflow-hidden bg-gradient-to-br from-purple-50 to-white border-l-4 border-l-purple-500 shadow-lg hover:shadow-xl transition-all duration-300">
+            <Card className="relative overflow-hidden bg-gradient-to-br from-purple-50 to-white border-l-4 border-l-purple-500">
               <CardHeader className="pb-3">
-                <CardTitle className="flex items-center text-lg">
-                  <div className="p-2 bg-purple-500 rounded-lg mr-3 shadow-md">
-                    <Target className="h-5 w-5 text-white" />
+                <CardTitle className="flex items-center gap-2 text-gray-900">
+                  <div className="p-2 bg-purple-500 rounded-lg">
+                    <Target className="h-4 w-4 text-white" />
                   </div>
-                  <span className="text-purple-800">Quick Actions</span>
+                  Quick Actions
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -465,13 +456,13 @@ export default function EmployeeDashboard() {
             </Card>
 
             {/* This Week Summary */}
-            <Card className="relative overflow-hidden bg-gradient-to-br from-orange-50 to-white border-l-4 border-l-orange-500 shadow-lg hover:shadow-xl transition-all duration-300">
+            <Card className="relative overflow-hidden bg-gradient-to-br from-orange-50 to-white border-l-4 border-l-orange-500">
               <CardHeader className="pb-3">
-                <CardTitle className="flex items-center text-lg">
-                  <div className="p-2 bg-orange-500 rounded-lg mr-3 shadow-md">
-                    <BarChart3 className="h-5 w-5 text-white" />
+                <CardTitle className="flex items-center gap-2 text-gray-900">
+                  <div className="p-2 bg-orange-500 rounded-lg">
+                    <BarChart3 className="h-4 w-4 text-white" />
                   </div>
-                  <span className="text-orange-800">This Week</span>
+                  This Week
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
