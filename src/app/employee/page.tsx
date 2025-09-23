@@ -83,6 +83,13 @@ export default function EmployeeDashboard() {
         flowaceService.getByEmployee(employeeId)
       ]);
 
+      console.log('API calls completed:', {
+        attendanceData: attendanceData.status,
+        issuesData: issuesData.status,
+        logsData: logsData.status,
+        flowaceData: flowaceData.status
+      });
+
       // Process attendance data
       let attendanceStats = {
         presentDays: 0,
@@ -103,13 +110,32 @@ export default function EmployeeDashboard() {
 
       // Process issues data
       let issueStats = { total: 0, pending: 0, resolved: 0 };
-      if (issuesData.status === 'fulfilled' && issuesData.value?.data?.success) {
-        const issues = issuesData.value.data.data || [];
+      if (issuesData.status === 'fulfilled' && issuesData.value) {
+        console.log('Issues API response:', issuesData.value);
+
+        // Handle different response structures
+        let issues = [];
+        if (Array.isArray(issuesData.value)) {
+          issues = issuesData.value;
+        } else if (issuesData.value?.data?.success && Array.isArray(issuesData.value.data.data)) {
+          issues = issuesData.value.data.data;
+        } else if (issuesData.value?.data && Array.isArray(issuesData.value.data)) {
+          issues = issuesData.value.data;
+        } else if (issuesData.value?.success && Array.isArray(issuesData.value.data)) {
+          issues = issuesData.value.data;
+        }
+
+        console.log('Processed issues:', issues);
+
         issueStats = {
           total: issues.length,
           pending: issues.filter((i: { issueStatus: string }) => i.issueStatus === 'pending').length,
           resolved: issues.filter((i: { issueStatus: string }) => i.issueStatus === 'resolved').length
         };
+
+        console.log('Issue stats:', issueStats);
+      } else {
+        console.log('Issues data not fulfilled or no value:', issuesData);
       }
 
       // Process work logs data

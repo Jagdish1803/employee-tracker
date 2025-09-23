@@ -377,16 +377,19 @@ export default function MyAttendance() {
                       Check In
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Check Out
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Break In
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Break Out
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Check Out
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Hours Worked
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Shift
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Remarks
@@ -396,6 +399,7 @@ export default function MyAttendance() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredRecords.map((record) => (
                     <tr key={record.id} className="hover:bg-gray-50">
+                      {/* Date */}
                       <td className="px-4 py-3 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
                           {new Date(record.date).toLocaleDateString('en-US', {
@@ -406,26 +410,37 @@ export default function MyAttendance() {
                           })}
                         </div>
                       </td>
+                      {/* Status */}
                       <td className="px-4 py-3 whitespace-nowrap">
                         <Badge variant={getStatusVariant(record.status)} className="text-xs">
                           {formatStatus(record.status)}
                         </Badge>
                       </td>
+                      {/* Check In */}
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                         {record.checkInTime || 'Not recorded'}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                        {record.checkOutTime || 'Not recorded'}
-                      </td>
+                      {/* Break In */}
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                         {getBreakInTime(record)}
                       </td>
+                      {/* Break Out */}
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                         {getBreakOutTime(record)}
                       </td>
+                      {/* Check Out */}
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                        {record.checkOutTime || 'Not recorded'}
+                      </td>
+                      {/* Hours Worked */}
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                         {record.hoursWorked?.toFixed(1) || '0.0'}h
                       </td>
+                      {/* Shift */}
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                        {record.shift || 'General'}
+                      </td>
+                      {/* Remarks */}
                       <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate">
                         {record.remarks || '-'}
                       </td>
