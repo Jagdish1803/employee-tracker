@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -60,7 +61,8 @@ export default function WorkAssignments() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'mandatory' | 'optional'>('all');
 
-  const employeeId = 1; // Use default employee ID for now
+  // Get actual employee data from authentication
+  const { employeeId, loading: employeeLoading, error: employeeError } = useEmployeeData();
 
   // Filter assignments based on search and type
   const filteredAssignments = assignments.filter(assignment => {
@@ -97,6 +99,8 @@ export default function WorkAssignments() {
   };
 
   const fetchExistingLogs = useCallback(async () => {
+    if (!employeeId) return; // Don't fetch if no employee ID
+
     try {
       const response = await logService.getByDate(employeeId, selectedDate);
 
@@ -131,23 +135,22 @@ export default function WorkAssignments() {
   }, [employeeId, selectedDate]);
 
   const fetchAssignments = useCallback(async () => {
+    if (!employeeId) return; // Don't fetch if no employee ID
+
     try {
       setLoading(true);
-      const response = await assignmentService.getAll();
+      // Use the getByEmployee method to get assignments for specific employee
+      const response = await assignmentService.getByEmployee(employeeId);
 
       let employeeAssignments: Assignment[] = [];
 
-      // Handle new API response structure
+      // Handle API response structure
       if (response && Array.isArray(response)) {
-        employeeAssignments = response.filter(
-          (assignment) => assignment.employeeId === employeeId
-        );
+        employeeAssignments = response;
       } else if (response && typeof response === 'object' && 'data' in response) {
         const apiResponse = response as { data: Assignment[] };
         if (Array.isArray(apiResponse.data)) {
-          employeeAssignments = apiResponse.data.filter(
-            (assignment) => assignment.employeeId === employeeId
-          );
+          employeeAssignments = apiResponse.data;
         }
       }
 
@@ -197,6 +200,11 @@ export default function WorkAssignments() {
   };
 
   const handleSubmit = async () => {
+    if (!employeeId) {
+      toast.error('Employee data not available. Please refresh the page.');
+      return;
+    }
+
     try {
       setSubmitLoading(true);
 
@@ -370,10 +378,22 @@ export default function WorkAssignments() {
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
-              {loading ? (
+              {(loading || employeeLoading) ? (
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
                   <p className="text-muted-foreground">Loading assignments...</p>
+                </div>
+              ) : employeeError ? (
+                <div className="text-center py-8">
+                  <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                  <p className="text-red-600 font-medium">Error loading employee data</p>
+                  <p className="text-sm text-muted-foreground">{employeeError}</p>
+                </div>
+              ) : !employeeId ? (
+                <div className="text-center py-8">
+                  <AlertTriangle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+                  <p className="text-amber-600 font-medium">No employee data found</p>
+                  <p className="text-sm text-muted-foreground">Please contact your administrator</p>
                 </div>
               ) : assignments.length === 0 ? (
                 <div className="text-center py-8">
@@ -430,13 +450,13 @@ export default function WorkAssignments() {
 
           {/* Submit Actions */}
           <div className="flex justify-end space-x-2">
-            <Button variant="outline" disabled={loading} onClick={() => setShowPreview(true)}>
+            <Button variant="outline" disabled={loading || employeeLoading || !employeeId} onClick={() => setShowPreview(true)}>
               <Eye className="h-4 w-4 mr-2" />
               Preview
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={submitLoading || assignments.length === 0 || submissionStatus?.isLocked}
+              disabled={submitLoading || assignments.length === 0 || submissionStatus?.isLocked || !employeeId || employeeLoading}
             >
               {submitLoading ? (
                 <>
@@ -511,10 +531,22 @@ export default function WorkAssignments() {
               </p>
             </CardHeader>
             <CardContent>
-              {loading ? (
+              {(loading || employeeLoading) ? (
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
                   <p className="text-muted-foreground">Loading assignments...</p>
+                </div>
+              ) : employeeError ? (
+                <div className="text-center py-8">
+                  <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                  <p className="text-red-600 font-medium">Error loading employee data</p>
+                  <p className="text-sm text-muted-foreground">{employeeError}</p>
+                </div>
+              ) : !employeeId ? (
+                <div className="text-center py-8">
+                  <AlertTriangle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+                  <p className="text-amber-600 font-medium">No employee data found</p>
+                  <p className="text-sm text-muted-foreground">Please contact your administrator</p>
                 </div>
               ) : filteredAssignments.length === 0 ? (
                 <div className="text-center py-8">
@@ -645,7 +677,9 @@ export default function WorkAssignments() {
                   assignments.length === 0 ||
                   submissionStatus?.isLocked ||
                   !isDateAllowed(selectedDate) ||
-                  Object.values(logs).filter(count => count > 0).length === 0
+                  Object.values(logs).filter(count => count > 0).length === 0 ||
+                  !employeeId ||
+                  employeeLoading
                 }
               >
                 <Save className="h-4 w-4 mr-2" />
