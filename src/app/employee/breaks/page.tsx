@@ -1,7 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { useEmployeeData } from '@/hooks/useEmployeeData';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,55 +12,74 @@ import {
   Square,
   AlertTriangle,
   Calendar,
-  Clock
+  Clock,
+  Timer,
+  TrendingUp
 } from 'lucide-react';
-import { toast } from 'sonner';
-import { breakService, BreakSummary } from '@/api';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { useBreakStatus, useBreakHistory, useBreakSummary, useBreakIn, useBreakOut, BreakStatus, EnhancedBreakRecord } from '@/hooks/useBreakQuery';
 
-interface BreakStatus {
-  id?: number;
-  employeeId: number;
-  breakDate: string;
-  breakInTime?: string;
-  breakOutTime?: string;
-  breakDuration: number;
-  isActive: boolean;
-  warningSent: boolean;
-  createdAt: string;
-}
+// Helper functions to prevent NaN issues
+const safeNumber = (value: unknown): number => {
+  if (typeof value === 'number' && !isNaN(value)) return value;
+  if (typeof value === 'string') {
+    const parsed = parseFloat(value);
+    return !isNaN(parsed) ? parsed : 0;
+  }
+  return 0;
+};
 
-interface BreakRecord {
-  id: number;
-  employeeId: number;
-  breakDate: string;
-  breakInTime?: string;
-  breakOutTime?: string;
-  breakDuration: number;
-  isActive: boolean;
-  warningSent: boolean;
-  createdAt: string;
-}
+const formatDuration = (minutes: number): string => {
+  const safeMins = safeNumber(minutes);
+  const hours = Math.floor(safeMins / 60);
+  const mins = safeMins % 60;
+  return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+};
 
-interface EnhancedBreakSummary {
-  totalBreaks: number;
-  totalDuration: number;
-  averageDuration: number;
-  longestBreak: number;
-  warningsReceived: number;
-}
+const formatTime = (timeString: string | null | undefined): string => {
+  if (!timeString) return 'Not recorded';
+  try {
+    const date = new Date(timeString);
+    if (isNaN(date.getTime())) return 'Invalid time';
+    return date.toTimeString().slice(0, 5); // HH:MM
+  } catch {
+    return 'Invalid time';
+  }
+};
+
+const calculateDuration = (startTime: string | null | undefined, endTime?: string | null): number => {
+  if (!startTime) return 0;
+
+  try {
+    const start = new Date(startTime);
+    const end = endTime ? new Date(endTime) : new Date();
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
+
+    const duration = Math.floor((end.getTime() - start.getTime()) / (1000 * 60));
+    return Math.max(0, duration); // Ensure non-negative
+  } catch {
+    return 0;
+  }
+};
 
 export default function BreakTracker() {
-  const [currentBreak, setCurrentBreak] = useState<BreakStatus | null>(null);
-  const [breakHistory, setBreakHistory] = useState<BreakRecord[]>([]);
-  const [summary, setSummary] = useState<EnhancedBreakSummary | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [, setCurrentTime] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
-  // Get actual employee data from authentication
+  // Get employee data
   const { employeeId, loading: employeeLoading, error: employeeError } = useEmployeeData();
 
-  // Update current time every second for real-time UI updates
+  // React Query hooks
+  const { data: breakStatus, isLoading: statusLoading, error: statusError } = useBreakStatus(employeeId);
+  const { data: breakHistory, isLoading: historyLoading } = useBreakHistory(employeeId, selectedDate);
+  const { data: breakSummary, isLoading: summaryLoading } = useBreakSummary(employeeId);
+
+  // Mutations
+  const breakInMutation = useBreakIn();
+  const breakOutMutation = useBreakOut();
+
+  // Update current time every second for real-time display
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(new Date());
@@ -70,249 +88,64 @@ export default function BreakTracker() {
     return () => clearInterval(interval);
   }, []);
 
-  const fetchBreakData = useCallback(async () => {
-    if (!employeeId) return; // Don't fetch if no employee ID
+  // Calculate current break duration safely
+  const getCurrentBreakDuration = (): number => {
+    const status = breakStatus as BreakStatus | null;
+    if (!status || !status.isActive || !status.breakInTime) return 0;
+    return calculateDuration(status.breakInTime);
+  };
 
-    try {
-      setLoading(true);
+  // Process break history safely
+  const processedHistory = React.useMemo(() => {
+    if (!Array.isArray(breakHistory)) return [];
 
-      // Fetch break status and summary with individual error handling
-      let statusResponse, summaryResponse;
+    return breakHistory.map((item: EnhancedBreakRecord, index: number) => ({
+      id: item.id || index,
+      breakInTime: item.breakInTime || item.timestamp,
+      breakOutTime: item.breakOutTime,
+      duration: item.breakOutTime
+        ? calculateDuration(item.breakInTime || item.timestamp, item.breakOutTime)
+        : 0,
+      isActive: !item.breakOutTime,
+      date: selectedDate,
+    }));
+  }, [breakHistory, selectedDate]);
 
-      try {
-        statusResponse = await breakService.getStatus(employeeId);
-      } catch {
-        statusResponse = null;
-      }
-
-      try {
-        summaryResponse = await breakService.getSummary(employeeId);
-      } catch {
-        summaryResponse = null;
-      }
-
-      // Process break status
-      if (statusResponse && typeof statusResponse === 'object') {
-        const status = statusResponse as Record<string, unknown>;
-        if (status.isActive && status.id) {
-          setCurrentBreak({
-            id: Number(status.id),
-            employeeId: Number(status.employeeId) || employeeId,
-            breakDate: String(status.breakDate) || new Date().toISOString().split('T')[0],
-            breakInTime: status.breakInTime ? new Date(String(status.breakInTime)).toTimeString().slice(0, 8) : new Date().toTimeString().slice(0, 8),
-            breakDuration: 0,
-            isActive: true,
-            warningSent: false,
-            createdAt: String(status.createdAt) || new Date().toISOString()
-          });
-        } else {
-          setCurrentBreak(null);
-        }
-      } else {
-        setCurrentBreak(null);
-      }
-
-      // Process break summary
-      if (summaryResponse && typeof summaryResponse === 'object') {
-        const apiSummary = summaryResponse as BreakSummary;
-        setSummary({
-          totalBreaks: apiSummary.breakCount || 0,
-          totalDuration: apiSummary.totalBreakTime || 0,
-          averageDuration: apiSummary.averageBreakTime || 0,
-          longestBreak: apiSummary.longestBreak || 0,
-          warningsReceived: 0
-        });
-      } else {
-        setSummary({
-          totalBreaks: 0,
-          totalDuration: 0,
-          averageDuration: 0,
-          longestBreak: 0,
-          warningsReceived: 0
-        });
-      }
-
-    } catch (error) {
-      console.error('Failed to load break data:', error);
-      toast.error('Failed to load break data', {
-        description: 'Unable to connect to the server. Please try again later.',
-        duration: 5000
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [employeeId]);
-
-  // Check for active breaks on component mount
-  useEffect(() => {
-    fetchBreakData();
-  }, [fetchBreakData]);
-
-  const fetchBreakHistory = useCallback(async () => {
-    if (!employeeId) return; // Don't fetch if no employee ID
-
-    try {
-      const historyResponse = await breakService.getHistory(employeeId, selectedDate);
-
-      if (Array.isArray(historyResponse)) {
-        // Convert to BreakRecord format
-        const processedHistory: BreakRecord[] = [];
-
-        // Group breaks by pairs
-        for (let i = 0; i < historyResponse.length; i++) {
-          const record = historyResponse[i];
-          processedHistory.push({
-            id: record.id,
-            employeeId: record.employeeId,
-            breakDate: selectedDate,
-            breakInTime: record.timestamp ? new Date(record.timestamp).toTimeString().slice(0, 8) : undefined,
-            breakOutTime: record.type === 'out' ? new Date(record.timestamp).toTimeString().slice(0, 8) : undefined,
-            breakDuration: 0, // Will be calculated
-            isActive: record.type === 'in',
-            warningSent: false,
-            createdAt: record.created_at || record.timestamp
-          });
-        }
-
-        setBreakHistory(processedHistory);
-      } else {
-        setBreakHistory([]);
-      }
-    } catch (error) {
-      console.error('Failed to fetch break history:', error);
-      setBreakHistory([]);
-    }
-  }, [employeeId, selectedDate]);
-
-  // Initial data load when employee ID is available
-  useEffect(() => {
-    if (employeeId) {
-      fetchBreakData();
-      fetchBreakHistory();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [employeeId]);
-
-  // Reload history when date changes
-  useEffect(() => {
-    if (employeeId) {
-      fetchBreakHistory();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDate, employeeId]);
-
-  const handleBreakIn = async () => {
-    if (!employeeId) {
-      toast.error('Employee data not available. Please refresh the page.');
-      return;
-    }
-
-    if (currentBreak?.isActive) {
-      toast.error('You are already on a break');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const response = await breakService.breakIn(employeeId);
-
-      const timestamp = response.timestamp || new Date().toISOString();
-      const newBreak: BreakStatus = {
-        id: response.id,
-        employeeId,
-        breakDate: new Date().toISOString().split('T')[0],
-        breakInTime: new Date(timestamp).toTimeString().slice(0, 8),
-        breakDuration: 0,
-        isActive: true,
-        warningSent: false,
-        createdAt: response.created_at || timestamp
+  // Process break summary safely
+  const summaryStats = React.useMemo(() => {
+    if (!breakSummary) {
+      return {
+        totalBreaks: 0,
+        totalDuration: 0,
+        averageDuration: 0,
+        longestBreak: 0,
       };
-
-      setCurrentBreak(newBreak);
-      toast.success('Break started successfully', {
-        description: 'Your break has been logged. Remember to end it when you return.',
-        duration: 4000
-      });
-
-      // Refresh data
-      fetchBreakData();
-    } catch (error) {
-      console.error('Failed to start break:', error);
-      toast.error('Failed to start break', {
-        description: 'There was an error starting your break. Please try again.',
-        duration: 5000
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleBreakOut = async () => {
-    if (!employeeId) {
-      toast.error('Employee data not available. Please refresh the page.');
-      return;
     }
 
-    if (!currentBreak?.isActive) {
-      toast.error('You are not currently on a break');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      await breakService.breakOut(employeeId);
-
-      const now = new Date();
-      const breakInTime = new Date(`${currentBreak.breakDate}T${currentBreak.breakInTime}`);
-      const duration = Math.floor((now.getTime() - breakInTime.getTime()) / (1000 * 60));
-
-      setCurrentBreak(null);
-
-      if (duration > 20) {
-        toast.warning(`Break ended - ${duration} minutes`, {
-          description: 'Your break exceeded the recommended 20 minutes. Please be mindful of break duration.',
-          duration: 6000
-        });
-      } else {
-        toast.success(`Break ended successfully`, {
-          description: `Total duration: ${duration} minutes. Welcome back!`,
-          duration: 4000
-        });
-      }
-
-      // Refresh data
-      fetchBreakData();
-    } catch (error) {
-      console.error('Failed to end break:', error);
-      toast.error('Failed to end break', {
-        description: 'There was an error ending your break. Please try again.',
-        duration: 5000
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getCurrentBreakDuration = () => {
-    if (!currentBreak?.isActive || !currentBreak.breakInTime) return 0;
-    const breakInTime = new Date(`${currentBreak.breakDate}T${currentBreak.breakInTime}`);
-    return Math.floor((currentTime.getTime() - breakInTime.getTime()) / (1000 * 60));
-  };
-
-  const formatDuration = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-  };
-
-  const formatTime = (timeString: string) => {
-    return timeString.slice(0, 5); // HH:MM
-  };
+    return {
+      totalBreaks: safeNumber(breakSummary.breakCount),
+      totalDuration: safeNumber(breakSummary.totalBreakTime),
+      averageDuration: safeNumber(breakSummary.averageBreakTime),
+      longestBreak: safeNumber(breakSummary.longestBreak),
+    };
+  }, [breakSummary]);
 
   const currentDuration = getCurrentBreakDuration();
   const isLongBreak = currentDuration > 20;
+  const isLoading = statusLoading || breakInMutation.isPending || breakOutMutation.isPending;
 
-  // Show error if employee data failed to load
+  // Handle break actions
+  const handleBreakIn = () => {
+    if (!employeeId) return;
+    breakInMutation.mutate(employeeId);
+  };
+
+  const handleBreakOut = () => {
+    if (!employeeId) return;
+    breakOutMutation.mutate(employeeId);
+  };
+
+  // Error states
   if (employeeError) {
     return (
       <div className="p-6">
@@ -320,13 +153,13 @@ export default function BreakTracker() {
           <AlertTriangle className="h-16 w-16 text-red-300 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-red-600 mb-2">Access Error</h3>
           <p className="text-gray-500">{employeeError}</p>
-          <p className="text-sm text-gray-400 mt-2">Please contact your administrator to verify your employee code.</p>
+          <p className="text-sm text-gray-400 mt-2">Please contact your administrator.</p>
         </div>
       </div>
     );
   }
 
-  // Show loading if employee data is still loading
+  // Loading states
   if (employeeLoading) {
     return (
       <div className="p-6">
@@ -361,21 +194,31 @@ export default function BreakTracker() {
       </div>
 
       {/* Current Break Status */}
-      <Card className={currentBreak?.isActive ? (isLongBreak ? 'border-red-200 bg-red-50' : 'border-blue-200 bg-blue-50') : ''}>
+      <Card className={(breakStatus as BreakStatus)?.isActive ? (isLongBreak ? 'border-red-200 bg-red-50' : 'border-blue-200 bg-blue-50') : ''}>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Coffee className="h-5 w-5" />
             <span>Current Break Status</span>
+            {statusError && (
+              <Badge variant="destructive" className="text-xs">
+                Error loading status
+              </Badge>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {currentBreak?.isActive ? (
+          {statusLoading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading break status...</p>
+            </div>
+          ) : (breakStatus as BreakStatus)?.isActive ? (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-2xl font-bold text-blue-600">Break In Progress</p>
                   <p className="text-muted-foreground">
-                    Started at {currentBreak.breakInTime && formatTime(currentBreak.breakInTime)}
+                    Started at {formatTime((breakStatus as BreakStatus)?.breakInTime)}
                   </p>
                 </div>
                 <Badge variant={isLongBreak ? 'destructive' : 'default'} className="text-lg px-4 py-2">
@@ -394,12 +237,12 @@ export default function BreakTracker() {
 
               <Button
                 onClick={handleBreakOut}
-                disabled={loading || employeeLoading || !employeeId}
+                disabled={isLoading}
                 variant={isLongBreak ? 'destructive' : 'default'}
                 className="w-full"
               >
                 <Square className="h-4 w-4 mr-2" />
-                {loading ? 'Ending Break...' : 'End Break'}
+                {breakOutMutation.isPending ? 'Ending Break...' : 'End Break'}
               </Button>
             </div>
           ) : (
@@ -408,9 +251,13 @@ export default function BreakTracker() {
                 <p className="text-2xl font-bold text-muted-foreground">No Active Break</p>
                 <p className="text-muted-foreground">Ready to start a break</p>
               </div>
-              <Button onClick={handleBreakIn} disabled={loading || employeeLoading || !employeeId} className="w-full">
+              <Button
+                onClick={handleBreakIn}
+                disabled={isLoading || !employeeId}
+                className="w-full"
+              >
                 <Play className="h-4 w-4 mr-2" />
-                {loading ? 'Starting Break...' : 'Start Break'}
+                {breakInMutation.isPending ? 'Starting Break...' : 'Start Break'}
               </Button>
             </div>
           )}
@@ -418,36 +265,45 @@ export default function BreakTracker() {
       </Card>
 
       {/* Break Summary */}
-      {summary && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Clock className="h-5 w-5" />
-              <span>Break Summary</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <TrendingUp className="h-5 w-5" />
+            <span>Today&apos;s Break Summary</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {summaryLoading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading summary...</p>
+            </div>
+          ) : (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
+              <div className="text-center">
+                <Timer className="h-8 w-8 text-blue-600 mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground">Total Breaks</p>
-                <p className="text-2xl font-bold">{summary.totalBreaks}</p>
+                <p className="text-2xl font-bold">{summaryStats.totalBreaks}</p>
               </div>
-              <div>
+              <div className="text-center">
+                <Clock className="h-8 w-8 text-green-600 mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground">Total Time</p>
-                <p className="text-2xl font-bold">{formatDuration(summary.totalDuration)}</p>
+                <p className="text-2xl font-bold">{formatDuration(summaryStats.totalDuration)}</p>
               </div>
-              <div>
+              <div className="text-center">
+                <TrendingUp className="h-8 w-8 text-orange-600 mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground">Average Duration</p>
-                <p className="text-2xl font-bold">{formatDuration(summary.averageDuration)}</p>
+                <p className="text-2xl font-bold">{formatDuration(summaryStats.averageDuration)}</p>
               </div>
-              <div>
+              <div className="text-center">
+                <AlertTriangle className="h-8 w-8 text-red-600 mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground">Longest Break</p>
-                <p className="text-2xl font-bold">{formatDuration(summary.longestBreak)}</p>
+                <p className="text-2xl font-bold">{formatDuration(summaryStats.longestBreak)}</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
 
       {/* Break History */}
       <Card>
@@ -458,38 +314,36 @@ export default function BreakTracker() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? (
+          {historyLoading ? (
             <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
               <p className="text-muted-foreground">Loading break history...</p>
             </div>
-          ) : breakHistory.length === 0 ? (
+          ) : processedHistory.length === 0 ? (
             <div className="text-center py-8">
               <Coffee className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground">No breaks taken on this date</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {breakHistory.map((breakRecord, index) => (
-                <div key={breakRecord.id || index} className="flex items-center justify-between p-3 border rounded-lg">
+              {processedHistory.map((breakRecord) => (
+                <div key={breakRecord.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex items-center space-x-3">
                     <Coffee className="h-4 w-4 text-muted-foreground" />
                     <div>
                       <p className="font-medium">
-                        {breakRecord.breakInTime && formatTime(breakRecord.breakInTime)}
+                        {formatTime(breakRecord.breakInTime)}
                         {breakRecord.breakOutTime && ` - ${formatTime(breakRecord.breakOutTime)}`}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {new Date(breakRecord.createdAt).toLocaleDateString()}
+                        {new Date(breakRecord.date).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <Badge variant={breakRecord.breakDuration > 30 ? 'destructive' : 'default'}>
-                      {breakRecord.isActive ? 'Active' : formatDuration(breakRecord.breakDuration)}
+                    <Badge variant={breakRecord.duration > 30 ? 'destructive' : breakRecord.isActive ? 'secondary' : 'default'}>
+                      {breakRecord.isActive ? 'Active' : formatDuration(breakRecord.duration)}
                     </Badge>
-                    {breakRecord.warningSent && (
-                      <p className="text-xs text-red-500 mt-1">Warning sent</p>
-                    )}
                   </div>
                 </div>
               ))}
