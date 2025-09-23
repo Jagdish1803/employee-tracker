@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { flowaceService } from '@/api';
 import { toast } from 'sonner';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 interface FlowaceRecord {
   id?: string;
@@ -63,7 +64,7 @@ export default function FlowaceActivity() {
   const [yearFilter, setYearFilter] = useState<string>(new Date().getFullYear().toString());
   const [hoursFilter, setHoursFilter] = useState<string>('all');
 
-  const employeeId = 1; // Use default employee ID for now
+  const { employeeId } = useEmployeeData();
 
   const filteredRecords = flowaceRecords.filter(record => {
     const productivityMatch = productivityFilter === 'all' ||
@@ -90,6 +91,11 @@ export default function FlowaceActivity() {
   });
 
   const fetchFlowaceData = useCallback(async () => {
+    if (!employeeId) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -186,8 +192,8 @@ export default function FlowaceActivity() {
   };
 
   return (
-    <div className="min-h-screen bg-white p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-white w-full">
+      <div className="w-full space-y-4 md:space-y-6 p-4 md:p-6">
         {/* Header */}
         <div className="flex items-center space-x-3 mb-6">
           <Activity className="h-6 w-6 text-blue-600" />
