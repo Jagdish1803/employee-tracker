@@ -33,16 +33,16 @@ export async function GET(
     const startDate = new Date(parseInt(year), parseInt(month) - 1, 1);
     const endDate = new Date(parseInt(year), parseInt(month), 0);
 
-    const attendanceRecords = await prisma.attendance.findMany({
+    const attendanceRecords = await prisma.attendanceRecord.findMany({
       where: {
         employeeId: employeeId,
-        attendanceDate: {
+        date: {
           gte: startDate,
           lte: endDate,
         }
       },
       orderBy: {
-        attendanceDate: 'asc'
+        date: 'asc'
       }
     });
 
@@ -50,18 +50,23 @@ export async function GET(
 
     // Transform to calendar view format
     const calendarData = attendanceRecords.map(record => ({
-      date: record.attendanceDate.toISOString().split('T')[0],
+      id: record.id,
+      date: record.date.toISOString().split('T')[0],
       status: record.status,
-      checkInTime: record.checkInTime ? 
-        record.checkInTime.toTimeString().slice(0, 8) : undefined,
-      checkOutTime: record.checkOutTime ? 
-        record.checkOutTime.toTimeString().slice(0, 8) : undefined,
-      lunchOutTime: record.lunchOutTime ? 
-        record.lunchOutTime.toTimeString().slice(0, 8) : undefined,
-      lunchInTime: record.lunchInTime ? 
-        record.lunchInTime.toTimeString().slice(0, 8) : undefined,
-      hoursWorked: record.hoursWorked,
-      remarks: record.remarks
+      checkInTime: record.checkInTime ?
+        record.checkInTime.toTimeString().slice(0, 8) : null,
+      checkOutTime: record.checkOutTime ?
+        record.checkOutTime.toTimeString().slice(0, 8) : null,
+      lunchOutTime: record.lunchOutTime ?
+        record.lunchOutTime.toTimeString().slice(0, 8) : null,
+      lunchInTime: record.lunchInTime ?
+        record.lunchInTime.toTimeString().slice(0, 8) : null,
+      breakOutTime: record.breakOutTime ?
+        record.breakOutTime.toTimeString().slice(0, 8) : null,
+      breakInTime: record.breakInTime ?
+        record.breakInTime.toTimeString().slice(0, 8) : null,
+      hoursWorked: record.totalHours,
+      remarks: record.exceptionNotes
     }));
 
     return NextResponse.json(calendarData);
