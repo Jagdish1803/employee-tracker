@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BarChart3, TrendingUp, Clock, Target, Award, Calendar } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
-import { useUser } from '@clerk/nextjs';
 import { flowaceService } from '@/api';
 import { toast } from 'sonner';
 
@@ -28,7 +27,6 @@ interface WeeklyStats {
 }
 
 export default function MyPerformance() {
-  const { user } = useUser();
   const [performanceData, setPerformanceData] = useState<PerformanceData | null>(null);
   const [weeklyStats, setWeeklyStats] = useState<WeeklyStats | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'quarter'>('month');
@@ -124,6 +122,7 @@ export default function MyPerformance() {
         setWeeklyStats(basicWeeklyStats);
       }
     } catch (error) {
+      console.error('Failed to load performance data:', error);
       toast.error('Failed to load performance data');
 
       // Set empty data on error

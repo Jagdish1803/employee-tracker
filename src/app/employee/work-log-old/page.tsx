@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useUser } from '@clerk/nextjs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,7 +33,6 @@ interface Assignment {
 
 
 export default function WorkLog() {
-  const { user } = useUser();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [logs, setLogs] = useState<Record<number, number>>({});
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);

@@ -54,7 +54,7 @@ interface DashboardStats {
 
 export default function EmployeeDashboard() {
   const { user } = useUser();
-  const { employee, loading: employeeLoading, error: employeeError, employeeId } = useEmployeeData();
+  const { loading: employeeLoading, error: employeeError, employeeId } = useEmployeeData();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 

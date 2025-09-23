@@ -31,7 +31,7 @@ export function useAttendanceRecords(params?: {
           search: params?.search
         });
         return response;
-      } catch (error) {
+      } catch {
         // Return empty array instead of throwing to prevent infinite loading
         return [];
       }
@@ -61,7 +61,7 @@ export function useUploadHistory() {
       try {
         const response = await attendanceApi.getUploadHistory();
         return response;
-      } catch (error) {
+      } catch {
         // Return empty array instead of throwing
         return [];
       }
@@ -98,7 +98,7 @@ export function useUpdateAttendanceRecord() {
       queryClient.invalidateQueries({ queryKey: attendanceKeys.records() });
       queryClient.invalidateQueries({ queryKey: attendanceKeys.all });
     },
-    onError: (error) => {
+    onError: () => {
       toast.error('Failed to update attendance record');
     },
   });

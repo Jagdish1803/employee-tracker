@@ -15,7 +15,6 @@ import {
   Clock
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useUser } from '@clerk/nextjs';
 import { breakService, BreakSummary } from '@/api';
 
 interface BreakStatus {
@@ -51,7 +50,6 @@ interface EnhancedBreakSummary {
 }
 
 export default function BreakTracker() {
-  const { user } = useUser();
   const [currentBreak, setCurrentBreak] = useState<BreakStatus | null>(null);
   const [breakHistory, setBreakHistory] = useState<BreakRecord[]>([]);
   const [summary, setSummary] = useState<EnhancedBreakSummary | null>(null);
@@ -136,6 +134,7 @@ export default function BreakTracker() {
       }
 
     } catch (error) {
+      console.error('Failed to load break data:', error);
       toast.error('Failed to load break data', {
         description: 'Unable to connect to the server. Please try again later.',
         duration: 5000
@@ -178,7 +177,8 @@ export default function BreakTracker() {
       } else {
         setBreakHistory([]);
       }
-    } catch {
+    } catch (error) {
+      console.error('Failed to fetch break history:', error);
       setBreakHistory([]);
     }
   }, [employeeId, selectedDate]);
@@ -225,7 +225,8 @@ export default function BreakTracker() {
 
       // Refresh data
       fetchBreakData();
-    } catch {
+    } catch (error) {
+      console.error('Failed to start break:', error);
       toast.error('Failed to start break', {
         description: 'There was an error starting your break. Please try again.',
         duration: 5000
@@ -265,7 +266,8 @@ export default function BreakTracker() {
 
       // Refresh data
       fetchBreakData();
-    } catch {
+    } catch (error) {
+      console.error('Failed to end break:', error);
       toast.error('Failed to end break', {
         description: 'There was an error ending your break. Please try again.',
         duration: 5000

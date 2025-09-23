@@ -15,7 +15,6 @@ import {
   Activity,
   Timer
 } from 'lucide-react';
-import { useUser } from '@clerk/nextjs';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { toast } from 'sonner';
 import { AttendanceRecord as APIAttendanceRecord } from '@/types';
@@ -44,7 +43,6 @@ interface AttendanceRecord extends APIAttendanceRecord {
 
 
 export default function MyAttendance() {
-  const { user } = useUser();
   const { employee, loading: employeeLoading, error: employeeError, employeeId } = useEmployeeData();
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>('all');

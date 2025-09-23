@@ -76,7 +76,7 @@ export function useEmployeeData() {
         } else {
           setError(`Employee not found for code: ${employeeCode}`);
         }
-      } catch (err) {
+      } catch {
         setError('Failed to fetch employee data');
       } finally {
         setLoading(false);

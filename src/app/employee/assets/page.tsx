@@ -6,11 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Laptop, Search, Calendar, Package, CheckCircle2, AlertCircle } from 'lucide-react';
-import { useUser } from '@clerk/nextjs';
 import { assetService, AssetAssignment } from '@/api';
 
 export default function MyAssets() {
-  const { user } = useUser();
   const [assignments, setAssignments] = useState<AssetAssignment[]>([]);
   const [filteredAssignments, setFilteredAssignments] = useState<AssetAssignment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,6 +47,7 @@ export default function MyAssets() {
       setAssignments(response);
     } catch (error) {
       // Don't show error toast for empty results, just log it
+      console.error('Failed to load asset assignments:', error);
       setAssignments([]);
     } finally {
       setLoading(false);

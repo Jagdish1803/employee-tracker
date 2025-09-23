@@ -19,7 +19,6 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { useUser } from '@clerk/nextjs';
 import { issueService } from '@/api';
 
 interface Issue {
@@ -57,7 +56,6 @@ const issueCategories = [
 ];
 
 export default function RaiseQuery() {
-  const { user } = useUser();
   const [issues, setIssues] = useState<Issue[]>([]);
   const [filteredIssues, setFilteredIssues] = useState<Issue[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,6 +89,7 @@ export default function RaiseQuery() {
       }
     } catch (error) {
       // Don't show error toast for empty results
+      console.error('Failed to fetch issues:', error);
       setIssues([]);
     } finally {
       setLoading(false);
@@ -145,6 +144,7 @@ export default function RaiseQuery() {
         toast.error('Failed to create issue');
       }
     } catch (error) {
+      console.error('Failed to create issue:', error);
       toast.error('Failed to create issue');
     } finally {
       setSubmitting(false);

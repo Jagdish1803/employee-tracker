@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
         { date: 'desc' },
         { employee: { name: 'asc' } }
       ]
-    }).catch(error => {
+    }).catch(() => {
       return [];
     });
 
@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
         const minutes = String(date.getUTCMinutes()).padStart(2, '0');
         
         return `${hours}:${minutes}`;
-      } catch (error) {
+      } catch {
         return null;
       }
     };
@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
       if (!date) return '';
       try {
         return date.toISOString().split('T')[0];
-      } catch (error) {
+      } catch {
         return '';
       }
     };
@@ -139,7 +139,7 @@ export async function GET(request: NextRequest) {
           shiftStart: record.shiftStart || null,
           employee: record.employee
         };
-      } catch (error) {
+      } catch {
         return null;
       }
     }).filter(Boolean);
@@ -151,7 +151,7 @@ export async function GET(request: NextRequest) {
         const dateCompare = new Date(b.date).getTime() - new Date(a.date).getTime();
         if (dateCompare !== 0) return dateCompare;
         return (a.employeeName || '').localeCompare(b.employeeName || '');
-      } catch (error) {
+      } catch {
         return 0;
       }
     });
@@ -241,7 +241,7 @@ export async function POST(request: NextRequest) {
           
           return utcDate;
         }
-      } catch (error) {
+      } catch {
         return null;
       }
     };

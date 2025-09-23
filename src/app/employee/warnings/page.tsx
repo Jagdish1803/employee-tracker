@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, CheckCircle2, XCircle, Calendar } from 'lucide-react';
-import { useUser } from '@clerk/nextjs';
 import { warningService } from '@/api';
 
 interface Warning {
@@ -21,7 +20,6 @@ interface Warning {
 }
 
 export default function MyWarnings() {
-  const { user } = useUser();
   const [warnings, setWarnings] = useState<Warning[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,6 +31,7 @@ export default function MyWarnings() {
       const response = await warningService.getByEmployee(employeeId);
       setWarnings(response || []);
     } catch (error) {
+      console.error('Failed to fetch warnings:', error);
       setWarnings([]);
     } finally {
       setLoading(false);

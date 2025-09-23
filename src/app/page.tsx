@@ -21,7 +21,7 @@ export default function HomePage() {
       // Check if user has admin code TIPL1002 in their metadata, username, or email
       const isAdmin = user.publicMetadata?.adminCode === 'TIPL1002' ||
                      user.username?.toUpperCase() === 'TIPL1002' ||
-                     user.emailAddresses[0]?.emailAddress.toUpperCase().includes('TIPL1002');
+                     user.emailAddresses?.[0]?.emailAddress.toUpperCase().includes('TIPL1002');
 
       if (isAdmin) {
         router.push('/admin');
