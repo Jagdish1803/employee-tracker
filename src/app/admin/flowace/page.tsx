@@ -245,8 +245,13 @@ export default function AdminFlowacePage() {
   };
 
   const selectCalendarDate = useCallback((day: number) => {
-    const selectedDateObj = new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth(), day);
-    const dateStr = selectedDateObj.toISOString().split('T')[0];
+    // Create date string directly to avoid timezone issues
+    const year = currentCalendarMonth.getFullYear();
+    const month = currentCalendarMonth.getMonth();
+    const monthStr = (month + 1).toString().padStart(2, '0');
+    const dayStr = day.toString().padStart(2, '0');
+    const dateStr = `${year}-${monthStr}-${dayStr}`;
+
     if (availableDates.includes(dateStr)) {
       setSelectedDate(dateStr);
       setCurrentPage(1);

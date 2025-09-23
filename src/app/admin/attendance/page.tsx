@@ -112,8 +112,11 @@ export default function AdminAttendancePage() {
     return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
   };
 
-  const formatDateForCalendar = (date: Date) => {
-    return formatDateStringForComparison(date.toISOString());
+  const formatDateForCalendar = (year: number, month: number, day: number) => {
+    // Create date string directly to avoid timezone issues
+    const monthStr = (month + 1).toString().padStart(2, '0');
+    const dayStr = day.toString().padStart(2, '0');
+    return `${year}-${monthStr}-${dayStr}`;
   };
 
   const navigateMonth = (direction: 'prev' | 'next') => {
@@ -129,8 +132,7 @@ export default function AdminAttendancePage() {
   };
 
   const selectCalendarDate = useCallback((day: number) => {
-    const selectedDateObj = new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth(), day);
-    const dateStr = formatDateForCalendar(selectedDateObj);
+    const dateStr = formatDateForCalendar(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth(), day);
     if (availableDates.includes(dateStr)) {
       setSelectedDate(dateStr);
       setCurrentPage(1);
@@ -151,11 +153,11 @@ export default function AdminAttendancePage() {
 
     // Add days of the month
     for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth(), day);
-      const dateStr = formatDateForCalendar(date);
+      const dateStr = formatDateForCalendar(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth(), day);
       const isAvailable = availableDates.includes(dateStr);
       const isSelected = selectedDate === dateStr;
-      const isToday = formatDateForCalendar(new Date()) === dateStr;
+      const todayStr = formatDateStringForComparison(new Date().toISOString());
+      const isToday = todayStr === dateStr;
 
       days.push(
         <button

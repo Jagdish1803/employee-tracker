@@ -49,14 +49,21 @@ export function formatDateForDisplay(dateString: string): string {
   // Format date string for display without timezone conversion issues
   const datePart = formatDateStringForComparison(dateString);
   const [year, month, day] = datePart.split('-');
-  const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
 
-  return date.toLocaleDateString('en-US', {
-    weekday: 'short',
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
+  // Use UTC to avoid any timezone shifts
+  const date = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)));
+
+  // Create a manual formatter to avoid timezone issues
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  const weekday = weekdays[date.getUTCDay()];
+  const monthName = months[date.getUTCMonth()];
+  const dayNum = date.getUTCDate();
+  const yearNum = date.getUTCFullYear();
+
+  return `${weekday}, ${monthName} ${dayNum}, ${yearNum}`;
 }
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
