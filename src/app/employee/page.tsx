@@ -82,12 +82,6 @@ export default function EmployeeDashboard() {
         flowaceService.getByEmployee(employeeId)
       ]);
 
-      console.log('API calls completed:', {
-        attendanceData: attendanceData.status,
-        issuesData: issuesData.status,
-        logsData: logsData.status,
-        flowaceData: flowaceData.status
-      });
 
       // Process attendance data
       let attendanceStats = {
@@ -110,8 +104,6 @@ export default function EmployeeDashboard() {
       // Process issues data
       let issueStats = { total: 0, pending: 0, resolved: 0 };
       if (issuesData.status === 'fulfilled' && issuesData.value) {
-        console.log('Issues API response:', issuesData.value);
-
         // Handle different response structures
         let issues: { issueStatus: string }[] = [];
         const responseValue = issuesData.value as unknown;
@@ -146,17 +138,11 @@ export default function EmployeeDashboard() {
           issues = responseValue.data as { issueStatus: string }[];
         }
 
-        console.log('Processed issues:', issues);
-
         issueStats = {
           total: issues.length,
           pending: issues.filter((i: { issueStatus: string }) => i.issueStatus === 'pending').length,
           resolved: issues.filter((i: { issueStatus: string }) => i.issueStatus === 'resolved').length
         };
-
-        console.log('Issue stats:', issueStats);
-      } else {
-        console.log('Issues data not fulfilled or no value:', issuesData);
       }
 
       // Process work logs data
