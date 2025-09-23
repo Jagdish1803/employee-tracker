@@ -15,7 +15,6 @@ import {
   Timer,
   Filter
 } from 'lucide-react';
-import { useUser } from '@clerk/nextjs';
 import { flowaceService } from '@/api';
 import { toast } from 'sonner';
 
@@ -56,7 +55,6 @@ interface FlowaceRecord {
 }
 
 export default function FlowaceActivity() {
-  const { user } = useUser();
   const [flowaceRecords, setFlowaceRecords] = useState<FlowaceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [productivityFilter, setProductivityFilter] = useState<string>('all');
@@ -115,27 +113,8 @@ export default function FlowaceActivity() {
                            (response && 'data' in response && Array.isArray((response as { data: unknown }).data)) ? (response as { data: FlowaceRecord[] }).data : [];
 
         if (recordsToCheck.length === 0) {
-          // Try to get ALL records to see if there's any flowace data at all
-          try {
-            const allRecordsResponse = await flowaceService.getAll();
-
-            if (allRecordsResponse.success && allRecordsResponse.records.length > 0) {
-              toast.info(`No activity data found for ${user?.fullName || 'your account'}. There are ${allRecordsResponse.records.length} records for other employees in the system.`, {
-                description: "Your activity data might not have been uploaded yet or may be associated with a different name.",
-                duration: 6000
-              });
-            } else {
-              toast.info('No activity data available', {
-                description: "No flowace data has been uploaded to the system yet. Please contact your administrator to upload activity tracking data.",
-                duration: 6000
-              });
-            }
-          } catch {
-            toast.info('No activity data found', {
-              description: "Unable to load activity tracking data for your account.",
-              duration: 4000
-            });
-          }
+          // No toast notifications for missing data - just log silently
+          console.log('No activity data found for current employee');
         }
     } catch {
       toast.error('Failed to load activity data', {
@@ -146,7 +125,7 @@ export default function FlowaceActivity() {
     } finally {
       setLoading(false);
     }
-  }, [employeeId, user?.fullName]);
+  }, [employeeId]);
 
   useEffect(() => {
     fetchFlowaceData();
