@@ -34,11 +34,12 @@ export class LogService {
 
       // Fallback for direct array response
       return response.data || [];
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching logs by date range:', error);
-      if (error.response) {
-        console.error('Error response:', error.response.data);
-        console.error('Error status:', error.response.status);
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response: { data: unknown; status: number } };
+        console.error('Error response:', axiosError.response.data);
+        console.error('Error status:', axiosError.response.status);
       }
       return [];
     }
@@ -48,11 +49,12 @@ export class LogService {
     try {
       const response = await apiClient.post(this.basePath, data);
       return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error submitting log:', error);
-      if (error.response) {
-        console.error('Error response:', error.response.data);
-        console.error('Error status:', error.response.status);
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response: { data: unknown; status: number } };
+        console.error('Error response:', axiosError.response.data);
+        console.error('Error status:', axiosError.response.status);
       }
       throw error;
     }

@@ -27,6 +27,37 @@ export function formatMinutesToHours(minutes: number): string {
   const m = minutes % 60;
   return `${h}h ${m}m`;
 }
+
+export function formatDateStringForComparison(dateString: string): string {
+  // Safely extract date part from date string without timezone conversion
+  // Handles both ISO strings and regular date strings
+  if (dateString.includes('T')) {
+    return dateString.split('T')[0];
+  }
+
+  // If it's already in YYYY-MM-DD format, return as is
+  if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    return dateString;
+  }
+
+  // For other formats, use UTC to avoid timezone shifts
+  const date = new Date(dateString + 'T00:00:00.000Z');
+  return date.toISOString().split('T')[0];
+}
+
+export function formatDateForDisplay(dateString: string): string {
+  // Format date string for display without timezone conversion issues
+  const datePart = formatDateStringForComparison(dateString);
+  const [year, month, day] = datePart.split('-');
+  const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+
+  return date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+}
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -36,13 +67,13 @@ export function cn(...inputs: ClassValue[]) {
 
 export function getWorkingDaysBetween(startDate: string, endDate: string): string[] {
   const workingDays: string[] = [];
-  const start = new Date(startDate);
-  const end = new Date(endDate);
+  const start = new Date(startDate + 'T00:00:00.000Z');
+  const end = new Date(endDate + 'T00:00:00.000Z');
 
-  for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+  for (let date = new Date(start); date <= end; date.setUTCDate(date.getUTCDate() + 1)) {
     // Exclude Sundays (0 = Sunday)
-    if (date.getDay() !== 0) {
-      workingDays.push(date.toISOString().split('T')[0]);
+    if (date.getUTCDay() !== 0) {
+      workingDays.push(formatDateStringForComparison(date.toISOString()));
     }
   }
 

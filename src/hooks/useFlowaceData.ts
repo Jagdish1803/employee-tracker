@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { flowaceService } from '@/api';
+import { formatDateStringForComparison } from '@/lib/utils';
 import type { FlowaceRecord, FlowaceUploadHistory } from '@/api/services/flowace.service';
 
 export function useFlowaceData() {
@@ -69,14 +70,14 @@ export function useFlowaceData() {
 
   // Update available dates
   useEffect(() => {
-    const newDates = [...new Set(filteredRecords.map(record => record.date))].sort();
+    const newDates = [...new Set(filteredRecords.map(record => formatDateStringForComparison(record.date)))].sort();
     setAvailableDates(newDates);
   }, [filteredRecords]);
 
   // Filter by date
   const dateFilteredRecords = selectedDate && selectedDate !== 'all'
     ? filteredRecords.filter(record => {
-        const recordDateString = record.date.split('T')[0];
+        const recordDateString = formatDateStringForComparison(record.date);
         return recordDateString === selectedDate;
       })
     : filteredRecords;

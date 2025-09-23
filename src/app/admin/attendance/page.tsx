@@ -16,7 +16,7 @@ import { AttendanceTable } from '@/components/attendance/AttendanceTable';
 import { AttendanceUploadDialog } from '@/components/attendance/AttendanceUploadDialog';
 import { useAttendanceManagement } from '@/hooks/useAttendanceManagement';
 import type { AttendanceRecord, UploadHistory } from '@/types';
-import { cn } from '@/lib/utils';
+import { cn, formatDateStringForComparison, formatDateForDisplay } from '@/lib/utils';
 
 export default function AdminAttendancePage() {
   const {
@@ -54,14 +54,14 @@ export default function AdminAttendancePage() {
 
   // Update available dates when records change using useMemo
   const availableDates = useMemo(() => {
-    return [...new Set(filteredRecords.map(record => record.date.split('T')[0]))].sort();
+    return [...new Set(filteredRecords.map(record => formatDateStringForComparison(record.date)))].sort();
   }, [filteredRecords]);
 
   // Filter records by selected date
   const dateFilteredRecords = useMemo(() => {
     if (selectedDate === 'all') return filteredRecords;
     return filteredRecords.filter(record => {
-      const recordDateString = record.date.split('T')[0];
+      const recordDateString = formatDateStringForComparison(record.date);
       return recordDateString === selectedDate;
     });
   }, [filteredRecords, selectedDate]);
@@ -112,8 +112,8 @@ export default function AdminAttendancePage() {
     return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
   };
 
-  const formatDateForComparison = (date: Date) => {
-    return date.toISOString().split('T')[0];
+  const formatDateForCalendar = (date: Date) => {
+    return formatDateStringForComparison(date.toISOString());
   };
 
   const navigateMonth = (direction: 'prev' | 'next') => {
@@ -130,7 +130,7 @@ export default function AdminAttendancePage() {
 
   const selectCalendarDate = useCallback((day: number) => {
     const selectedDateObj = new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth(), day);
-    const dateStr = formatDateForComparison(selectedDateObj);
+    const dateStr = formatDateForCalendar(selectedDateObj);
     if (availableDates.includes(dateStr)) {
       setSelectedDate(dateStr);
       setCurrentPage(1);
@@ -152,10 +152,10 @@ export default function AdminAttendancePage() {
     // Add days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth(), day);
-      const dateStr = formatDateForComparison(date);
+      const dateStr = formatDateForCalendar(date);
       const isAvailable = availableDates.includes(dateStr);
       const isSelected = selectedDate === dateStr;
-      const isToday = formatDateForComparison(new Date()) === dateStr;
+      const isToday = formatDateForCalendar(new Date()) === dateStr;
 
       days.push(
         <button
@@ -354,12 +354,7 @@ export default function AdminAttendancePage() {
                         <SelectItem value="all">All Dates</SelectItem>
                         {availableDates.map((date) => (
                           <SelectItem key={date} value={date}>
-                            {new Date(date).toLocaleDateString('en-US', {
-                              weekday: 'short',
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric'
-                            })}
+                            {formatDateForDisplay(date)}
                           </SelectItem>
                         ))}
                       </SelectContent>

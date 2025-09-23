@@ -2,6 +2,7 @@
 
 import React from 'react';
 import type { FlowaceRecord } from '@/api/services/flowace.service';
+import { formatDateForDisplay } from '@/lib/utils';
 import { RefreshCw, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -112,12 +113,7 @@ export function FlowaceFilters({
                   <SelectItem value="all">All Dates</SelectItem>
                   {availableDates.map((date) => (
                     <SelectItem key={date} value={date}>
-                      {new Date(date).toLocaleDateString('en-US', {
-                        weekday: 'short',
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                      })}
+                      {formatDateForDisplay(date)}
                     </SelectItem>
                   ))}
                 </SelectContent>

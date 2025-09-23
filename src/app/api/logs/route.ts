@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
       totalMinutes += minutes;
 
       // Save or update log
-      const savedLog = await prisma.log.upsert({
+      await prisma.log.upsert({
         where: {
           employee_tag_date: {
             employeeId: validatedData.employeeId,

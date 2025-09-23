@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { cn } from '@/lib/utils';
+import { cn, formatDateStringForComparison } from '@/lib/utils';
 
 interface FlowaceCalendarDialogProps {
   open: boolean;
@@ -39,8 +39,8 @@ export function FlowaceCalendarDialog({
     return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
   };
 
-  const formatDateForComparison = (date: Date) => {
-    return date.toISOString().split('T')[0];
+  const formatDateForCalendar = (date: Date) => {
+    return formatDateStringForComparison(date.toISOString());
   };
 
   return (
@@ -97,7 +97,7 @@ export function FlowaceCalendarDialog({
             {Array.from({ length: getDaysInMonth(currentCalendarMonth) }).map((_, index) => {
               const day = index + 1;
               const dateObj = new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth(), day);
-              const dateStr = formatDateForComparison(dateObj);
+              const dateStr = formatDateForCalendar(dateObj);
               const hasData = availableDates.includes(dateStr);
               const isSelected = selectedDate === dateStr;
 
