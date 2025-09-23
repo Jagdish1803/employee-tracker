@@ -71,7 +71,7 @@ export default function AssetsPage() {
   const [selectedAssetForHistory, setSelectedAssetForHistory] = useState<Asset | null>(null);
 
   // API Hooks
-  const { data: assetsResponse, isLoading: assetsLoading } = useAssets(filters);
+  const { data: assetsResponse, isLoading: assetsLoading, refetch: refetchAssets } = useAssets(filters);
   const { data: employeesResponse } = useEmployees({ limit: 1000 });
   const { data: historyResponse, isLoading: historyLoading } = useAssetHistory(
     selectedAssetForHistory ? { assetId: selectedAssetForHistory.id.toString() } : {}
@@ -117,6 +117,12 @@ export default function AssetsPage() {
     try {
       const result = await createAssetMutation.mutateAsync(assetForm);
       toast.success(result.message || 'Asset created successfully!');
+
+      // Force immediate refresh like flowace/attendance
+      setTimeout(() => {
+        refetchAssets();
+      }, 100);
+
       closeDialog();
     } catch (error: unknown) {
       toast.error((error as Error).message || 'Failed to create asset');
@@ -132,6 +138,12 @@ export default function AssetsPage() {
         data: assetForm
       });
       toast.success(result.message || 'Asset updated successfully!');
+
+      // Force immediate refresh
+      setTimeout(() => {
+        refetchAssets();
+      }, 100);
+
       closeDialog();
     } catch (error: unknown) {
       toast.error((error as Error).message || 'Failed to update asset');
@@ -144,6 +156,12 @@ export default function AssetsPage() {
     try {
       const result = await deleteAssetMutation.mutateAsync(assetToDelete.id);
       toast.success(result.message || 'Asset deleted successfully!');
+
+      // Force immediate refresh
+      setTimeout(() => {
+        refetchAssets();
+      }, 100);
+
       setDeleteDialogOpen(false);
       setAssetToDelete(null);
     } catch (error: unknown) {
@@ -675,6 +693,12 @@ export default function AssetsPage() {
         employees={employees}
         mode={assignmentMode}
         assignment={assetToAssign?.assignments?.[0]}
+        onSuccess={() => {
+          // Force immediate refresh after assignment changes
+          setTimeout(() => {
+            refetchAssets();
+          }, 100);
+        }}
       />
 
       {/* Asset History Dialog */}

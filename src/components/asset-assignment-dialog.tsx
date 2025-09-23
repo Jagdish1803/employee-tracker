@@ -31,6 +31,7 @@ interface AssetAssignmentDialogProps {
   employees: Employee[];
   mode: 'assign' | 'return';
   assignment?: AssetAssignment; // For return mode
+  onSuccess?: () => void; // Callback after successful assignment/return
 }
 
 export function AssetAssignmentDialog({
@@ -39,7 +40,8 @@ export function AssetAssignmentDialog({
   asset,
   employees,
   mode,
-  assignment
+  assignment,
+  onSuccess
 }: AssetAssignmentDialogProps) {
   const [formData, setFormData] = useState({
     employeeId: '',
@@ -64,6 +66,7 @@ export function AssetAssignmentDialog({
         assignmentNotes: formData.assignmentNotes || undefined,
       });
       toast.success(result.message || 'Asset assigned successfully!');
+      onSuccess?.();
       handleClose();
     } catch (error: unknown) {
       toast.error((error as Error).message || 'Failed to assign asset');
@@ -83,6 +86,7 @@ export function AssetAssignmentDialog({
         returnNotes: formData.returnNotes || undefined,
       });
       toast.success(result.message || 'Asset returned successfully!');
+      onSuccess?.();
       handleClose();
     } catch (error: unknown) {
       toast.error((error as Error).message || 'Failed to return asset');

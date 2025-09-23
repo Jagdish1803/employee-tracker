@@ -212,11 +212,20 @@ export default function AdminAttendancePage() {
     }
   };
 
-  const confirmDeleteRecord = () => {
+  const confirmDeleteRecord = async () => {
     if (recordToDelete) {
-      deleteRecord(recordToDelete.id);
-      setDeleteRecordConfirmOpen(false);
-      setRecordToDelete(null);
+      try {
+        deleteRecord(recordToDelete.id);
+        // Auto-refresh like flowace after successful delete
+        setTimeout(() => {
+          loadAttendanceRecords(true);
+        }, 100);
+      } catch (error) {
+        console.error('Error deleting record:', error);
+      } finally {
+        setDeleteRecordConfirmOpen(false);
+        setRecordToDelete(null);
+      }
     }
   };
 
@@ -226,11 +235,21 @@ export default function AdminAttendancePage() {
     setDeleteBatchConfirmOpen(true);
   };
 
-  const confirmDeleteBatch = () => {
+  const confirmDeleteBatch = async () => {
     if (batchToDelete) {
-      deleteBatch(batchToDelete);
-      setDeleteBatchConfirmOpen(false);
-      setBatchToDelete(null);
+      try {
+        deleteBatch(batchToDelete);
+        // Auto-refresh like flowace after successful batch delete
+        setTimeout(() => {
+          loadAttendanceRecords(true);
+          loadUploadHistory();
+        }, 100);
+      } catch (error) {
+        console.error('Error deleting batch:', error);
+      } finally {
+        setDeleteBatchConfirmOpen(false);
+        setBatchToDelete(null);
+      }
     }
   };
 

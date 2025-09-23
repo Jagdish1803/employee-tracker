@@ -130,8 +130,12 @@ export const useCreateAsset = () => {
       return response.json();
     },
     onSuccess: () => {
+      // Invalidate all assets queries regardless of filters
       queryClient.invalidateQueries({ queryKey: ['assets'] });
+      // Force refetch all assets queries
       queryClient.refetchQueries({ queryKey: ['assets'] });
+      // Also invalidate asset history
+      queryClient.invalidateQueries({ queryKey: ['asset-history'] });
     },
   });
 };
@@ -158,8 +162,11 @@ export const useUpdateAsset = () => {
       return response.json();
     },
     onSuccess: (data, variables) => {
+      // Invalidate all assets queries regardless of filters
       queryClient.invalidateQueries({ queryKey: ['assets'] });
       queryClient.invalidateQueries({ queryKey: ['asset', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['asset-history'] });
+      // Force refetch all assets queries
       queryClient.refetchQueries({ queryKey: ['assets'] });
     },
   });
@@ -215,8 +222,11 @@ export const useAssignAsset = () => {
       return response.json();
     },
     onSuccess: () => {
+      // Invalidate all asset-related queries
       queryClient.invalidateQueries({ queryKey: ['assets'] });
       queryClient.invalidateQueries({ queryKey: ['asset-history'] });
+      // Force refetch to ensure immediate UI update
+      queryClient.refetchQueries({ queryKey: ['assets'] });
     },
   });
 };
@@ -243,8 +253,11 @@ export const useReturnAsset = () => {
       return response.json();
     },
     onSuccess: () => {
+      // Invalidate all asset-related queries
       queryClient.invalidateQueries({ queryKey: ['assets'] });
       queryClient.invalidateQueries({ queryKey: ['asset-history'] });
+      // Force refetch to ensure immediate UI update
+      queryClient.refetchQueries({ queryKey: ['assets'] });
     },
   });
 };
