@@ -164,22 +164,27 @@ export default function WorkAssignments() {
   }, [employeeId]);
 
   useEffect(() => {
-    fetchAssignments();
-    fetchExistingLogs();
-  }, [selectedDate, fetchExistingLogs, fetchAssignments]);
+    if (employeeId) {
+      fetchAssignments();
+      fetchExistingLogs();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate, employeeId]);
 
-  // Initialize logs with default 0 values for assignments
+  // Initialize logs with default 0 values for assignments (only when assignments change)
   useEffect(() => {
     if (assignments.length > 0) {
-      const initialLogs: Record<number, number> = {};
-      assignments.forEach(assignment => {
-        if (assignment.tagId) {
-          initialLogs[assignment.tagId] = logs[assignment.tagId] || 0;
-        }
+      setLogs(prevLogs => {
+        const initialLogs: Record<number, number> = {};
+        assignments.forEach(assignment => {
+          if (assignment.tagId) {
+            initialLogs[assignment.tagId] = prevLogs[assignment.tagId] || 0;
+          }
+        });
+        return { ...prevLogs, ...initialLogs };
       });
-      setLogs(prevLogs => ({ ...initialLogs, ...prevLogs }));
     }
-  }, [assignments, logs]);
+  }, [assignments]);
 
   const handleLogChange = (tagId: number, count: number) => {
     setLogs(prev => ({
