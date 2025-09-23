@@ -77,7 +77,7 @@ export const useAssets = (filters: AssetFilters = {}) => {
       return response.json();
     },
     staleTime: 0, // Always consider data stale
-    cacheTime: 0, // Don't cache data
+    gcTime: 0, // Don't cache data (updated property name)
     refetchOnWindowFocus: true,
     refetchOnMount: true,
   });
