@@ -55,7 +55,7 @@ interface DashboardStats {
 
 export default function EmployeeDashboard() {
   const { user } = useUser();
-  const { loading: employeeLoading, error: employeeError, employeeId } = useEmployeeData();
+  const { employee, loading: employeeLoading, error: employeeError, employeeId } = useEmployeeData();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -206,29 +206,22 @@ export default function EmployeeDashboard() {
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="min-w-0 flex-1">
               <h1 className="text-xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-                Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {user?.fullName || 'Employee'}!
+                Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {employee?.name || user?.fullName || 'Employee'}!
               </h1>
               <p className="text-muted-foreground mt-1 text-sm md:text-base">
-                Employee: <span className="font-medium">{user?.fullName}</span>
-                <span className="hidden sm:inline"> • General Department</span>
+                Employee: <span className="font-medium">{employee?.name || user?.fullName}</span>
+                {employee?.employeeCode && <span className="hidden sm:inline"> • Code: {employee.employeeCode}</span>}
               </p>
             </div>
             <div className="text-left md:text-right flex-shrink-0">
               <div className="text-xs md:text-sm text-muted-foreground">Today</div>
               <div className="text-sm md:text-lg font-semibold text-gray-900">
                 {new Date().toLocaleDateString('en-US', {
-                  weekday: 'short',
-                  month: 'short',
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
                   day: 'numeric'
                 })}
-                <span className="hidden md:inline">
-                  {new Date().toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    weekday: 'long'
-                  })}
-                </span>
               </div>
             </div>
           </div>
