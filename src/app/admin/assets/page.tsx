@@ -118,10 +118,17 @@ export default function AssetsPage() {
       const result = await createAssetMutation.mutateAsync(assetForm);
       toast.success(result.message || 'Asset created successfully!');
 
-      // Force immediate refresh like flowace/attendance
+      // Force immediate refresh like flowace/attendance with multiple strategies
+      refetchAssets();
       setTimeout(() => {
         refetchAssets();
-      }, 100);
+      }, 50);
+      setTimeout(() => {
+        refetchAssets();
+      }, 200);
+      setTimeout(() => {
+        refetchAssets();
+      }, 500);
 
       closeDialog();
     } catch (error: unknown) {
@@ -694,10 +701,17 @@ export default function AssetsPage() {
         mode={assignmentMode}
         assignment={assetToAssign?.assignments?.[0]}
         onSuccess={() => {
-          // Force immediate refresh after assignment changes
+          // Force immediate refresh after assignment changes with multiple strategies
+          refetchAssets();
           setTimeout(() => {
             refetchAssets();
-          }, 100);
+          }, 50);
+          setTimeout(() => {
+            refetchAssets();
+          }, 200);
+          setTimeout(() => {
+            refetchAssets();
+          }, 500);
         }}
       />
 

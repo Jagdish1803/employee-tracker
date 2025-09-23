@@ -62,12 +62,24 @@ export const useAssets = (filters: AssetFilters = {}) => {
         }
       });
 
-      const response = await fetch(`/api/assets?${params.toString()}`);
+      // Add cache-busting timestamp to ensure fresh data
+      params.append('_t', Date.now().toString());
+
+      const response = await fetch(`/api/assets?${params.toString()}`, {
+        cache: 'no-cache',
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch assets');
       }
       return response.json();
     },
+    staleTime: 0, // Always consider data stale
+    cacheTime: 0, // Don't cache data
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
 };
 
@@ -136,6 +148,8 @@ export const useCreateAsset = () => {
       queryClient.refetchQueries({ queryKey: ['assets'] });
       // Also invalidate asset history
       queryClient.invalidateQueries({ queryKey: ['asset-history'] });
+      // Clear all cached data and force fresh fetch
+      queryClient.removeQueries({ queryKey: ['assets'] });
     },
   });
 };
@@ -168,6 +182,8 @@ export const useUpdateAsset = () => {
       queryClient.invalidateQueries({ queryKey: ['asset-history'] });
       // Force refetch all assets queries
       queryClient.refetchQueries({ queryKey: ['assets'] });
+      // Clear all cached data and force fresh fetch
+      queryClient.removeQueries({ queryKey: ['assets'] });
     },
   });
 };
@@ -196,6 +212,8 @@ export const useDeleteAsset = () => {
       queryClient.invalidateQueries({ queryKey: ['asset-history'] });
       // Force refetch to ensure UI updates immediately
       queryClient.refetchQueries({ queryKey: ['assets'] });
+      // Clear all cached data and force fresh fetch
+      queryClient.removeQueries({ queryKey: ['assets'] });
     },
   });
 };
@@ -227,6 +245,8 @@ export const useAssignAsset = () => {
       queryClient.invalidateQueries({ queryKey: ['asset-history'] });
       // Force refetch to ensure immediate UI update
       queryClient.refetchQueries({ queryKey: ['assets'] });
+      // Clear all cached data and force fresh fetch
+      queryClient.removeQueries({ queryKey: ['assets'] });
     },
   });
 };
@@ -258,6 +278,8 @@ export const useReturnAsset = () => {
       queryClient.invalidateQueries({ queryKey: ['asset-history'] });
       // Force refetch to ensure immediate UI update
       queryClient.refetchQueries({ queryKey: ['assets'] });
+      // Clear all cached data and force fresh fetch
+      queryClient.removeQueries({ queryKey: ['assets'] });
     },
   });
 };
