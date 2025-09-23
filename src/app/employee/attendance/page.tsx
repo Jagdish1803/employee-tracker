@@ -174,19 +174,21 @@ export default function MyAttendance() {
   }
 
   return (
-    <div className="min-h-screen bg-white p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-white">
+      <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
         {/* Header */}
-        <div className="flex items-center space-x-3 mb-6">
-          <CalendarDays className="h-6 w-6 text-blue-600" />
-          <h1 className="text-2xl font-bold text-gray-900">
-            My Attendance {employee && `- ${employee.name}`}
+        <div className="flex items-center gap-2 md:gap-3 mb-4 md:mb-6">
+          <CalendarDays className="h-5 w-5 md:h-6 md:w-6 text-blue-600" />
+          <h1 className="text-lg md:text-2xl font-bold text-gray-900 truncate">
+            My Attendance{employee && (
+              <span className="hidden sm:inline"> - {employee.name}</span>
+            )}
           </h1>
         </div>
 
         {/* Key Metrics Cards */}
         {summary && (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">

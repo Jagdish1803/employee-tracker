@@ -88,25 +88,25 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="p-4 lg:p-6 space-y-8">
+    <div className="space-y-4 md:space-y-8">
       {/* Header Section */}
-      <div className="border-b border-border/40 pb-6">
-        <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
+      <div className="border-b border-border/40 pb-4 md:pb-6">
+        <div className="flex flex-col space-y-3 md:flex-row md:items-center md:justify-between md:space-y-0">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
               Admin Dashboard
             </h1>
-            <p className="text-muted-foreground mt-2">
+            <p className="text-muted-foreground mt-1 md:mt-2 text-sm md:text-base">
               Monitor and manage your organization&apos;s productivity and operations
             </p>
           </div>
-          <div className="flex items-center space-x-3">
-            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+          <div className="flex items-center gap-2 md:gap-3 flex-wrap">
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs md:text-sm">
               <Activity className="h-3 w-3 mr-1" />
               System Online
             </Badge>
-            <Button variant="outline" size="sm">
-              <Settings className="h-4 w-4 mr-2" />
+            <Button variant="outline" size="sm" className="text-xs md:text-sm">
+              <Settings className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
               Settings
             </Button>
           </div>
@@ -115,8 +115,8 @@ export default function AdminDashboard() {
 
       {/* Key Metrics */}
       <div>
-        <h2 className="text-xl font-semibold mb-4 text-gray-900">Key Metrics</h2>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-gray-900">Key Metrics</h2>
+        <div className="grid gap-3 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500 bg-gradient-to-br from-blue-50 to-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-700">Total Employees</CardTitle>

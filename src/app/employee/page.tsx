@@ -201,50 +201,57 @@ export default function EmployeeDashboard() {
     <div className="min-h-screen w-full bg-gray-50">
       {/* Hero Section */}
       <div className="bg-white shadow-sm border-b w-full">
-        <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+        <div className="w-full px-3 md:px-4 lg:px-8 py-4 md:py-8">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl md:text-3xl font-bold text-gray-900 truncate">
                 Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {user?.fullName || 'Employee'}!
               </h1>
-              <p className="text-gray-600 mt-1">
-                Employee: <span className="font-medium">{user?.fullName}</span> •
-                <span className="ml-1">General Department</span>
+              <p className="text-gray-600 mt-1 text-sm md:text-base">
+                Employee: <span className="font-medium">{user?.fullName}</span>
+                <span className="hidden sm:inline"> • General Department</span>
               </p>
             </div>
-            <div className="text-right">
-              <div className="text-sm text-gray-500">Today</div>
-              <div className="text-lg font-semibold text-gray-900">
-                {new Date().toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
+            <div className="text-left md:text-right flex-shrink-0">
+              <div className="text-xs md:text-sm text-gray-500">Today</div>
+              <div className="text-sm md:text-lg font-semibold text-gray-900">
+                {new Date().toLocaleDateString('en-US', {
+                  weekday: 'short',
+                  month: 'short',
+                  day: 'numeric'
                 })}
+                <span className="hidden md:inline">
+                  {new Date().toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    weekday: 'long'
+                  })}
+                </span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
-        <div className="w-full space-y-8">
+      <div className="w-full px-3 md:px-4 lg:px-8 py-4 md:py-8">
+        <div className="w-full space-y-4 md:space-y-8">
         {/* Quick Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
           <Card className="border-gray-200 hover:shadow-lg transition-all">
-            <CardContent className="p-6">
+            <CardContent className="p-4 md:p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">Attendance Rate</p>
-                  <p className="text-3xl font-bold text-gray-900">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs md:text-sm font-medium text-gray-600 mb-1">Attendance Rate</p>
+                  <p className="text-2xl md:text-3xl font-bold text-gray-900">
                     {Math.round(stats?.attendance.thisMonth.attendanceRate || 0)}%
                   </p>
-                  <p className="text-xs text-gray-600 mt-1">
+                  <p className="text-xs text-gray-600 mt-1 truncate">
                     {stats?.attendance.thisMonth.presentDays || 0} of {stats?.attendance.thisMonth.totalDays || 26} days
                   </p>
                 </div>
-                <div className="p-3 bg-gray-100 rounded-full">
-                  <Calendar className="h-6 w-6 text-gray-600" />
+                <div className="p-2 md:p-3 bg-gray-100 rounded-full flex-shrink-0">
+                  <Calendar className="h-4 w-4 md:h-6 md:w-6 text-gray-600" />
                 </div>
               </div>
               <div className="mt-4">
@@ -257,17 +264,17 @@ export default function EmployeeDashboard() {
           </Card>
 
           <Card className="border-gray-200 hover:shadow-lg transition-all">
-            <CardContent className="p-6">
+            <CardContent className="p-4 md:p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">Work Hours</p>
-                  <p className="text-3xl font-bold text-gray-900">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs md:text-sm font-medium text-gray-600 mb-1">Work Hours</p>
+                  <p className="text-2xl md:text-3xl font-bold text-gray-900">
                     {(stats?.attendance.thisMonth.totalHours || 0).toFixed(1)}h
                   </p>
                   <p className="text-xs text-gray-600 mt-1">This month</p>
                 </div>
-                <div className="p-3 bg-gray-100 rounded-full">
-                  <Clock className="h-6 w-6 text-gray-600" />
+                <div className="p-2 md:p-3 bg-gray-100 rounded-full flex-shrink-0">
+                  <Clock className="h-4 w-4 md:h-6 md:w-6 text-gray-600" />
                 </div>
               </div>
             </CardContent>
