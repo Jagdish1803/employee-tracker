@@ -1,0 +1,6 @@
+{
+  "name": "@seo-checker/shared",
+  "version": "1.0.0",
+  "description": "Shared utilities for SEO Rank Checker",
+  "main": "constants.js"
+}

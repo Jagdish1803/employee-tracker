@@ -1,0 +1,230 @@
+// Prisma schema for SEO Rank Checker
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Lead {
+  id              String   @id @default(uuid())
+  email           String?  @unique
+  phone           String?
+  name            String?
+  company         String?
+  website         String?
+  leadScore       Int      @default(0)
+  leadStatus      LeadStatus @default(cold)
+  totalChecks     Int      @default(0)
+  reportViews     Int      @default(0)
+  ctaClicks       Int      @default(0)
+  assignedTo      String?
+  lastContactedAt DateTime?
+  nextFollowUpAt  DateTime?
+  convertedAt     DateTime?
+  conversionValue Float?
+  utmSource       String?
+  utmMedium       String?
+  utmCampaign     String?
+  referrer        String?
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  rankChecks    RankCheck[]
+  interactions  LeadInteraction[]
+  reports       Report[]
+
+  @@map("leads")
+}
+
+model RankCheck {
+  id                    String   @id @default(uuid())
+  keyword               String
+  domain                String
+  location              String   @default("us")
+  device                String   @default("desktop")
+  status                CheckStatus @default(queued)
+  progress              Int      @default(0)
+  currentPosition       Int?
+  previousPosition      Int?
+  positionChange        Int?
+  searchVolume          Int?
+  estimatedTrafficLoss  Float?
+  estimatedRevenueLoss  Float?
+  leadId                String?
+  sessionId             String?
+  ipAddress             String?
+  errorMessage          String?
+  jobId                 String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  completedAt           DateTime?
+
+  lead         Lead?        @relation(fields: [leadId], references: [id])
+  serpResults  SerpResult[]
+  competitors  Competitor[]
+  seoIssues    SeoIssue[]
+  report       Report?
+  analytics    AnalyticsEvent[]
+
+  @@map("rank_checks")
+}
+
+model SerpResult {
+  id          String @id @default(uuid())
+  checkId     String
+  position    Int
+  domain      String
+  url         String
+  title       String?
+  description String?
+  isTarget    Boolean @default(false)
+  createdAt   DateTime @default(now())
+
+  rankCheck RankCheck @relation(fields: [checkId], references: [id], onDelete: Cascade)
+
+  @@map("serp_results")
+}
+
+model Competitor {
+  id               String @id @default(uuid())
+  checkId          String
+  domain           String
+  position         Int
+  url              String?
+  title            String?
+  domainAge        Int?
+  estimatedTraffic Int?
+  createdAt        DateTime @default(now())
+
+  rankCheck RankCheck @relation(fields: [checkId], references: [id], onDelete: Cascade)
+
+  @@map("competitors")
+}
+
+model SeoIssue {
+  id              String   @id @default(uuid())
+  checkId         String
+  issueType       String
+  severity        IssueSeverity @default(medium)
+  description     String
+  recommendation  String?
+  estimatedImpact String?
+  fixDifficulty   String?
+  fixTimeline     String?
+  createdAt       DateTime @default(now())
+
+  rankCheck RankCheck @relation(fields: [checkId], references: [id], onDelete: Cascade)
+
+  @@map("seo_issues")
+}
+
+model Report {
+  id                 String   @id @default(uuid())
+  checkId            String   @unique
+  leadId             String?
+  summaryHtml        String?
+  summaryPdf         String?
+  viewedAt           DateTime?
+  viewCount          Int      @default(0)
+  timeSpentSeconds   Int      @default(0)
+  scrollDepth        Int      @default(0)
+  emailCapturedAt    DateTime?
+  ctaClickedAt       DateTime?
+  ctaType            String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  rankCheck RankCheck @relation(fields: [checkId], references: [id], onDelete: Cascade)
+  lead      Lead?     @relation(fields: [leadId], references: [id])
+
+  @@map("reports")
+}
+
+model LeadInteraction {
+  id              String   @id @default(uuid())
+  leadId          String
+  interactionType String
+  channel         String?
+  subject         String?
+  message         String?
+  outcome         String?
+  performedBy     String?
+  createdAt       DateTime @default(now())
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@map("lead_interactions")
+}
+
+model AnalyticsEvent {
+  id          String   @id @default(uuid())
+  eventType   String
+  checkId     String?
+  leadId      String?
+  sessionId   String?
+  eventData   Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  rankCheck RankCheck? @relation(fields: [checkId], references: [id], onDelete: SetNull)
+
+  @@map("analytics_events")
+}
+
+model EmailCampaign {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  active      Boolean  @default(true)
+  triggerType String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  emails CampaignEmail[]
+
+  @@map("email_campaigns")
+}
+
+model CampaignEmail {
+  id         String @id @default(uuid())
+  campaignId String
+  sequence   Int
+  delayHours Int    @default(0)
+  subject    String
+  htmlBody   String
+  textBody   String?
+  createdAt  DateTime @default(now())
+
+  campaign EmailCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@map("campaign_emails")
+}
+
+enum LeadStatus {
+  cold
+  warm
+  hot
+  contacted
+  won
+  lost
+}
+
+enum CheckStatus {
+  queued
+  processing
+  completed
+  failed
+}
+
+enum IssueSeverity {
+  low
+  medium
+  high
+  critical
+}

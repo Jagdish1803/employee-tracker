@@ -1,0 +1,19 @@
+const { LEAD_STATUS, CHECK_STATUS, QUEUE_NAMES } = require('../../../../packages/shared/constants');
+
+const ESTIMATED_CHECK_TIME_SECONDS = 60;
+const MAX_SERP_RESULTS = 100;
+const TOP_COMPETITORS_COUNT = 10;
+
+const DEFAULT_LOCATION = 'us';
+const DEFAULT_DEVICE = 'desktop';
+
+module.exports = {
+  LEAD_STATUS,
+  CHECK_STATUS,
+  QUEUE_NAMES,
+  ESTIMATED_CHECK_TIME_SECONDS,
+  MAX_SERP_RESULTS,
+  TOP_COMPETITORS_COUNT,
+  DEFAULT_LOCATION,
+  DEFAULT_DEVICE,
+};
