@@ -1,0 +1,28 @@
+{
+  "name": "@seo-checker/api",
+  "version": "1.0.0",
+  "description": "SEO Rank Checker API Server",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop seo-api",
+    "pm2:logs": "pm2 logs seo-api"
+  },
+  "dependencies": {
+    "bullmq": "^4.17.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.4.1",
+    "helmet": "^8.0.0",
+    "ioredis": "^5.4.1",
+    "pino": "^8.21.0",
+    "pino-http": "^10.3.0",
+    "uuid": "^9.0.1",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "pino-pretty": "^11.3.0"
+  }
+}
